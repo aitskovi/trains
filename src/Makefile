@@ -20,16 +20,16 @@ all: kernel.elf
 
 DEPS = $(OBJECTS:.o=.depends)
 
-%.s : %.c  
+%.s : %.c
 	$(CC) -S $(CFLAGS) $<
 
 %.depends: %.c
-        $(CC) -M $(CFLAGS) $< > $@ 
+	$(CC) -M $(CFLAGS) $< > $@
 
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-a0.elf : main.o $(OBJECTS)
+kernel.elf : kernel.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 test : test.o $(OBJECTS)
