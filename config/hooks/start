@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+. /u/aianus/giddyup/functions.sh
+
+cd "${RELEASE}/src"
+make clean
+make
+cp a0.elf ../
+
