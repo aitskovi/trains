@@ -38,4 +38,7 @@ test : test.o $(OBJECTS)
 clean:
 	-rm -f *.elf *.s *.o kernel.map test
 
+install: kernel.elf
+	-cp kernel.elf /u/cs452/tftp/ARM/ai/
+
 -include $(DEPS)
