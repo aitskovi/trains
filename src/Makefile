@@ -8,9 +8,9 @@ else
 	include arm.mk
 endif
 
-OBJECTS = io.o ring_buffer.o timer.o ui.o train.o utility.o
+OBJECTS = bwio.o kernel.o
 
-all: a0.elf 
+all: kernel.elf 
 
 .SUFFIXES:
 	
@@ -18,8 +18,13 @@ all: a0.elf
 .SECONDARY:
 	
 
+DEPS = $(OBJECTS:.o=.depends)
+
 %.s : %.c  
-	$(CC) -S $(CFLAGS) $< 
+	$(CC) -S $(CFLAGS) $<
+
+%.depends: %.c
+        $(CC) -M $(CFLAGS) $< > $@ 
 
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
@@ -31,4 +36,6 @@ test : test.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
-	-rm -f *.elf *.s *.o a0.map test
+	-rm -f *.elf *.s *.o kernel.map test
+
+-include $(DEPS)
