@@ -8,7 +8,7 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o kernel.o
+OBJECTS = bwio.o 
 
 all: kernel.elf 
 
