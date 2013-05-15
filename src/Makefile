@@ -8,7 +8,7 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o syscall.o
+OBJECTS = bwio.o syscall.o switch.o task.o
 
 all: kernel.elf 
 
