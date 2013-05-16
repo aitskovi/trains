@@ -8,7 +8,7 @@ enum TASK_STATE {
 };
 */
 
-#define STACK_SIZE 1024
+#define STACK_SIZE 1048576 // 1mb stack
 
 typedef struct Task {
     /**
