@@ -41,6 +41,7 @@ typedef struct Task {
 } Task;
 
 void task_print(Task *t);
+void task_create(Task *t, void (*code)());
 
 #endif
 

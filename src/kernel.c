@@ -12,11 +12,9 @@ void interrupt() {
  */
 void hello() {
     bwprintf(COM2, "Hello: Initializing\n\r");
-    //for(;;) {
-        //bwprintf(COM2, "Hello: Pre-Syscall");
-        //syscall(1);
-        //bwprintf(COM2, "Hello: Post-Syscall");
-    //}
+    bwprintf(COM2, "Hello: Pre-Syscall");
+    syscall(1);
+    bwprintf(COM2, "Hello: Post-Syscall");
 }
 
 int main() {
@@ -24,7 +22,7 @@ int main() {
     bwprintf(COM2, "Hello World!\n\r");
 
     void (**syscall_handler)() = 0x28;
-    *syscall_handler = software_interrupt;
+    *syscall_handler = kernel_enter;
 
     //syscall(1);
 
@@ -35,6 +33,7 @@ int main() {
     bwprintf(COM2, "Hello is %x\n\r", hello);
     task_print(&t);
     kernel_exit(&t);
+    bwprintf(COM2, "Back in da Kernel!\n\r");
 
     return 0;
 }

@@ -4,11 +4,11 @@
 
 #define SL 10
 #define IP 11
-#define LR 12
-#define FP 13
+#define FP 12
+#define LR 13
 #define PC 14
 
-int task_create(Task *t, void (*code)()) {
+void task_create(Task *t, void (*code)()) {
    t->tid = 1; 
    t->pc = code;
    t->sp = t->stack + STACK_SIZE - 15;
@@ -25,11 +25,9 @@ int task_create(Task *t, void (*code)()) {
 
    t->sp[SL] = t->stack + STACK_SIZE;
    t->sp[IP] = 0;
-   t->sp[LR] = 0;
    t->sp[FP] = t->sp[SL];
+   t->sp[LR] = 0;
    t->sp[PC] = t->pc;
-
-   return 0;
 }
 
 void task_print(Task *t) {
