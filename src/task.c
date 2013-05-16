@@ -28,9 +28,11 @@ int task_create(Task *t, void (*code)()) {
    t->sp[LR] = 0;
    t->sp[FP] = t->sp[SL];
    t->sp[PC] = t->pc;
+
+   return 0;
 }
 
 void task_print(Task *t) {
-    bwprintf(COM2, "Task id:%d, code:%x, sp: %x, spsr: %x, pc: %x\n\r",
+    bwprintf(COM2, "Task id:%d, sp: %x, spsr: %x, pc: %x\n\r",
             t->tid, t->sp, t->spsr, t->pc);
 }

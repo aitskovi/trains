@@ -34,7 +34,7 @@ int main() {
     bwprintf(COM2, "Task Created!\n\r");
     bwprintf(COM2, "Hello is %x\n\r", hello);
     task_print(&t);
-    kernel_exit(hello);
+    kernel_exit(&t);
 
     return 0;
 }
