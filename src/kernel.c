@@ -22,7 +22,7 @@ int main() {
     bwprintf(COM2, "Hello World!\n\r");
 
     void (**syscall_handler)() = 0x28;
-    *syscall_handler = kernel_enter;
+    *syscall_handler = &kernel_enter;
 
     //syscall(1);
 

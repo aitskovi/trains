@@ -9,7 +9,7 @@ struct Request {
     void *args;
 };
 
-void kernel_enter();
 void kernel_exit(struct Task *t);
+void kernel_enter(struct Task *t);
 
 #endif

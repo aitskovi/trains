@@ -36,14 +36,9 @@ typedef struct Task {
      * Do we really need to save this?
      */
     unsigned int spsr;
-
-    void *pc;
 } Task;
 
 void task_print(Task *t);
 void task_create(Task *t, void (*code)());
 
 #endif
-
-// Running Task
-// -> Stack Pointer.
