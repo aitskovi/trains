@@ -8,7 +8,7 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o syscall.o switch.o task.o
+OBJECTS = bwio.o syscall.o task.o
 
 all: kernel.elf 
 
@@ -29,14 +29,14 @@ DEPS = $(OBJECTS:.o=.depends)
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-kernel.elf : kernel.o $(OBJECTS)
+kernel.elf : kernel.o context_switch.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 test : test.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
-	-rm -f *.elf *.s *.o kernel.map test
+	-rm -f *.elf *.o kernel.map test
 
 install: kernel.elf
 	-cp kernel.elf /u/cs452/tftp/ARM/aianus/

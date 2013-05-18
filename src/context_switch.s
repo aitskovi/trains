@@ -35,7 +35,35 @@ kernel_exit:
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
-	bl	kernel_enter(PLT)
+
+	stmfd sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, sl, fp, ip, lr, pc} @ Store kernel registers
+
+	ldr r0, [fp, #-20] @ Load address of TD
+	bl task_get_sp(PLT) @ Get stack pointer from TD
+	mov r5, r0 @ Save sp in r5
+
+	ldr r0, [fp, #-20] @ Load address of TD
+	bl task_get_spsr(PLT) @ Get spsr from TD
+	msr spsr, r0 @ Save spsr
+
+	ldr r0, [fp, #-20] @ Load address of TD
+	bl task_get_pc(PLT) @ Get pc from TD
+	mov r14, r0
+
+	msr cpsr_c, #31 @ Change to system state
+
+	mov sp, r5 @ Install stack pointer of regular process
+	ldmfd sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, sl, fp, ip, lr} @ Reload user registers
+
+	msr cpsr_c, #19 @ Change to svc state
+	movs pc, r14 @ GO!
+
+/*
+	mov r1, r14
+	mov r0, #1
+	bl bwputr(PLT)
+*/
+
 	mov	r0, #1
 	ldr	r3, .L4+12
 	add	r3, sl, r3
@@ -57,9 +85,8 @@ kernel_exit:
 kernel_enter:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 1, uses_anonymous_args = 0
-	mov	ip, sp
-	stmfd	sp!, {fp, ip, lr, pc}
-	sub	fp, ip, #4
-	ldmfd	sp, {fp, sp, pc}
+
+	@msr cpsr_c, #19 @ Supervisor Mode
+	@ldmfd sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, sl, fp, ip, lr, pc} @ Reload kernel state
 	.size	kernel_enter, .-kernel_enter
 	.ident	"GCC: (GNU) 4.0.2"

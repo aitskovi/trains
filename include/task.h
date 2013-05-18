@@ -33,6 +33,11 @@ typedef struct Task {
     unsigned int spsr;
 
     /**
+     * The stored pc for the task.
+     */
+    void *pc;
+
+    /**
      * The stack for this task.
      */
     unsigned char stack[STACK_SIZE];
@@ -40,5 +45,8 @@ typedef struct Task {
 
 void task_print(Task *t);
 void task_create(Task *t, void (*code)());
+int *task_get_sp(Task *t);
+unsigned int task_get_spsr(Task *t);
+void *task_get_pc(Task *t);
 
 #endif
