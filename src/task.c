@@ -2,17 +2,17 @@
 
 #include <bwio.h>
 
-#define SL 10
-#define FP 11
-#define IP 12
-#define LR 13
+#define SL 6
+#define FP 7
+#define IP 8
+#define LR 9
 
 #define USER_MODE_FLAG 0x10
 
 void task_create(Task *t, void (*code)()) {
    t->tid = 1; 
    t->sp = (int *) (t->stack + STACK_SIZE);
-   t->sp -= 14; // Make room for 14 registers
+   t->sp -= 10; // Make room for 14 registers
 
    asm(
         "mrs %[status_register], cpsr"
@@ -22,7 +22,7 @@ void task_create(Task *t, void (*code)()) {
    t->spsr = ((t->spsr >> 5) << 5) | USER_MODE_FLAG;
 
    int i;
-   for (i = 0; i < 10; ++i) {
+   for (i = 0; i < 6; ++i) {
        t->sp[i] = 0;
    }
 
@@ -44,6 +44,21 @@ unsigned int task_get_spsr(Task *t) {
 
 void * task_get_pc(Task *t) {
 	return t->pc;
+}
+
+void task_save_pc(Task *t, void *pc) {
+	t->pc = pc;
+	bwprintf(COM2, "Saved pc: %x\n", t->pc);
+}
+
+void task_save_sp(Task *t, int *sp) {
+	t->sp = sp;
+	bwprintf(COM2, "Saved sp: %x\n", t->sp);
+}
+
+void task_save_spsr(Task *t, unsigned int spsr) {
+	t->spsr = spsr;
+	bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
 }
 
 void task_print(Task *t) {

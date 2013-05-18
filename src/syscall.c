@@ -1,11 +1,8 @@
 #include <bwio.h>
 
 int syscall(unsigned int number) {
-    asm("mov r7, %[syscall_number]" "\n\t"
-        "swi 0" "\n\t"
-        :
-        : [syscall_number] "r" (number)
-        : "r7");
+    asm("mov r0, #255" "\n\t"
+    	"swi 0" "\n\t");
 
     return 0;
 }

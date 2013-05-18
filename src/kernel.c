@@ -17,10 +17,12 @@ void interrupt() {
  * Simple One Function User Task.
  */
 void hello() {
-    bwprintf(COM2, "Hello: Initializing\n\r");
-    bwprintf(COM2, "Hello: Pre-Syscall");
+    bwprintf(COM2, "Hello: Initializing\n");
+    while (1) {
+    bwprintf(COM2, "Hello: Pre-Syscall\n");
     syscall(1);
-    bwprintf(COM2, "Hello: Post-Syscall");
+    bwprintf(COM2, "Hello: Post-Syscall\n");
+    }
 }
 
 void initialize_kernel() {
@@ -29,15 +31,15 @@ void initialize_kernel() {
     void (**syscall_handler)() = 0x28;
     *syscall_handler = &kernel_enter;
 
-    bwprintf(COM2, "Creating Task!\n\r");
-    bwprintf(COM2, "Hello is %x\n\r", hello);
+    bwprintf(COM2, "Creating Task!\n");
+    bwprintf(COM2, "Hello is %x\n", hello);
     task_create(&tasks[0], hello);
-    bwprintf(COM2, "Task Created!\n\r");
+    bwprintf(COM2, "Task Created!\n");
     task_print(&tasks[0]);
 }
 
-void handle (Request *req) {
-	bwprintf(COM2, "Back in da Kernel!\n\r");
+void handle (unsigned int req) {
+	bwprintf(COM2, "Back in da Kernel with req %x!\n", req);
 }
 
 Task *schedule () {
@@ -47,13 +49,13 @@ Task *schedule () {
 int main() {
     initialize_kernel();
 
-    bwprintf(COM2, "Kernel Initialized\n\r");
+    bwprintf(COM2, "Kernel Initialized\n");
 
-    unsigned int i; Request req;
+    unsigned int i; unsigned int req;
     for( i = 0; i < 4; i++ ) {
     	active = schedule();
-    	kernel_exit( active, &req );
-    	handle( &req );
+    	req = kernel_exit( active );
+    	handle( req );
     }
 
     return 0;

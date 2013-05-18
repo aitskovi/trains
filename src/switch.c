@@ -3,7 +3,7 @@
 #include <request.h>
 #include <task.h>
 
-void kernel_exit( Task *active, Request *req ) {
+unsigned int kernel_exit(Task *active) {
 	bwprintf( COM2, "In kernel_exit\n\r" );
 	bwprintf( COM2, "kernel_exit activating\n\r" );
 	kernel_enter( );

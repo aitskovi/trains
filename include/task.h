@@ -48,5 +48,8 @@ void task_create(Task *t, void (*code)());
 int *task_get_sp(Task *t);
 unsigned int task_get_spsr(Task *t);
 void *task_get_pc(Task *t);
+void task_save_pc(Task *t, void *pc);
+void task_save_sp(Task *t, int *sp);
+void task_save_spsr(Task *t, unsigned int spsr);
 
 #endif
