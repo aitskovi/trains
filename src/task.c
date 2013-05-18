@@ -34,12 +34,16 @@ void task_create(Task *t, void (*code)()) {
    t->pc = code;
 }
 
-void task_set_returnvalue (Task *t, unsigned int value) {
+void task_set_return_value (Task *t, int value) {
 	t->return_value = value;
 }
 
 int *task_get_sp(Task *t) {
 	return t->sp;
+}
+
+int task_get_return_value(Task *t) {
+	return t->return_value;
 }
 
 unsigned int task_get_spsr(Task *t) {

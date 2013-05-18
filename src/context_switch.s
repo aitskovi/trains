@@ -47,12 +47,16 @@ kernel_exit:
 	msr spsr, r0 @ Save spsr
 
 	ldr r0, [fp, #-20] @ Load address of TD
+	bl task_get_return_value(PLT) @ Get return value from TD
+	mov r4, r0
+
+	ldr r0, [fp, #-20] @ Load address of TD
 	bl task_get_pc(PLT) @ Get pc from TD
 	mov r14, r0
 
 	msr cpsr_c, #31 @ Change to system state
-
 	mov sp, r5 @ Install stack pointer of regular process
+	mov r0, r4 @ Install return value
 	ldmfd sp!, {r4, r5, r6, r7, r8, r9, sl, fp, ip, lr} @ Reload user registers
 
 	msr cpsr_c, #19 @ Change to svc state

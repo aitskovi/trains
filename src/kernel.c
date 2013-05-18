@@ -42,7 +42,7 @@ void handle (Task *task, Request *req) {
 	switch (req->request) {
 	case 1:
 		bwprintf(COM2, "Got MyTidRequest with argument %d", req->args[0]);
-		task_set_returnvalue(task, task->tid + req->args[0]);
+		task_set_return_value(task, task->tid + req->args[0]);
 		break;
 	default:
 		bwprintf(COM2, "Undefined request number %u\n", req->request);

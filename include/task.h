@@ -40,7 +40,7 @@ typedef struct Task {
     /**
      * The return value to a syscall
      */
-    unsigned int return_value;
+    int return_value;
 
     /**
      * The stack for this task.
@@ -56,6 +56,7 @@ void *task_get_pc(Task *t);
 void task_save_pc(Task *t, void *pc);
 void task_save_sp(Task *t, int *sp);
 void task_save_spsr(Task *t, unsigned int spsr);
-void task_set_returnvalue (Task *t, unsigned int value);
+void task_set_return_value (Task *t, int value);
+int task_get_return_value(Task *t);
 
 #endif
