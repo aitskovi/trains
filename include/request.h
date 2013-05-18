@@ -3,7 +3,7 @@
 
 typedef struct Request {
 	unsigned int request;
-	void *args[4];
+	void *args[5];
 	int response;
 } Request;
 

@@ -1,15 +1,18 @@
 #include <bwio.h>
+#include <request.h>
 
-int syscall(unsigned int number) {
-    asm("mov r0, #255" "\n\t"
-    	"swi 0" "\n\t");
+#define MY_TID_CALL_NO 1
 
-    return 0;
+int syscall(Request *req) {
+    asm("mov r0, %[request]" "\n\t"
+    	"swi 0" "\n\t"
+    	:
+    	: [request] "r" (req));
 }
 
-void software_interrupt() {
-    unsigned int number;
-    asm("mov %[syscall_number], r7" : [syscall_number] "=r" (number) :);
-    bwprintf(COM2, "Recieved System Call: %d\n\r", number);
+int MyTid(unsigned int specialNumber) {
+	Request req;
+	req.request = MY_TID_CALL_NO;
+	req.args[0] = specialNumber;
+	return syscall(&req);
 }
-

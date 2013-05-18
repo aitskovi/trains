@@ -20,8 +20,8 @@ void hello() {
     bwprintf(COM2, "Hello: Initializing\n");
     while (1) {
     bwprintf(COM2, "Hello: Pre-Syscall\n");
-    syscall(1);
-    bwprintf(COM2, "Hello: Post-Syscall\n");
+    int return_value = MyTid(666);
+    bwprintf(COM2, "Hello: Post-Syscall returned value was %u\n", return_value);
     }
 }
 
@@ -38,8 +38,16 @@ void initialize_kernel() {
     task_print(&tasks[0]);
 }
 
-void handle (unsigned int req) {
-	bwprintf(COM2, "Back in da Kernel with req %x!\n", req);
+void handle (Task *task, Request *req) {
+	switch (req->request) {
+	case 1:
+		bwprintf(COM2, "Got MyTidRequest with argument %d", req->args[0]);
+		task_set_returnvalue(task, task->tid + req->args[0]);
+		break;
+	default:
+		bwprintf(COM2, "Undefined request number %u\n", req->request);
+		break;
+	}
 }
 
 Task *schedule () {
@@ -55,7 +63,7 @@ int main() {
     for( i = 0; i < 4; i++ ) {
     	active = schedule();
     	req = kernel_exit( active );
-    	handle( req );
+    	handle( active, req );
     }
 
     return 0;
