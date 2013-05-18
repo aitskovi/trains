@@ -2,14 +2,9 @@
 #define _SWITCH_H_
 
 struct Task;
+struct Request;
 
-struct Request {
-    unsigned int syscall;
-    int result;
-    void *args;
-};
-
-void kernel_exit(struct Task *t);
-void kernel_enter(struct Task *t);
+void kernel_exit(struct Task *t, struct Request *req);
+void kernel_enter();
 
 #endif

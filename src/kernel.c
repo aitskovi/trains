@@ -2,6 +2,12 @@
 #include <switch.h>
 #include <syscall.h>
 #include <task.h>
+#include <request.h>
+
+#define MAX_TASKS 4
+
+static Task tasks[MAX_TASKS];
+static Task *active;
 
 void interrupt() {
     bwprintf(COM2, "Hello Interrupt!");
@@ -17,23 +23,38 @@ void hello() {
     bwprintf(COM2, "Hello: Post-Syscall");
 }
 
-int main() {
-    bwsetfifo(COM2, OFF);
-    bwprintf(COM2, "Hello World!\n\r");
+void initialize_kernel() {
+	bwsetfifo(COM2, OFF);
 
     void (**syscall_handler)() = 0x28;
     *syscall_handler = &kernel_enter;
 
-    //syscall(1);
-
-    Task t;
     bwprintf(COM2, "Creating Task!\n\r");
-    task_create(&t, hello);
-    bwprintf(COM2, "Task Created!\n\r");
     bwprintf(COM2, "Hello is %x\n\r", hello);
-    task_print(&t);
-    kernel_exit(&t);
-    bwprintf(COM2, "Back in da Kernel!\n\r");
+    task_create(&tasks[0], hello);
+    bwprintf(COM2, "Task Created!\n\r");
+    task_print(&tasks[0]);
+}
+
+void handle (Request *req) {
+	bwprintf(COM2, "Back in da Kernel!\n\r");
+}
+
+Task *schedule () {
+	return &tasks[0];
+}
+
+int main() {
+    initialize_kernel();
+
+    bwprintf(COM2, "Kernel Initialized\n\r");
+
+    unsigned int i; Request req;
+    for( i = 0; i < 4; i++ ) {
+    	active = schedule();
+    	kernel_exit( active, &req );
+    	handle( &req );
+    }
 
     return 0;
 }

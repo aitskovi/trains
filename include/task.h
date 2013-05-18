@@ -22,11 +22,6 @@ typedef struct Task {
     // enum TASK_STATE state;
 
     /**
-     * The stack for this task.
-     */
-    int stack[STACK_SIZE];
-
-    /**
      * The stack pointer for the task.
      */
     int *sp;
@@ -36,6 +31,11 @@ typedef struct Task {
      * Do we really need to save this?
      */
     unsigned int spsr;
+
+    /**
+     * The stack for this task.
+     */
+    unsigned char stack[STACK_SIZE];
 } Task;
 
 void task_print(Task *t);

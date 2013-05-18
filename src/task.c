@@ -9,7 +9,9 @@
 
 void task_create(Task *t, void (*code)()) {
    t->tid = 1; 
-   t->sp = t->stack + STACK_SIZE - 14;
+   t->sp = (int *) (t->stack + STACK_SIZE);
+   t->sp -= 14; // Make room for 14 registers
+
    asm(
         "mrs %[status_register], spsr"
         : [status_register] "=r" (t->spsr) 
@@ -21,10 +23,10 @@ void task_create(Task *t, void (*code)()) {
        t->sp[i] = 0;
    }
 
-   t->sp[SL] = t->stack + STACK_SIZE;
+   t->sp[SL] = (unsigned int) (t->stack + STACK_SIZE);
    t->sp[IP] = 0;
    t->sp[FP] = t->sp[SL];
-   t->sp[LR] = code;
+   t->sp[LR] = (unsigned int) code;
 }
 
 void task_print(Task *t) {

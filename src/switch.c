@@ -1,8 +1,20 @@
 #include <switch.h>
 #include <bwio.h>
-
+#include <request.h>
 #include <task.h>
 
+void kernel_exit( Task *active, Request *req ) {
+	bwprintf( COM2, "In kernel_exit\n\r" );
+	bwprintf( COM2, "kernel_exit activating\n\r" );
+	kernel_enter( );
+	bwprintf( COM2, "exiting kernel_exit\n\r" );
+}
+
+void kernel_enter() {
+
+}
+
+/*
 void kernel_exit(Task *task) {
     // Push the registers onto the kernel stack.
     asm(
@@ -29,8 +41,6 @@ void kernel_enter(Task *t) {
     asm(
         "ldmia sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, sl, fp, ip, lr}" "\n\t" // Unbackup.
        );
-
-    //unsigned int number;
-    //asm("mov %[syscall_number], r7" : [syscall_number] "=r" (number) :);
-    //bwprintf(COM2, "Recieved System Call: %d\n\r", number);
 }
+*/
+
