@@ -8,14 +8,11 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o syscall.o task.o
+OBJECTS = bwio.o scheduling.o circular_queue.o task.o
 
 all: kernel.elf 
 
 .SUFFIXES:
-	
-
-.SECONDARY:
 	
 
 DEPS = $(OBJECTS:.o=.depends)
@@ -29,7 +26,7 @@ DEPS = $(OBJECTS:.o=.depends)
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-kernel.elf : kernel.o context_switch.o $(OBJECTS)
+kernel.elf : kernel.o context_switch.o syscall.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 test : test.o $(OBJECTS)
