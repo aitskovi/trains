@@ -22,6 +22,8 @@ void hello() {
         bwprintf(COM2, "Hello: Post-Syscall returned value was %u\n", return_value);
         int parent_tid = MyParentTid();
         bwprintf(COM2, "My Parent Tid is: %d\n", parent_tid);
+        Pass();
+        bwprintf(COM2, "Passing\n");
     }
 }
 
@@ -56,6 +58,9 @@ int handle(Task *task, Request *req) {
     case MY_PARENT_TID:
         bwprintf(COM2, "Got ParentTid System Call\n");
         task_set_return_value(task, task->parent_tid);
+        break;
+    case PASS:
+        bwprintf(COM2, "Got Pass System Call\n");
         break;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);

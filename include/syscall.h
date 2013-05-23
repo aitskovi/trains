@@ -7,6 +7,7 @@ enum syscall_number {
     CREATE,
     MY_TID,
     MY_PARENT_TID,
+    PASS,
     NUM_SYSCALLS,
 };
 
@@ -18,5 +19,6 @@ int syscall(struct Request *req);
 int MyTid(unsigned int specialNumber);
 int MyParentTid();
 int Create(int priority, void(*code)());
+void Pass();
 
 #endif

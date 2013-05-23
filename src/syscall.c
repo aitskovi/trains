@@ -29,3 +29,9 @@ int Create(int priority, void(*code)()) {
     req.args[1] = code;
     return syscall(&req);
 }
+
+void Pass() {
+    Request req;
+    req.request = PASS;
+    syscall(&req);
+}
