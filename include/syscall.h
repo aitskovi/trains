@@ -3,13 +3,18 @@
 
 struct Request;
 
+enum syscall_number {
+    CREATE,
+    MY_TID,
+    NUM_SYSCALLS
+};
+
 /**
  * Perform a syscall with the following number.
  */
 int syscall(struct Request *req);
 
 int MyTid(unsigned int specialNumber);
-
-void software_interrupt();
+int Create(int priority, void(*code)());
 
 #endif

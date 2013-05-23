@@ -35,9 +35,16 @@ void initialize_kernel() {
 
 void handle(Task *task, Request *req) {
     switch (req->request) {
-    case 1:
-        bwprintf(COM2, "Got MyTidRequest with argument %d", req->args[0]);
-        task_set_return_value(task, task->tid + req->args[0]);
+    case MY_TID:
+        bwprintf(COM2, "Got MyTidRequest");
+        task_set_return_value(task, task->tid);
+        break;
+    case CREATE:
+        bwprintf(COM2, "Got Create System Call with priority: %d, code: %x\n\r",
+                req->args[0], req->args[1]);
+        Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
+        make_ready(child);
+        task_set_return_value(task, task->tid);
         break;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);
