@@ -36,6 +36,6 @@ clean:
 	-rm -f *.elf *.o kernel.map test
 
 install: kernel.elf
-	-cp kernel.elf /u/cs452/tftp/ARM/aianus/
+	-cp kernel.elf /u/cs452/tftp/ARM/ai/
 
 -include $(DEPS)
