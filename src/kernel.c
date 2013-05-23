@@ -35,7 +35,12 @@ void initialize_kernel() {
     initialize_tasks();
 }
 
-void handle(Task *task, Request *req) {
+/**
+ * Handles a request for a task.
+ *
+ * Returns an integer defining whether a task should be rescheduled.
+ */
+int handle(Task *task, Request *req) {
     switch (req->request) {
     case MY_TID:
         bwprintf(COM2, "Got MyTidRequest");
@@ -56,6 +61,8 @@ void handle(Task *task, Request *req) {
         bwprintf(COM2, "Undefined request number %u\n", req->request);
         break;
     }
+
+    return 0;
 }
 
 int main() {
@@ -75,8 +82,8 @@ int main() {
     for (i = 0; i < 4; i++) {
         active = schedule();
         req = kernel_exit(active);
-        handle(active, req);
-        make_ready(active);
+        int should_reschedule = handle(active, req);
+        if (should_reschedule == 0) make_ready(active);
     }
 
     return 0;
