@@ -10,7 +10,7 @@ int syscall(Request *req) {
     	: [request] "r" (req));
 }
 
-int MyTid(unsigned int specialNumber) {
+int MyTid() {
 	Request req;
 	req.request = MY_TID;
 	return syscall(&req);
@@ -24,7 +24,7 @@ int MyParentTid() {
 
 int Create(int priority, void(*code)()) {
     Request req;
-    req.request = MY_TID;
+    req.request = CREATE;
     req.args[0] = priority;
     req.args[1] = code;
     return syscall(&req);

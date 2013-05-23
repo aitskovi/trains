@@ -4,6 +4,7 @@
 #include <task.h>
 #include <request.h>
 #include <scheduling.h>
+#include <user.h>
 
 static Task *active;
 
@@ -18,7 +19,7 @@ void hello() {
     bwprintf(COM2, "Hello: Initializing\n");
     while (1) {
         bwprintf(COM2, "Hello: Pre-Syscall\n");
-        int return_value = MyTid(666);
+        int return_value = MyTid();
         bwprintf(COM2, "Hello: Post-Syscall returned value was %u\n", return_value);
         int parent_tid = MyParentTid();
         bwprintf(COM2, "My Parent Tid is: %d\n", parent_tid);
@@ -47,7 +48,7 @@ void initialize_kernel() {
 int handle(Task *task, Request *req) {
     switch (req->request) {
     case MY_TID:
-        bwprintf(COM2, "Got MyTidRequest");
+        //bwprintf(COM2, "Got MyTidRequest");
         task_set_return_value(task, task->tid);
         break;
     case CREATE:
@@ -55,17 +56,17 @@ int handle(Task *task, Request *req) {
                 req->args[0], req->args[1]);
         Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
         make_ready(child);
-        task_set_return_value(task, task->tid);
+        task_set_return_value(task, child->tid);
         break;
     case MY_PARENT_TID:
-        bwprintf(COM2, "Got ParentTid System Call\n");
+        //bwprintf(COM2, "Got ParentTid System Call\n");
         task_set_return_value(task, task->parent_tid);
         break;
     case PASS:
-        bwprintf(COM2, "Got Pass System Call\n");
+        //bwprintf(COM2, "Got Pass System Call\n");
         break;
     case EXIT:
-        bwprintf(COM2, "Got Exit System Call\n");
+        //bwprintf(COM2, "Got Exit System Call\n");
         return -1;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);
@@ -80,10 +81,10 @@ int main() {
 
     bwprintf(COM2, "Kernel Initialized\n");
 
-    bwprintf(COM2, "Creating Task!\n");
-    bwprintf(COM2, "Hello is %x\n", hello);
-    active = task_create(hello, 0, MEDIUM);
-    bwprintf(COM2, "Task Created!\n");
+    //bwprintf(COM2, "Creating Task!\n");
+    //bwprintf(COM2, "Hello is %x\n", hello);
+    active = task_create(first, 0, MEDIUM);
+    //bwprintf(COM2, "Task Created!\n");
     task_print(active);
 
     make_ready(active);
