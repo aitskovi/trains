@@ -1,6 +1,6 @@
-CC      = gcc
-AS		= as
-LD      = gcc
+CC      = /usr/bin/gcc
+AS		= /usr/bin/as
+LD      = /usr/bin/gcc
 CFLAGS  = -g -c -fPIC -fno-builtin -Wall -I. -I../include
 # -g: include hooks for gdb
 # -c: only compile

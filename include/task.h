@@ -1,14 +1,11 @@
 #ifndef _TASK_H_
 #define _TASK_H_
 
-/*
-enum TASK_STATE {
-    TASK_ACTIVE,
-    TASK_READY,
-};
-*/
+#include <scheduling.h>
 
 #define STACK_SIZE 1048576 // 1mb stack
+
+#define MAX_TASKS 4
 
 typedef struct Task {
     /**
@@ -43,13 +40,23 @@ typedef struct Task {
     int return_value;
 
     /**
+     * The parent tid of the task
+     */
+    unsigned int parent_tid;
+
+    /**
+     * The priority of the task
+     */
+    enum task_priority priority;
+
+    /**
      * The stack for this task.
      */
     unsigned char stack[STACK_SIZE];
 } Task;
 
 void task_print(Task *t);
-void task_create(Task *t, void (*code)());
+Task * task_create(void (*code)(), unsigned int parent_tid, enum task_priority priority);
 int *task_get_sp(Task *t);
 unsigned int task_get_spsr(Task *t);
 void *task_get_pc(Task *t);
@@ -58,5 +65,6 @@ void task_save_sp(Task *t, int *sp);
 void task_save_spsr(Task *t, unsigned int spsr);
 void task_set_return_value (Task *t, int value);
 int task_get_return_value(Task *t);
+void initialize_tasks();
 
 #endif
