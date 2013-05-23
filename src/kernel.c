@@ -20,6 +20,8 @@ void hello() {
         bwprintf(COM2, "Hello: Pre-Syscall\n");
         int return_value = MyTid(666);
         bwprintf(COM2, "Hello: Post-Syscall returned value was %u\n", return_value);
+        int parent_tid = MyParentTid();
+        bwprintf(COM2, "My Parent Tid is: %d\n", parent_tid);
     }
 }
 
@@ -45,6 +47,10 @@ void handle(Task *task, Request *req) {
         Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
         make_ready(child);
         task_set_return_value(task, task->tid);
+        break;
+    case MY_PARENT_TID:
+        bwprintf(COM2, "Got ParentTid System Call\n");
+        task_set_return_value(task, task->parent_tid);
         break;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);

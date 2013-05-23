@@ -16,6 +16,12 @@ int MyTid(unsigned int specialNumber) {
 	return syscall(&req);
 }
 
+int MyParentTid() {
+    Request req;
+    req.request = MY_PARENT_TID;
+    return syscall(&req);
+}
+
 int Create(int priority, void(*code)()) {
     Request req;
     req.request = MY_TID;

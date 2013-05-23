@@ -6,7 +6,8 @@ struct Request;
 enum syscall_number {
     CREATE,
     MY_TID,
-    NUM_SYSCALLS
+    MY_PARENT_TID,
+    NUM_SYSCALLS,
 };
 
 /**
@@ -15,6 +16,7 @@ enum syscall_number {
 int syscall(struct Request *req);
 
 int MyTid(unsigned int specialNumber);
+int MyParentTid();
 int Create(int priority, void(*code)());
 
 #endif
