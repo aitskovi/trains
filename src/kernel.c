@@ -24,6 +24,8 @@ void hello() {
         bwprintf(COM2, "My Parent Tid is: %d\n", parent_tid);
         Pass();
         bwprintf(COM2, "Passing\n");
+        bwprintf(COM2, "Exiting!\n");
+        Exit();
     }
 }
 
@@ -62,6 +64,9 @@ int handle(Task *task, Request *req) {
     case PASS:
         bwprintf(COM2, "Got Pass System Call\n");
         break;
+    case EXIT:
+        bwprintf(COM2, "Got Exit System Call\n");
+        return -1;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);
         break;
@@ -83,9 +88,8 @@ int main() {
 
     make_ready(active);
 
-    unsigned int i, req;
-    for (i = 0; i < 4; i++) {
-        active = schedule();
+    Request *req;
+    while((active = schedule())) {
         req = kernel_exit(active);
         int should_reschedule = handle(active, req);
         if (should_reschedule == 0) make_ready(active);

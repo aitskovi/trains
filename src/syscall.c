@@ -35,3 +35,9 @@ void Pass() {
     req.request = PASS;
     syscall(&req);
 }
+
+void Exit() {
+    Request req;
+    req.request = EXIT;
+    syscall(&req);
+}

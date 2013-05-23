@@ -8,6 +8,7 @@ enum syscall_number {
     MY_TID,
     MY_PARENT_TID,
     PASS,
+    EXIT,
     NUM_SYSCALLS,
 };
 
@@ -20,5 +21,6 @@ int MyTid(unsigned int specialNumber);
 int MyParentTid();
 int Create(int priority, void(*code)());
 void Pass();
+void Exit();
 
 #endif
