@@ -37,7 +37,5 @@ clean:
 
 install: kernel.elf
 	-cp kernel.elf /u/cs452/tftp/ARM/ai/
-	-chown aitskovi:cs452_06 /u/cs452/tftp/ARM/ai/kernel.elf
-	-chmod g+rwx /u/cs452/tftp/ARM/ai/kernel.elf
 
 -include $(DEPS)
