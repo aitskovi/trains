@@ -55,8 +55,12 @@ int handle(Task *task, Request *req) {
         bwprintf(COM2, "Got Create System Call with priority: %d, code: %x\n\r",
                 req->args[0], req->args[1]);
         Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
-        make_ready(child);
-        task_set_return_value(task, child->tid);
+        if (!child) {
+            task_set_return_value(task, -2);
+        } else {
+            make_ready(child);
+            task_set_return_value(task, child->tid);
+        }
         break;
     case MY_PARENT_TID:
         //bwprintf(COM2, "Got ParentTid System Call\n");

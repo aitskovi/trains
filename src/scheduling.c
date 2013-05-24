@@ -6,6 +6,7 @@
  */
 
 #include <scheduling.h>
+
 #include <task.h>
 #include <circular_queue.h>
 

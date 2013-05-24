@@ -13,6 +13,9 @@ static struct Task tasks[MAX_TASKS];
 static unsigned int next_tid = 0;
 
 Task * task_create(void (*code)(), unsigned int parent_tid, enum task_priority priority) {
+    // Don't go off the end of the task array.
+    if (next_tid == MAX_TASKS) return 0;
+
     Task *t = &tasks[next_tid++];
 
     t->tid = next_tid - 1;
