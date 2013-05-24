@@ -33,7 +33,7 @@ void hello() {
 void initialize_kernel() {
     bwsetfifo(COM2, OFF);
 
-    void (**syscall_handler)() = 0x28;
+    void (**syscall_handler)() = (void (**)())0x28;
     *syscall_handler = &kernel_enter;
 
     initialize_scheduling();

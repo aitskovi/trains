@@ -8,6 +8,9 @@ int syscall(Request *req) {
     	"swi 0" "\n\t"
     	:
     	: [request] "r" (req));
+
+    register int retval asm("r0");
+    return retval;
 }
 
 int MyTid() {
@@ -25,7 +28,7 @@ int MyParentTid() {
 int Create(int priority, void(*code)()) {
     Request req;
     req.request = CREATE;
-    req.args[0] = priority;
+    req.args[0] = (void *)priority;
     req.args[1] = code;
     return syscall(&req);
 }
