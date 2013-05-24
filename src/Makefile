@@ -33,7 +33,7 @@ test : test.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
-	-rm -f *.elf *.o kernel.map test
+	-rm -f *.elf *.o kernel.map test `find ./*.s ! -name context_switch.s`
 
 install: kernel.elf
 	-cp kernel.elf /u/cs452/tftp/ARM/ai/
