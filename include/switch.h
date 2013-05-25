@@ -4,7 +4,7 @@
 struct Task;
 struct Request;
 
-unsigned int kernel_exit(struct Task *t);
+struct Request *kernel_exit(struct Task *t);
 void kernel_enter();
 
 #endif
