@@ -6,6 +6,7 @@
  */
 
 #include <scheduling.h>
+
 #include <task.h>
 #include <circular_queue.h>
 
@@ -24,7 +25,7 @@ Task * schedule () {
     unsigned int i;
     Task *result;
     for (i = 0; i < NUM_PRIORITIES; ++i) {
-        if (result = circular_queue_pop(&ready_queues[i])) {
+        if ((result = circular_queue_pop(&ready_queues[i]))) {
             return result;
         }
     }

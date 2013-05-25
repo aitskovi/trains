@@ -13,6 +13,9 @@ static struct Task tasks[MAX_TASKS];
 static unsigned int next_tid = 0;
 
 Task * task_create(void (*code)(), unsigned int parent_tid, enum task_priority priority) {
+    // Don't go off the end of the task array.
+    if (next_tid == MAX_TASKS) return 0;
+
     Task *t = &tasks[next_tid++];
 
     t->tid = next_tid - 1;
@@ -59,17 +62,17 @@ void * task_get_pc(Task *t) {
 
 void task_save_pc(Task *t, void *pc) {
     t->pc = pc;
-    bwprintf(COM2, "Saved pc: %x\n", t->pc);
+    //bwprintf(COM2, "Saved pc: %x\n", t->pc);
 }
 
 void task_save_sp(Task *t, int *sp) {
     t->sp = sp;
-    bwprintf(COM2, "Saved sp: %x\n", t->sp);
+    //bwprintf(COM2, "Saved sp: %x\n", t->sp);
 }
 
 void task_save_spsr(Task *t, unsigned int spsr) {
     t->spsr = spsr;
-    bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
+    //bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
 }
 
 void task_print(Task *t) {

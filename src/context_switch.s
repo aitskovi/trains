@@ -29,12 +29,12 @@ kernel_exit:
 	ldr	r3, .L4+4
 	add	r3, sl, r3
 	mov	r1, r3
-	bl	bwprintf(PLT)
+	#bl	bwprintf(PLT)
 	mov	r0, #1
 	ldr	r3, .L4+8
 	add	r3, sl, r3
 	mov	r1, r3
-	bl	bwprintf(PLT)
+	#bl	bwprintf(PLT)
 
 	stmfd sp!, {r6, r7, r8, r9, sl, fp, ip, lr} @ Store kernel registers
 
@@ -122,7 +122,7 @@ kernel_enter:
 	ldr	r3, .L4+12
 	add	r3, sl, r3
 	mov	r1, r3
-	bl	bwprintf(PLT)
+	#bl	bwprintf(PLT)
 
     mov r0, r4
     mov r1, r5

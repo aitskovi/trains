@@ -18,6 +18,7 @@
 
 # Byproducts
 *.s
+!context_switch.s
 *.map
 *.depends
 *.elf
