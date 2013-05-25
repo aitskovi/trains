@@ -50,10 +50,10 @@ int handle(Task *task, Request *req) {
     case CREATE:
         //bwprintf(COM2, "Got Create System Call with priority: %d, code: %x\n\r",
                 //req->args[0], req->args[1]);
-    	if ((int) req->args[0] < 0 || (int) req->args[0] > NUM_PRIORITIES) {
-    		task_set_return_value(task, -1);
-    		return 0;
-    	}
+        if ((int) req->args[0] < 0 || (int) req->args[0] > NUM_PRIORITIES) {
+            task_set_return_value(task, -1);
+            return 0;
+        }
         Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
         if (!child) {
             task_set_return_value(task, -2);
