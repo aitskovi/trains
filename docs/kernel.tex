@@ -1,0 +1,47 @@
+\documentclass{article}
+
+\title{CS 452 Kernel Documentation}
+\author{Avi Itskovich, 20332164}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+This documentation covers the implementation of the Kernel for Assignment 1. This includes basic scheduling, context switching and task creation. The provided system calls are:
+\begin{itemize}
+  \item int Create(int priority, (void *code)())
+  \item int MyTid()
+  \item int MyParentTid()
+  \item void Pass()
+  \item void Exit()
+\end{itemize}
+The kernel runs the user task defined by the assignment, and provides the requested output.
+
+\section{Operating Instructions}
+\begin{enumerate}
+  \item load -b 0x00218000 -h 129.97.167.12 "ARM/ai/kernel1.elf"
+  \item go
+\end{enumerate}
+
+\section{Kernel Description}
+
+\subsection{Tasks}
+
+\subsection{Context Switch}
+
+\subsection{System Calls}
+
+A system call can be divided into two parts. The user mode function that uses swi to enter the kernel, and kernel mode function that performs the required operations. In our system we use a Request structure to move information between these two areas. Although we originally expected to simply pass the arguments through the registers, we realized that some system calls in later assignments used more than 4 arguments. Using more than 4 arguments requires the placement of arguments on the stack. Instead of fighting with GCC, we decided to marshal the contents of the system call into the request structure before passing it through as our only argument. The request structure encapsulates both the system call number, as well as the arguments passed in. Inside the kernel, we handle the request by switching on the system call number, and doing the proper computation afterwards. Once the result is generated, we set the return value inside the task, which is then transmitted back in the next context switch to that task.
+
+Note that we've considered the performance implications of wrapping up the data in a Request structure. It currently vastly simplifies our code, so we would like to maintain  it until we find that it's a performance problem.
+
+\subsection{Scheduling}
+
+\subsection{Known Bugs}
+\begin{itemize}
+  \item Our system can only currently handle 5 concurrent tasks.
+\end{itemize}
+
+\end{document}
