@@ -25,3 +25,9 @@
 
 # Vim Files
 *.swp
+
+# PDF Files
+*.aux
+*.pdf
+*.log
+*.gz
