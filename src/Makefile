@@ -8,7 +8,7 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o scheduling.o circular_queue.o task.o memory.o
+OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o
 
 all: kernel.elf 
 
