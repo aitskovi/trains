@@ -8,9 +8,11 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o scheduling.o circular_queue.o task.o user.o
+OBJECTS = bwio.o scheduling.o circular_queue.o task.o
 
 all: kernel.elf 
+
+tests: test circular_queue_tests
 
 .SUFFIXES:
 
@@ -27,10 +29,13 @@ DEPS = $(OBJECTS:.o=.depends)
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-kernel.elf : kernel.o context_switch.o syscall.o $(OBJECTS)
+kernel.elf : kernel.o context_switch.o syscall.o user.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 test : test.o $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+circular_queue_tests : circular_queue_tests.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:

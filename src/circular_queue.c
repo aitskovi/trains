@@ -11,8 +11,8 @@
 int circular_queue_push(struct circular_queue *queue, void *data) {
     queue->elements[queue->write_count++ % CIRCULAR_QUEUE_SIZE] = data;
 
-    // Check if we've overrun our queue
-   if ((queue->write_count - queue->read_count) / CIRCULAR_QUEUE_SIZE > 0) {
+   // Check if we've overrun our queue
+   if ((queue->write_count - queue->read_count - 1) / CIRCULAR_QUEUE_SIZE > 0) {
        return -1;
    }
 
