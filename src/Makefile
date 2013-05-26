@@ -13,7 +13,8 @@ OBJECTS = bwio.o scheduling.o circular_queue.o task.o user.o
 all: kernel.elf 
 
 .SUFFIXES:
-	
+
+.SECONDARY:
 
 DEPS = $(OBJECTS:.o=.depends)
 
