@@ -25,9 +25,38 @@ The kernel runs the user task defined by the assignment, and provides the reques
 
 \section{Operating Instructions}
 \begin{enumerate}
-  \item load -b 0x00218000 -h 129.97.167.12 "ARM/ai/kernel1.elf"
+  \item load -b 0x00218000 -h 10.15.167.4 "ARM/ai/kernel1.elf"
   \item go
 \end{enumerate}
+
+\section{Submitted Files}
+\begin{itemize}
+  \item a4e2596082274858565d2979a282471f  /u/aitskovich/cs452/k1/include/bwio.h
+  \item 7a3463e8a5a7fd2920efc5e1bb160b9f  /u/aitskovich/cs452/k1/include/circular\_queue.h
+  \item b044b4c9d77f1d0dd9b7a2961e45a67a  /u/aitskovich/cs452/k1/include/kmemory.h
+  \item 081b58b1ad6e401d9648cb88ffb30301  /u/aitskovich/cs452/k1/include/request.h
+  \item 90dc03978263d9a0f904aa76fa243f1b  /u/aitskovich/cs452/k1/include/scheduling.h
+  \item 7a139daaf3199b29a9fd5eda47ce189e  /u/aitskovich/cs452/k1/include/switch.h
+  \item bce3e5651a8e18cc15ce7994d2353756  /u/aitskovich/cs452/k1/include/syscall.h
+  \item 56e948abbb303da3d07b77c69a36f27e  /u/aitskovich/cs452/k1/include/task.h
+  \item 9af226f127c1fd759530cd45236c37b8  /u/aitskovich/cs452/k1/include/ts7200.h
+  \item c5a29a46e3fa5f281d5114f6ee0e6420  /u/aitskovich/cs452/k1/include/user.h
+  \item db55cf26b7b39728b3f6dc490a2f3744  /u/aitskovich/cs452/k1/src/arm.mk
+  \item 25757ddee6d82a16be926075e04b4972  /u/aitskovich/cs452/k1/src/bwio.c
+  \item 7e851ecfa1b8faa9186a1625bd05a03b  /u/aitskovich/cs452/k1/src/circular\_queue.c
+  \item 3fba02ffe8046a9db99fea23f331dc2e  /u/aitskovich/cs452/k1/src/circular\_queue\_tests.c
+  \item 18f694878a418c8d04d2ac44b9380a79  /u/aitskovich/cs452/k1/src/context\_switch.s
+  \item 5573ed5bb9debc960cda5dbb99176c1a  /u/aitskovich/cs452/k1/src/kernel.c
+  \item e31d42639a3c6f4aa3e6bd74c7a5fd27  /u/aitskovich/cs452/k1/src/Makefile
+  \item 4aa618b9753c5292e5d9e5c95d297f10  /u/aitskovich/cs452/k1/src/orex.ld
+  \item cb127e770cea22148fb2f0233eaca0ca  /u/aitskovich/cs452/k1/src/scheduling.c
+  \item a86e452286c5fec6e8871cd2604e28eb  /u/aitskovich/cs452/k1/src/switch.c
+  \item 8f510e86e79dca63bace625c0188e3ac  /u/aitskovich/cs452/k1/src/syscall.c
+  \item 102b94e6db86abbe4ba9becef5b6e7e5  /u/aitskovich/cs452/k1/src/task.c
+  \item c3b46c3acfa81d47b2e01f9e1a223543  /u/aitskovich/cs452/k1/src/test.c
+  \item 4cd28e770ae68bc84d735f6010d9bf6b  /u/aitskovich/cs452/k1/src/user.c
+  \item 17b79aee81f0e087bb0298b74ae82aae  /u/aitskovich/cs452/k1/src/x86.mk
+\end{itemize}
 
 \section{Kernel Description}
 
@@ -97,4 +126,24 @@ For scheduling, tasks are maintained on an array of circular queues, one for eac
 \end{itemize}
 \end{itemize}
 
+\section{Kernel Output}
+
+Our kernel outputs the following when run:
+\begin{verbatim}
+Created: <1>
+Created: <2>
+My Tid: 3, My Parent Tid: 0
+My Tid: 3, My Parent Tid: 0
+Created: <3>
+My Tid: 4, My Parent Tid: 0
+My Tid: 4, My Parent Tid: 0
+Created: <4>
+First: exiting
+My Tid: 1, My Parent Tid: 0
+My Tid: 2, My Parent Tid: 0
+My Tid: 1, My Parent Tid: 0
+My Tid: 2, My Parent Tid: 0
+\end{verbatim}
+
+The user program first creates two low priority tasks 1 and 2. These two tasks don't run as we continually run the first task which has higher priority then them, until it finishes. Afterwards the Kernel creates a high priority task 3. 3's output comes before it's creation printout because it gets run instead of the first user task, until it complets since it has highest priority. A similar thing occurs with 4. Once all the high priority tasks have finished, the First task finishes and then the low priority tasks are allowed to run. Since both low priority tasks are of the same type, the alternate running (fairness along a priority level).
 \end{document}
