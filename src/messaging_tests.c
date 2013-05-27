@@ -84,7 +84,7 @@ void messaging_recieve_blocking_test() {
     assert(result == 0);
 
     // Try to recieve again. It should come in old buffers.
-    int result = msg_recieve(b, &src, 0, 0);
+    int result = msg_recieve(b, 0, 0, 0);
     assert(src == 0);
     assert(result == 7);
     assert(strcmp(msg, rcvd) == 0);
