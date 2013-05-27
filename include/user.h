@@ -3,5 +3,6 @@
 
 void first();
 void second();
+void kernel_timing();
 
 #endif
