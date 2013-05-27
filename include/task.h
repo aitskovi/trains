@@ -50,9 +50,20 @@ typedef struct Task {
     enum task_priority priority;
 
     /**
+     * The next task in the scheduling queue
+     */
+    struct Task *next;
+
+    /**
+     * The previous task in the scheduling queue
+     */
+    struct Task *prev;
+
+    /**
      * The stack for this task.
      */
     unsigned char stack[STACK_SIZE];
+
 } Task;
 
 void task_print(Task *t);

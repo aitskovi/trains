@@ -23,6 +23,12 @@ DEPS = $(OBJECTS:.o=.depends)
 %.s : %.c
 	$(CC) -S $(CFLAGS) $<
 
+scheduling.s : scheduling.c
+	$(CC) -S $(CFLAGS) -O3 $<
+
+circular_queue.s : circular_queue.c
+	$(CC) -S $(CFLAGS) -O3 $<
+
 %.depends: %.c
 	$(CC) -M $(CFLAGS) $< > $@
 
