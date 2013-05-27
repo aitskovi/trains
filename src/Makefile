@@ -12,7 +12,7 @@ OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o
 
 all: kernel.elf 
 
-tests: test circular_queue_tests
+tests: test circular_queue_tests messaging_tests
 
 .SUFFIXES:
 
@@ -36,6 +36,9 @@ test : test.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
 circular_queue_tests : circular_queue_tests.o $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+messaging_tests: messaging_tests.c $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:

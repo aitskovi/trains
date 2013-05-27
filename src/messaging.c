@@ -18,7 +18,7 @@ static int msg_lengths[MAX_TASKS];
 static char* replies[MAX_TASKS];
 static int reply_lengths[MAX_TASKS];
 
-void initialize_messaging() {
+void messaging_initialize() {
     int i;
     for (i = 0; i < MAX_TASKS; ++i) {
         circular_queue_initialize(&mailboxes[i]);
@@ -30,6 +30,9 @@ void initialize_messaging() {
 }
 
 int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
+    if (msgs[src] != 0 || msg_lengths[src] != 0) return -1;
+    if (replies[src] != 0 || reply_lengths[src] != 0) return -2;
+
     // Put your send buffer in place, and wait.
     msgs[src] = msg;
     msg_lengths[src] = msglen;
@@ -41,8 +44,8 @@ int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
     // Tell the task he has a message from you.
     int error = circular_queue_push(&mailboxes[dst], (void *)src);
     if (error) {
-        bwprintf(COM2, "Error Informing Task: %d of Message from %d", dst, src);
-        return -1;
+        //bwprintf(COM2, "Error Informing Task: %d of Message from %d", dst, src);
+        return -3;
     }
 
     return 0;
@@ -53,7 +56,7 @@ int krecieve(int dst, int *src, char *msg, int msglen) {
 
     // Check if we have a messsage waiting for us.
     if (circular_queue_empty(mailbox)) {
-        bwprintf(COM2, "No Messages!, Let's block\n");
+        //bwprintf(COM2, "No Messages!, Let's block\n");
         return -1;
     }
 
@@ -73,8 +76,8 @@ int krecieve(int dst, int *src, char *msg, int msglen) {
 
 int kreply(int tid, char *reply, int replylen) {
     // Ensure we're waiting for a reply, and not send blocked or not blocked at all.
-    if (msgs[tid] != 0 && reply_lengths !=0) return -1;
-    if (replies[tid] == 0 && reply_lengths[tid] == 0) return -2;
+    if (msgs[tid] != 0 || msg_lengths[tid] !=0) return -1;
+    if (replies[tid] == 0 || reply_lengths[tid] == 0) return -2;
 
     // Write data into the waiting task's buffer.
     replylen = min(replylen, reply_lengths[tid]);

@@ -1,6 +1,8 @@
 #ifndef _MESSAGING_H_
 #define _MESSAGING_H_
 
+void messaging_initialize();
+
 /**
  * Send a message from a src to destination.
  *
@@ -13,7 +15,7 @@
  *
  * @return Result of the send comand. Can be either
  *       0 -> Successful Send
- *      -1 -> Error
+ *      <0 -> Error
  */
 int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen);
 
