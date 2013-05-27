@@ -14,9 +14,9 @@ static struct circular_queue mailboxes[MAX_TASKS];
 static char *msgs[MAX_TASKS];
 static int msg_lengths[MAX_TASKS];
 
-// An array of replies you're set to recieve.
-static char* replies[MAX_TASKS];
-static int reply_lengths[MAX_TASKS];
+// An array of message you're set to recieve.
+static char* rcvds[MAX_TASKS];
+static int rcvd_lengths[MAX_TASKS];
 
 void messaging_initialize() {
     int i;
@@ -24,22 +24,22 @@ void messaging_initialize() {
         circular_queue_initialize(&mailboxes[i]);
         msgs[i] = 0;
         msg_lengths[i] = 0;
-        replies[i] = 0;
-        reply_lengths[i] = 0;
+        rcvds[i] = 0;
+        rcvd_lengths[i] = 0;
     }
 }
 
 int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
     if (msgs[src] != 0 || msg_lengths[src] != 0) return -1;
-    if (replies[src] != 0 || reply_lengths[src] != 0) return -2;
+    if (rcvds[src] != 0 || rcvd_lengths[src] != 0) return -2;
 
     // Put your send buffer in place, and wait.
     msgs[src] = msg;
     msg_lengths[src] = msglen;
 
     // Put your reply buffer in place, and wait.
-    replies[src] = reply;
-    reply_lengths[src] = replylen;
+    rcvds[src] = reply;
+    rcvd_lengths[src] = replylen;
 
     // Tell the task he has a message from you.
     int error = circular_queue_push(&mailboxes[dst], (void *)src);
@@ -54,9 +54,21 @@ int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
 int krecieve(int dst, int *src, char *msg, int msglen) {
     struct circular_queue *mailbox = &mailboxes[dst];
 
+    if (msg == 0 && msglen == 0) {
+        // TODO Assert that we have something in rcvds and rcvd_length
+        msg = rcvds[dst];
+        msglen = rcvd_lengths[dst];
+        rcvds[dst] = 0;
+        rcvd_lengths[dst] = 0;
+    }
+
+    // Assert that we don't have anything left over in our rcvds buffer.
+
     // Check if we have a messsage waiting for us.
     if (circular_queue_empty(mailbox)) {
-        //bwprintf(COM2, "No Messages!, Let's block\n");
+        // We're about to block. Let's store our buffer.
+        rcvds[dst] = msg;
+        rcvd_lengths[dst] = msglen;
         return -1;
     }
 
@@ -77,14 +89,14 @@ int krecieve(int dst, int *src, char *msg, int msglen) {
 int kreply(int tid, char *reply, int replylen) {
     // Ensure we're waiting for a reply, and not send blocked or not blocked at all.
     if (msgs[tid] != 0 || msg_lengths[tid] !=0) return -1;
-    if (replies[tid] == 0 || reply_lengths[tid] == 0) return -2;
+    if (rcvds[tid] == 0 || rcvd_lengths[tid] == 0) return -2;
 
     // Write data into the waiting task's buffer.
-    replylen = min(replylen, reply_lengths[tid]);
-    memcpy(replies[tid], reply, replylen);
+    replylen = min(replylen, rcvd_lengths[tid]);
+    memcpy(rcvds[tid], reply, replylen);
 
-    replies[tid] = 0;
-    reply_lengths[tid] = 0;
+    rcvds[tid] = 0;
+    rcvd_lengths[tid] = 0;
 
     return replylen;
 }

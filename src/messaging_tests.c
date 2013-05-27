@@ -74,6 +74,21 @@ void messaging_recieve_blocking_test() {
     int rcvd_len = 7;
     int result = krecieve(b, &src, rcvd, rcvd_len);
     assert(result == -1);
+
+    int a = 0;
+    char *msg = "abcdef";
+    int msglen = 7;
+    char reply[7];
+    int replylen = 7;
+    result = ksend(a, b, msg, msglen, reply, replylen);
+    assert(result == 0);
+
+    // Try to recieve again. It should come in old buffers.
+    int result = krecieve(b, &src, 0, 0);
+    assert(src == 0);
+    assert(result == 7);
+    assert(strcmp(msg, rcvd) == 0);
+
 }
 
 void messaging_recieve_partial_message() {
