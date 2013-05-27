@@ -1,7 +1,11 @@
 \documentclass{article}
 
 \title{CS 452 Kernel Documentation}
-\author{Avi Itskovich, 20332164}
+\author{
+  Avi Itskovich, 20332164
+  \and
+  Alex Ianus, 20342535
+}
 
 \begin{document}
 
@@ -29,19 +33,68 @@ The kernel runs the user task defined by the assignment, and provides the reques
 
 \subsection{Tasks}
 
+Our kernel has the concept of Tasks -- independent executions of code along with associated state. We keep track of tasks in an array of task descriptors containing
+
+\begin{itemize}
+  \item The task id
+  \item The task id of the parent of the task
+  \item The stack pointer for the task
+  \item The saved program state register for the task
+  \item The return value
+  \item The task priority
+  \item The stack for the task
+\end{itemize}
+
+TIDs are assigned in sequential order from 0 to 4.
+
 \subsection{Context Switch}
+
+When entering or exiting the kernel it's necessary to store and restore task state respectively. This is called a context switch and the code for accomplishing this is in context\_switch.s. When entering the kernel we perform the following operations:
+\begin{enumerate}
+  \item Switch to system mode
+  \item Save registers to the user's stack
+  \item Switch to supervisor mode
+  \item Save the program counter to the task descriptor
+  \item Switch to system state
+  \item Get the stack pointer
+  \item Switch to supervisor mode
+  \item Save the stack pointer to the task descriptor
+  \item Save the SPSR to the task descriptor
+  \item Return into the main kernel loop
+\end{enumerate}
+When exiting the kernel we perform the following operations:
+\begin{enumerate}
+  \item Store kernel state onto its stack
+  \item Get the stack pointer of the task from the task descriptor
+  \item Get the spsr from the task descriptor
+  \item Get the return value from the task descriptor
+  \item Get the pc from the TD and store it in LR\_svc
+  \item Switch to system mode
+  \item Install the sp of the task
+  \item Install the return value in r0
+  \item Load the rest of the task state from its stack
+  \item Switch to user mode and set the pc from LR\_svc atomically
+\end{enumerate}
 
 \subsection{System Calls}
 
 A system call can be divided into two parts. The user mode function that uses swi to enter the kernel, and kernel mode function that performs the required operations. In our system we use a Request structure to move information between these two areas. Although we originally expected to simply pass the arguments through the registers, we realized that some system calls in later assignments used more than 4 arguments. Using more than 4 arguments requires the placement of arguments on the stack. Instead of fighting with GCC, we decided to marshal the contents of the system call into the request structure before passing it through as our only argument. The request structure encapsulates both the system call number, as well as the arguments passed in. Inside the kernel, we handle the request by switching on the system call number, and doing the proper computation afterwards. Once the result is generated, we set the return value inside the task, which is then transmitted back in the next context switch to that task.
 
-Note that we've considered the performance implications of wrapping up the data in a Request structure. It currently vastly simplifies our code, so we would like to maintain  it until we find that it's a performance problem.
+Note that we've considered the performance implications of wrapping up the data in a Request structure. It currently vastly simplifies our code, so we would like to maintain it until we find that it's a performance problem.
 
 \subsection{Scheduling}
 
-\subsection{Known Bugs}
+For scheduling, tasks are maintained on an array of circular queues, one for each priority (4 in total). The head task on the first non-empty queue is scheduled for execution. This is not a particularly good algorithm as it wastes memory and will frequently require a linear scan of the priority queues. We're thinking of moving to using a single skip-list type queue for extremely fast scheduling. Scheduling code is found in scheduling.c.
+
+\subsection{Bugs and Limitations}
 \begin{itemize}
   \item Our system can only currently handle 5 concurrent tasks.
+  \item We wrote kernel 1 with simplicity a priority over performance. Things we plan to improve in the future are:
+\begin{itemize}
+\item Memory layout: we're still using the memory layout from a0 with the task stacks inside the task descriptors. In the future we'll want the kernel data structures packed together nicely to improve cache performance.
+\item Function calls inside context switch: we call functions within our context switch to read and write from the task descriptor struct. In the future we plan to inline these calls.
+\item System call branching: we use a Request struct and a switch statement written in C to determine which system call has been issued. In the future we plan to use a jump table and leave the arguments in the correct registers for fast dispatching.
+\end{itemize}
 \end{itemize}
 
 \end{document}
