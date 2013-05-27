@@ -29,7 +29,7 @@ void messaging_initialize() {
     }
 }
 
-int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
+int msg_send(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
     if (msgs[src] != 0 || msg_lengths[src] != 0) return -1;
     if (rcvds[src] != 0 || rcvd_lengths[src] != 0) return -2;
 
@@ -51,7 +51,7 @@ int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen) {
     return 0;
 }
 
-int krecieve(int dst, int *src, char *msg, int msglen) {
+int msg_recieve(int dst, int *src, char *msg, int msglen) {
     struct circular_queue *mailbox = &mailboxes[dst];
 
     if (msg == 0 && msglen == 0) {
@@ -86,7 +86,7 @@ int krecieve(int dst, int *src, char *msg, int msglen) {
     return msglen;
 }
 
-int kreply(int tid, char *reply, int replylen) {
+int msg_reply(int tid, char *reply, int replylen) {
     // Ensure we're waiting for a reply, and not send blocked or not blocked at all.
     if (msgs[tid] != 0 || msg_lengths[tid] !=0) return -1;
     if (rcvds[tid] == 0 || rcvd_lengths[tid] == 0) return -2;

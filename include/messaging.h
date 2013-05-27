@@ -17,7 +17,7 @@ void messaging_initialize();
  *       0 -> Successful Send
  *      <0 -> Error
  */
-int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen);
+int msg_send(int src, int dst, char *msg, int msglen, char *reply, int replylen);
 
 /**
  * Recieve a message from another task.
@@ -27,12 +27,12 @@ int ksend(int src, int dst, char *msg, int msglen, char *reply, int replylen);
  * @param msg A buffer for holding the message.
  * @param msglen The length of the buffer for holding the message.
  *
- * @return Result of krecieve
+ * @return Result of msg_recieve
  *      >0 -> Success getting message and length recieved.
  *      -1 -> SEND_BLOCKED
  *      -2 -> Error
  */
-int krecieve(int dst, int *src, char *msg, int msglen);
+int msg_recieve(int dst, int *src, char *msg, int msglen);
 
 /**
  * Replay to a message send by another task.
@@ -46,6 +46,6 @@ int krecieve(int dst, int *src, char *msg, int msglen);
  *       -1  -> Task is Recv_Blocked.
  *       -2  -> Task is Not Message Blocked.
  */
-int kreply(int tid, char *reply, int replylen);
+int msg_reply(int tid, char *reply, int replylen);
 
 #endif
