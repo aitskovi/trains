@@ -76,6 +76,11 @@ void task_save_spsr(Task *t, unsigned int spsr) {
     //bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
 }
 
+Task *task_get(int tid) {
+    if (tid < next_tid && tid > 0) return &tasks[tid];
+    else return 0;
+}
+
 void task_print(Task *t) {
     bwprintf(COM2, "TD address:%x Task id:%d, sp: %x, spsr: %x\n\r", t, t->tid,
             t->sp, t->spsr);

@@ -70,6 +70,9 @@ void task_save_sp(Task *t, int *sp);
 void task_save_spsr(Task *t, unsigned int spsr);
 void task_set_return_value (Task *t, int value);
 int task_get_return_value(Task *t);
+
+Task *task_get(int tid);
+
 void initialize_tasks();
 
 #endif
