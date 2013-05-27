@@ -5,6 +5,7 @@
 #include <request.h>
 #include <scheduling.h>
 #include <user.h>
+#include <time.h>
 
 static Task *active;
 
@@ -32,6 +33,7 @@ void initialize_kernel() {
     void (**syscall_handler)() = (void (**)())0x28;
     *syscall_handler = &kernel_enter;
 
+    initialize_time();
     initialize_scheduling();
     initialize_tasks();
 }
