@@ -50,6 +50,11 @@ typedef struct Task {
     enum task_priority priority;
 
     /**
+     * The state of the task.
+     */
+    enum task_state state;
+
+    /**
      * The stack for this task.
      */
     unsigned char stack[STACK_SIZE];

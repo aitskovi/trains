@@ -18,6 +18,15 @@ enum task_priority {
 	NUM_PRIORITIES
 };
 
+enum task_state {
+    UNKNOWN,
+    READY,
+    ACTIVE,
+    SEND_BLOCKED,
+    RPLY_BLOCKED,
+    RECV_BLOCKED,
+};
+
 struct Task *schedule();
 void make_ready(struct Task *task);
 void initialize_scheduling();

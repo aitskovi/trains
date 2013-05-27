@@ -37,6 +37,7 @@ Task * task_create(void (*code)(), unsigned int parent_tid, enum task_priority p
 
     t->parent_tid = parent_tid;
     t->priority = priority;
+    t->state = UNKNOWN;
     return t;
 }
 
