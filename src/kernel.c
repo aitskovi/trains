@@ -89,7 +89,7 @@ int main() {
 
     //bwprintf(COM2, "Creating Task!\n");
     //bwprintf(COM2, "Hello is %x\n", hello);
-    active = task_create(first, 0, MEDIUM);
+    active = task_create(kernel_timing, 0, MEDIUM);
     //bwprintf(COM2, "Task Created!\n");
     //task_print(active);
 
