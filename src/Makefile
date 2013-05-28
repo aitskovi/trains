@@ -29,7 +29,7 @@ DEPS = $(OBJECTS:.o=.depends)
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-kernel.elf : kernel.o context_switch.o syscall.o user.o $(OBJECTS)
+kernel.elf : kernel.o context_switch.o syscall.o user.o time.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 test : test.o $(OBJECTS)
