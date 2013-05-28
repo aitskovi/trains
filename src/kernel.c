@@ -7,6 +7,7 @@
 #include <user.h>
 #include <messaging.h>
 #include <ksyscalls.h>
+#include <nameserver.h>
 
 static Task *active;
 
@@ -93,11 +94,13 @@ void handle(Task *task, Request *req) {
 int main() {
     initialize_kernel();
 
-    //bwprintf(COM2, "Kernel Initialized\n");
+    // This has to be done after kernel initialization.
+    initialize_nameserver();
 
+    //bwprintf(COM2, "Kernel Initialized\n");
     //bwprintf(COM2, "Creating Task!\n");
     //bwprintf(COM2, "Hello is %x\n", hello);
-    active = task_create(communication, 0, MEDIUM);
+    active = task_create(registration, 0, MEDIUM);
     //bwprintf(COM2, "Task Created!\n");
     //task_print(active);
 
