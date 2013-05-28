@@ -5,4 +5,8 @@ void first();
 void second();
 void kernel_timing();
 
+void communication();
+void producer();
+void consumer();
+
 #endif

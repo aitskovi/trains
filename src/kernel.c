@@ -6,6 +6,8 @@
 #include <scheduling.h>
 #include <user.h>
 #include <time.h>
+#include <messaging.h>
+#include <ksyscalls.h>
 
 static Task *active;
 
@@ -36,25 +38,24 @@ void initialize_kernel() {
     initialize_time();
     initialize_scheduling();
     initialize_tasks();
+    initialize_messaging();
 }
 
 /**
  * Handles a request for a task.
  *
- * Returns an integer defining whether a task should be rescheduled.
  */
-int handle(Task *task, Request *req) {
+void handle(Task *task, Request *req) {
     switch (req->request) {
     case MY_TID:
-        //bwprintf(COM2, "Got MyTidRequest");
         task_set_return_value(task, task->tid);
+        make_ready(task);
         break;
     case CREATE:
-        //bwprintf(COM2, "Got Create System Call with priority: %d, code: %x\n\r",
-                //req->args[0], req->args[1]);
         if ((int) req->args[0] < 0 || (int) req->args[0] > NUM_PRIORITIES) {
             task_set_return_value(task, -1);
-            return 0;
+            make_ready(task);
+            return;
         }
         Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
         if (!child) {
@@ -63,23 +64,31 @@ int handle(Task *task, Request *req) {
             make_ready(child);
             task_set_return_value(task, child->tid);
         }
+        make_ready(task);
         break;
     case MY_PARENT_TID:
-        //bwprintf(COM2, "Got ParentTid System Call\n");
         task_set_return_value(task, task->parent_tid);
+        make_ready(task);
         break;
     case PASS:
-        //bwprintf(COM2, "Got Pass System Call\n");
+        make_ready(task);
         break;
     case EXIT:
-        //bwprintf(COM2, "Got Exit System Call\n");
-        return -1;
+        task->state = ZOMBIE;
+        break;
+    case SEND:
+        ksend(task, (int)req->args[0], (char *)req->args[1], (int)req->args[2], (char *)req->args[3], (int)req->args[4]);
+        break;
+    case RECEIVE:
+        krecieve(task, (int *)req->args[0], (char *)req->args[1], (int)req->args[2]);
+        break;
+    case REPLY:
+        kreply(task, (int)req->args[0], (char *)req->args[1], (int)req->args[2]);
+        break;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);
         break;
     }
-
-    return 0;
 }
 
 int main() {
@@ -89,7 +98,7 @@ int main() {
 
     //bwprintf(COM2, "Creating Task!\n");
     //bwprintf(COM2, "Hello is %x\n", hello);
-    active = task_create(first, 0, MEDIUM);
+    active = task_create(communication, 0, MEDIUM);
     //bwprintf(COM2, "Task Created!\n");
     //task_print(active);
 
@@ -98,8 +107,7 @@ int main() {
     Request *req;
     while((active = schedule())) {
         req = kernel_exit(active);
-        int should_reschedule = handle(active, req);
-        if (should_reschedule == 0) make_ready(active);
+        handle(active, req);
     }
 
     return 0;

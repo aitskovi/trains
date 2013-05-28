@@ -50,6 +50,11 @@ typedef struct Task {
     enum task_priority priority;
 
     /**
+     * The state of the task.
+     */
+    enum task_state state;
+
+    /**
      * The stack for this task.
      */
     unsigned char stack[STACK_SIZE];
@@ -65,6 +70,10 @@ void task_save_sp(Task *t, int *sp);
 void task_save_spsr(Task *t, unsigned int spsr);
 void task_set_return_value (Task *t, int value);
 int task_get_return_value(Task *t);
+
+Task *task_get(int tid);
+int task_is_invalid(int tid);
+
 void initialize_tasks();
 
 #endif

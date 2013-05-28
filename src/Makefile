@@ -8,11 +8,11 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o scheduling.o circular_queue.o task.o
+OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o
 
 all: kernel.elf 
 
-tests: test circular_queue_tests
+tests: test circular_queue_tests messaging_tests ksyscalls_tests
 
 .SUFFIXES:
 
@@ -36,6 +36,12 @@ test : test.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
 circular_queue_tests : circular_queue_tests.o $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+messaging_tests: messaging_tests.o $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+ksyscalls_tests: ksyscalls_tests.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
