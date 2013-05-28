@@ -17,6 +17,7 @@ struct circular_queue {
 	unsigned int read_count;
 };
 
+int circular_queue_empty(struct circular_queue *queue);
 int circular_queue_push(struct circular_queue *queue, void *data);
 void *circular_queue_pop(struct circular_queue *queue);
 void circular_queue_initialize(struct circular_queue *queue);

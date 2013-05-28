@@ -37,6 +37,7 @@ Task * task_create(void (*code)(), unsigned int parent_tid, enum task_priority p
 
     t->parent_tid = parent_tid;
     t->priority = priority;
+    t->state = UNKNOWN;
     return t;
 }
 
@@ -73,6 +74,18 @@ void task_save_sp(Task *t, int *sp) {
 void task_save_spsr(Task *t, unsigned int spsr) {
     t->spsr = spsr;
     //bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
+}
+
+Task *task_get(int tid) {
+    if (tid < next_tid && tid >= 0) return &tasks[tid];
+    else return 0;
+}
+
+int task_is_invalid(int tid) {
+    Task *task = task_get(tid);
+    if (task == 0) return -1;
+    else if (task->state == ZOMBIE) return -2;
+    else return 0;
 }
 
 void task_print(Task *t) {

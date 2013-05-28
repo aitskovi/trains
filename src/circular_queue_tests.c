@@ -34,6 +34,7 @@ void test_queue_empty() {
 
     void *data = circular_queue_pop(&queue);
     assert(data == 0);
+    assert(circular_queue_empty(&queue));
 
     int i;
     for (i = 0; i < CIRCULAR_QUEUE_SIZE; ++i) {
@@ -44,6 +45,7 @@ void test_queue_empty() {
     }
     data = circular_queue_pop(&queue);
     assert(data == 0);
+    assert(circular_queue_empty(&queue));
 }
 
 void test_queue_full() {

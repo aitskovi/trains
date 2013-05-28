@@ -26,6 +26,7 @@ Task * schedule () {
     Task *result;
     for (i = 0; i < NUM_PRIORITIES; ++i) {
         if ((result = circular_queue_pop(&ready_queues[i]))) {
+            result->state = ACTIVE;
             return result;
         }
     }
@@ -33,5 +34,6 @@ Task * schedule () {
 }
 
 void make_ready(Task *task) {
+    task->state = READY;
     circular_queue_push(&ready_queues[task->priority], task);
 }

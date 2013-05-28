@@ -44,3 +44,33 @@ void Exit() {
     req.request = EXIT;
     syscall(&req);
 }
+
+int Send(int tid, char *msg, int msglen, char *reply, int replylen) {
+    Request req;
+    req.request = SEND;
+    req.args[0] = (void *)tid;
+    req.args[1] = msg;
+    req.args[2] = (void *)msglen;
+    req.args[3] = reply;
+    req.args[4] = (void *)replylen;
+    return syscall(&req);
+}
+
+int Receive(int *tid, char *msg, int msglen) {
+    Request req;
+    req.request = RECEIVE;
+    req.args[0] = tid;
+    req.args[1] = msg;
+    req.args[2] = (void *)msglen;
+    return syscall(&req);
+}
+
+int Reply(int tid, char *reply, int replylen) {
+    Request req;
+    req.request = REPLY;
+    req.args[0] = (void *)tid;
+    req.args[1] = reply;
+    req.args[2] = (void *)replylen;
+    return syscall(&req);
+}
+
