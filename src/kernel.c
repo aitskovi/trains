@@ -70,6 +70,7 @@ int handle(Task *task, Request *req) {
         //bwprintf(COM2, "Got Pass System Call\n");
         break;
     case EXIT:
+        task->state = ZOMBIE;
         //bwprintf(COM2, "Got Exit System Call\n");
         return -1;
     default:

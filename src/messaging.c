@@ -19,7 +19,7 @@ static char* rcvds[MAX_TASKS];
 static int rcvd_lengths[MAX_TASKS];
 static int* rcvd_srcs[MAX_TASKS];
 
-void messaging_initialize() {
+void initialize_messaging() {
     int i;
     for (i = 0; i < MAX_TASKS; ++i) {
         circular_queue_initialize(&mailboxes[i]);

@@ -25,6 +25,7 @@ enum task_state {
     SEND_BLOCKED,
     RPLY_BLOCKED,
     RECV_BLOCKED,
+    ZOMBIE,
 };
 
 struct Task *schedule();

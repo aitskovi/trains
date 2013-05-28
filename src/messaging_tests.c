@@ -2,12 +2,14 @@
 //
 // Notes: This covers testing everything outside of scheduling.
 
+#include <messaging.h>
+
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
 
 void messaging_basic_test() {
-   messaging_initialize(); 
+   initialize_messaging();
 
    int i;
    for (i = 0; i < 3; ++i) {
@@ -37,7 +39,7 @@ void messaging_basic_test() {
 }
 
 void messaging_send_double_test() {
-    messaging_initialize(); 
+    initialize_messaging();
 
     int a = 0;
     int b = 1;
@@ -66,7 +68,7 @@ void messaging_send_double_test() {
 }
 
 void messaging_recieve_blocking_test() {
-    messaging_initialize();
+    initialize_messaging();
 
     int b = 1;
     int src;
@@ -84,7 +86,7 @@ void messaging_recieve_blocking_test() {
     assert(result == 0);
 
     // Try to recieve again. It should come in old buffers.
-    int result = msg_recieve(b, 0, 0, 0);
+    result = msg_recieve(b, 0, 0, 0);
     assert(src == 0);
     assert(result == 7);
     assert(strcmp(msg, rcvd) == 0);
@@ -92,7 +94,7 @@ void messaging_recieve_blocking_test() {
 }
 
 void messaging_recieve_partial_message() {
-    messaging_initialize(); 
+    initialize_messaging();
 
     int a = 0;
     int b = 1;
@@ -114,13 +116,13 @@ void messaging_recieve_partial_message() {
 }
 
 void messaging_reply_non_blocked_test() {
-    messaging_initialize(); 
+    initialize_messaging();
 
     // Fail to reply non blocked.
     char *rply = "fedcba";
     int rply_len = 7;
-    result = msg_reply(0, rply, rply_len);
-    assert(result == -1);
+    int result = msg_reply(0, rply, rply_len);
+    assert(result == -2);
 
     int a = 0;
     int b = 1;
@@ -128,7 +130,7 @@ void messaging_reply_non_blocked_test() {
     int msglen = 7;
     char reply[7];
     int replylen = 7;
-    int result = msg_send(a, b, msg, msglen, reply, replylen);
+    result = msg_send(a, b, msg, msglen, reply, replylen);
     assert(result == 0);
 
     // Fail to reply, recv blocked.
@@ -137,7 +139,7 @@ void messaging_reply_non_blocked_test() {
 }
 
 void messaging_reply_partial_message_test() {
-    messaging_initialize(); 
+    initialize_messaging();
 
     int a = 0;
     int b = 1;
@@ -165,7 +167,7 @@ void messaging_reply_partial_message_test() {
 }
 
 void messaging_fifo_ordering_test() {
-    messaging_initialize(); 
+    initialize_messaging();
 
     int a = 0;
     int b = 1;
@@ -181,7 +183,7 @@ void messaging_fifo_ordering_test() {
     int msglen2 = 7;
     char reply2[7];
     int replylen2 = 7;
-    int result = msg_send(c, b, msg2, msglen2, reply2, replylen2);
+    result = msg_send(c, b, msg2, msglen2, reply2, replylen2);
     assert(result == 0);
 
     int src;

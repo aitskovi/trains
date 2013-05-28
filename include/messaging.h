@@ -1,7 +1,7 @@
 #ifndef _MESSAGING_H_
 #define _MESSAGING_H_
 
-void messaging_initialize();
+void initialize_messaging();
 
 /**
  * Send a message from a src to destination.

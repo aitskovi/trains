@@ -72,6 +72,7 @@ void task_set_return_value (Task *t, int value);
 int task_get_return_value(Task *t);
 
 Task *task_get(int tid);
+int task_is_invalid(int tid);
 
 void initialize_tasks();
 

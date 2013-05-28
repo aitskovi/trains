@@ -77,7 +77,14 @@ void task_save_spsr(Task *t, unsigned int spsr) {
 }
 
 Task *task_get(int tid) {
-    if (tid < next_tid && tid > 0) return &tasks[tid];
+    if (tid < next_tid && tid >= 0) return &tasks[tid];
+    else return 0;
+}
+
+int task_is_invalid(int tid) {
+    Task *task = task_get(tid);
+    if (task == 0) return -1;
+    else if (task->state == ZOMBIE) return -2;
     else return 0;
 }
 
