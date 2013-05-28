@@ -3,11 +3,14 @@
 #include <request.h>
 #include <task.h>
 
-unsigned int kernel_exit(Task *active) {
+struct Request* kernel_exit(Task *active) {
+    return 0;
+    /*
 	bwprintf( COM2, "In kernel_exit\n\r" );
 	bwprintf( COM2, "kernel_exit activating\n\r" );
 	kernel_enter( );
 	bwprintf( COM2, "exiting kernel_exit\n\r" );
+    */
 }
 
 void kernel_enter() {

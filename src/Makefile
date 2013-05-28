@@ -14,6 +14,9 @@ all: kernel.elf
 
 tests: test circular_queue_tests messaging_tests ksyscalls_tests
 
+opt: CFLAGS+=-O2
+opt: all
+
 .SUFFIXES:
 
 .SECONDARY:
@@ -22,6 +25,9 @@ DEPS = $(OBJECTS:.o=.depends)
 
 %.s : %.c
 	$(CC) -S $(CFLAGS) $<
+
+bwio.s : bwio.c
+	$(CC) -S $(CFLAGS) -O0 $<
 
 %.depends: %.c
 	$(CC) -M $(CFLAGS) $< > $@
