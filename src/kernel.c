@@ -53,6 +53,7 @@ void handle(Task *task, Request *req) {
     case CREATE:
         if ((int) req->args[0] < 0 || (int) req->args[0] > NUM_PRIORITIES) {
             task_set_return_value(task, -1);
+            make_ready(task);
             return;
         }
         Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
@@ -69,9 +70,11 @@ void handle(Task *task, Request *req) {
         make_ready(task);
         break;
     case PASS:
+        make_ready(task);
         break;
     case EXIT:
         task->state = ZOMBIE;
+        break;
     case SEND:
         ksend(task, (int)req->args[0], (char *)req->args[1], (int)req->args[2], (char *)req->args[3], (int)req->args[4]);
         break;
@@ -94,7 +97,7 @@ int main() {
 
     //bwprintf(COM2, "Creating Task!\n");
     //bwprintf(COM2, "Hello is %x\n", hello);
-    active = task_create(first, 0, MEDIUM);
+    active = task_create(communication, 0, MEDIUM);
     //bwprintf(COM2, "Task Created!\n");
     //task_print(active);
 

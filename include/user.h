@@ -4,4 +4,8 @@
 void first();
 void second();
 
+void communication();
+void producer();
+void consumer();
+
 #endif
