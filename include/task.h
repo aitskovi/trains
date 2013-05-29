@@ -5,7 +5,7 @@
 
 #define STACK_SIZE 1048576 // 1mb stack
 
-#define MAX_TASKS 5
+#define MAX_TASKS 10
 
 typedef struct Task {
     /**
