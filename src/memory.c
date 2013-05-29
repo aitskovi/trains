@@ -9,3 +9,14 @@ void * memcpy (void *destination, void *source, unsigned int len) {
 
     return destination;
 }
+
+void * memset (void *destination, unsigned char value, unsigned int len) {
+    unsigned char *dst = (unsigned char *)destination;
+
+    unsigned int i;
+    for (i = 0; i < len; ++i) {
+        *dst++ = value;
+    }
+
+    return destination;
+}
