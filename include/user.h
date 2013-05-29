@@ -8,4 +8,6 @@ void communication();
 void producer();
 void consumer();
 
+void registration();
+
 #endif
