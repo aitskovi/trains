@@ -1,10 +1,10 @@
-#ifndef _STRINGS_H_
-#define _STRINGS_H_
+#ifndef _STRING_H_
+#define _STRING_H_
 
 /**
  * Return the length of a null terminated string.
  */
-int strlen(char *a);
+unsigned int strlen(char *a);
 
 /**
  * Verify if two strings are equal.

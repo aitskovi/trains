@@ -1,13 +1,12 @@
-#ifndef _STRINGS_H_
-#define _STRINGS_H_
+#ifndef _STRING_H_
+#define _STRING_H_
 
 /**
  * Return the length of a null terminated string.
  */
-int strlen(char *a) {
-    // add 1 space for null terminator.
-    int length = 1;
-    while (*++a) {
+unsigned int strlen(char *a) {
+    unsigned int length = 0;
+    while (*a++) {
         ++length;
     }
     return length;
