@@ -8,7 +8,7 @@ else
 	include arm.mk
 endif
 
-OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameserver.o strings.o
+OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameservice.o strings.o
 
 all: kernel.elf 
 
@@ -29,7 +29,7 @@ DEPS = $(OBJECTS:.o=.depends)
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-kernel.elf : kernel.o context_switch.o syscall.o user.o $(OBJECTS)
+kernel.elf : kernel.o context_switch.o syscall.o user.o nameserver.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 test : test.o $(OBJECTS)

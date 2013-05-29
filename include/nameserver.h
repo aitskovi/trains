@@ -1,4 +1,7 @@
-int initialize_nameserver();
+#ifndef _NAMESERVER_H_
+#define _NAMESERVER_H_
+
+void initialize_nameserver();
 
 /**
  * Register the task under the specified name.
@@ -19,3 +22,4 @@ int RegisterAs(char *name);
  */
 int WhoIs(char *name);
 
+#endif
