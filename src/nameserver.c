@@ -34,11 +34,9 @@ int RegisterAs(char *name) {
     struct NameServerRequest req;
     req.operation = REGISTER_AS;
     req.data = name;
-    int reqlen = sizeof(struct NameServerRequest);
 
     struct NameServerReply reply;
-    int replylen = sizeof(struct NameServerReply);
-    int result = Send(nameserver_tid, (char *)&req, reqlen, (char *)&reply, replylen);
+    int result = Send(nameserver_tid, (char *)&req, sizeof(req), (char *)&reply, sizeof(reply));
     if (result < 0) {
         return result;
     }
@@ -58,11 +56,9 @@ int WhoIs(char *name) {
     struct NameServerRequest req;
     req.operation = WHO_IS;
     req.data = name;
-    int reqlen = sizeof(struct NameServerRequest);
 
     struct NameServerReply reply;
-    int replylen = sizeof(struct NameServerReply);
-    int result = Send(nameserver_tid, (char *)&req, reqlen, (char *)&reply, replylen);
+    int result = Send(nameserver_tid, (char *)&req, sizeof(req), (char *)&reply, sizeof(reply));
     if (result < 0) {
         return result;
     }
@@ -74,31 +70,29 @@ void NameServer() {
     bwprintf(COM2, "NameServer: Starting Up\n");
     int src;
     struct NameServerRequest req;
-    int reqlen = sizeof(struct NameServerRequest);
 
     struct NameServerReply reply;
-    int replylen = sizeof(struct NameServerReply);
 
     for(;;) {
-        Receive(&src, (char *)&req, reqlen);
+        Receive(&src, (char *)&req, sizeof(req));
 
         switch(req.operation) {
             case REGISTER_AS: 
-                bwprintf(COM2, "NameServer: Recieved RegisterAs\n");
+                bwprintf(COM2, "NameServer: Received RegisterAs\n");
                 bwprintf(COM2, "NameServer: Registering %d as %s\n", src, req.data);
                 reply.result = nameservice_register(req.data, src);
                 break;
             case WHO_IS:
-                bwprintf(COM2, "NameServer: Recieved WhoIs\n");
+                bwprintf(COM2, "NameServer: Received WhoIs\n");
                 bwprintf(COM2, "NameServer: Looking Up %s\n", req.data);
                 reply.result = nameservice_lookup(req.data);
                 break;
             default:
-                bwprintf(COM2, "NameServer: Recieved Invalid Request\n");
+                bwprintf(COM2, "NameServer: Received Invalid Request\n");
                 break;
         }
 
-        Reply(src, (char *)&reply, replylen);
+        Reply(src, (char *)&reply, sizeof(reply));
     }
 
     bwprintf(COM2, "NameServer: Exit\n");
@@ -113,5 +107,5 @@ void initialize_nameserver() {
     nameserver_tid = task->tid;
     make_ready(task);
     bwprintf(COM2, "NameServer created in task <%d>\n", nameserver_tid);
-    return 0;
+
 }
