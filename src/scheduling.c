@@ -26,9 +26,12 @@ Task * schedule () {
     Task *result;
     for (i = 0; i < NUM_PRIORITIES; ++i) {
         if ((result = queue_heads[i])) {
-            queue_heads[i] = result->next;
             if (queue_tails[i] == result) queue_tails[i] = 0;
+
+            queue_heads[i] = result->next;
             result->state = ACTIVE;
+            result->next = 0;
+
             return result;
         }
     }
@@ -39,8 +42,12 @@ void make_ready(Task *task) {
     enum task_priority priority = task->priority;
     task->state = READY;
 
+    // If we have someone in the list, point them to us.
     if (queue_tails[priority] != 0) queue_tails[priority]->next = task;
-    queue_tails[priority] = task;
 
+    // If no one is in the list, we're the new head!
     if (queue_heads[priority] == 0) queue_heads[priority] = task;
+
+    // We're always the new tail.
+    queue_tails[priority] = task;
 }
