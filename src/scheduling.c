@@ -10,22 +10,24 @@
 #include <task.h>
 #include <circular_queue.h>
 
-static struct circular_queue ready_queues[NUM_PRIORITIES];
-static struct circular_queue blocked;
+static Task *queue_heads[NUM_PRIORITIES];
+static Task *queue_tails[NUM_PRIORITIES];
 
 void initialize_scheduling () {
 	unsigned int i;
 	for (i = 0; i <  NUM_PRIORITIES; ++i) {
-		circular_queue_initialize(&ready_queues[i]);
+        queue_heads[i] = 0;
+        queue_tails[i] = 0;
 	}
-	circular_queue_initialize(&blocked);
 }
 
 Task * schedule () {
     unsigned int i;
     Task *result;
     for (i = 0; i < NUM_PRIORITIES; ++i) {
-        if ((result = circular_queue_pop(&ready_queues[i]))) {
+        if ((result = queue_heads[i])) {
+            queue_heads[i] = result->next;
+            if (queue_tails[i] == result) queue_tails[i] = 0;
             result->state = ACTIVE;
             return result;
         }
@@ -34,6 +36,11 @@ Task * schedule () {
 }
 
 void make_ready(Task *task) {
+    enum task_priority priority = task->priority;
     task->state = READY;
-    circular_queue_push(&ready_queues[task->priority], task);
+
+    if (queue_tails[priority] != 0) queue_tails[priority]->next = task;
+    queue_tails[priority] = task;
+
+    if (queue_heads[priority] == 0) queue_heads[priority] = task;
 }
