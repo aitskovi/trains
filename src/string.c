@@ -1,5 +1,4 @@
-#ifndef _STRING_H_
-#define _STRING_H_
+#include <string.h>
 
 /**
  * Return the length of a null terminated string.
@@ -19,5 +18,3 @@ int streq(char *a, char *b) {
     while(*a != 0 && *b != 0 && *++a == *++b) {}
     return *a == *b;
 }
-
-#endif
