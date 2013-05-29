@@ -35,3 +35,7 @@ void circular_queue_initialize(struct circular_queue *queue) {
     queue->read_count = 0;
     queue->write_count = 0;
 }
+
+unsigned int circular_queue_size(struct circular_queue *queue) {
+    return queue->write_count - queue->read_count;
+}
