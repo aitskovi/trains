@@ -77,3 +77,16 @@ int kreply(Task *active, int tid, char *reply, int replylen) {
     return 0;
 }
 
+int kexit(Task *active) {
+    active->state = ZOMBIE;
+
+    // Cleanup any leftover sends.
+    int next;
+    while ((next = msg_pop(active->tid)) != -1) {
+        Task *task = task_get(next);
+        task_set_return_value(task, -3);
+        make_ready(task);
+    }
+
+    return 0;
+}

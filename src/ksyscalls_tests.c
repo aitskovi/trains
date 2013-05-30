@@ -116,9 +116,27 @@ void kreply_non_blocked_test() {
     assert(strcmp(rcvd, msg) == 0);
 }
 
+void ksend_transaction_failed() {
+    reset();
+
+    char *msg = "Hello!";
+    int msglen = 7;
+    char reply[5];
+    int replylen = 5;
+    ksend(t0, t1->tid, msg, msglen, reply, replylen);
+
+    assert(t0->state == SEND_BLOCKED);
+
+    kexit(t1);
+    assert(t0->state == READY);
+    assert(t0->return_value == -3);
+    assert(t1->state == ZOMBIE);
+}
+
 int main() {
     kmessaging_test();
     krecieve_blocking_test();
     kreply_non_blocked_test();
+    ksend_transaction_failed();
     return 0;
 }

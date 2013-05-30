@@ -75,7 +75,7 @@ void handle(Task *task, Request *req) {
         make_ready(task);
         break;
     case EXIT:
-        task->state = ZOMBIE;
+        kexit(task);
         break;
     case SEND:
         ksend(task, (int)req->args[0], (char *)req->args[1], (int)req->args[2], (char *)req->args[3], (int)req->args[4]);
