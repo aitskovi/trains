@@ -2,8 +2,8 @@
 # Makefile for busy-wait IO tests
 #
 
-VPATH += libc/ test/ user/
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/rps
+VPATH += libc/ test/ user/ user/rps
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps
 
 ifeq ($(ARCH), x86)
 	include x86.mk
@@ -11,6 +11,7 @@ else
 	include arm.mk
 endif
 
+ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o
 OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameservice.o string.o
 
 all: kernel.elf 
@@ -38,7 +39,13 @@ bwio.s : bwio.c
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
 
-kernel.elf : kernel.o context_switch.o syscall.o user.o time.o nameserver.o $(OBJECTS)
+kernel.elf : $(ARMOBJECTS) $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+	
+kernel2.elf : kernel2.o rpsclient.o rpsserver.o $(ARMOBJECTS) $(OBJECTS) 
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+	
+kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 scheduling_tests : scheduling_tests.o $(OBJECTS)
@@ -56,7 +63,7 @@ ksyscalls_tests: ksyscalls_tests.o $(OBJECTS)
 clean:
 	-rm -f *.depends *.elf *.o kernel.map `find ./*.s ! -name context_switch.s`
 
-install: kernel.elf
-	-cp kernel.elf /u/cs452/tftp/ARM/ai/
+install: kerneltimings.elf kernel2.elf
+	-cp kernel2.elf kerneltimings.elf /u/cs452/tftp/ARM/ai/
 
 -include $(DEPS)

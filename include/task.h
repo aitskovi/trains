@@ -7,7 +7,7 @@
 
 #define MAX_TASKS 10
 
-typedef unsigned int tid_t;
+typedef int tid_t;
 
 typedef struct Task {
     /**

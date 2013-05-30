@@ -1,6 +1,8 @@
 #ifndef _SYSCALL_H_
 #define _SYSCALL_H_
 
+#include <task.h>
+
 struct Request;
 
 enum syscall_number {
