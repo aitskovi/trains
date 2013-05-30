@@ -90,3 +90,10 @@ int kexit(Task *active) {
 
     return 0;
 }
+
+int kmytid(Task *task) {
+    task_set_return_value(task, task->tid);
+    make_ready(task);
+
+    return 0;
+}

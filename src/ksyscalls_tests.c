@@ -133,10 +133,20 @@ void ksend_transaction_failed() {
     assert(t1->state == ZOMBIE);
 }
 
+void kmytid_test() {
+    reset();
+
+    kmytid(t1);
+
+    assert(t1->state == READY);
+    assert(t1->return_value == 1);
+}
+
 int main() {
     kmessaging_test();
     krecieve_blocking_test();
     kreply_non_blocked_test();
     ksend_transaction_failed();
+    kmytid_test();
     return 0;
 }

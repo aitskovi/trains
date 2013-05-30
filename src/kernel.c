@@ -49,8 +49,7 @@ void initialize_kernel() {
 void handle(Task *task, Request *req) {
     switch (req->request) {
     case MY_TID:
-        task_set_return_value(task, task->tid);
-        make_ready(task);
+        kmytid(task);
         break;
     case CREATE:
         if ((int) req->args[0] < 0 || (int) req->args[0] > NUM_PRIORITIES) {
