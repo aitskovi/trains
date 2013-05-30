@@ -76,12 +76,12 @@ void task_save_spsr(Task *t, unsigned int spsr) {
     //bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
 }
 
-Task *task_get(int tid) {
+Task *task_get(tid_t tid) {
     if (tid < next_tid && tid >= 0) return &tasks[tid];
     else return 0;
 }
 
-int task_is_invalid(int tid) {
+int task_is_invalid(tid_t tid) {
     Task *task = task_get(tid);
     if (task == 0) return -1;
     else if (task->state == ZOMBIE) return -2;

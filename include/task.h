@@ -7,11 +7,13 @@
 
 #define MAX_TASKS 10
 
+typedef unsigned int tid_t;
+
 typedef struct Task {
     /**
      * The id of the task.
      */
-    unsigned int tid;
+    tid_t tid;
 
     /**
      * The current state of the task.
@@ -61,7 +63,7 @@ typedef struct Task {
 } Task;
 
 void task_print(Task *t);
-Task * task_create(void (*code)(), unsigned int parent_tid, enum task_priority priority);
+Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority);
 int *task_get_sp(Task *t);
 unsigned int task_get_spsr(Task *t);
 void *task_get_pc(Task *t);
@@ -71,8 +73,8 @@ void task_save_spsr(Task *t, unsigned int spsr);
 void task_set_return_value (Task *t, int value);
 int task_get_return_value(Task *t);
 
-Task *task_get(int tid);
-int task_is_invalid(int tid);
+Task *task_get(tid_t tid);
+int task_is_invalid(tid_t tid);
 
 void initialize_tasks();
 

@@ -4,7 +4,6 @@
 #include <task.h>
 #include <request.h>
 #include <scheduling.h>
-#include <user.h>
 #include <time.h>
 #include <messaging.h>
 #include <ksyscalls.h>
@@ -12,23 +11,7 @@
 
 static Task *active;
 
-/**
- * Simple One Function User Task.
- */
-void hello() {
-    bwprintf(COM2, "Hello: Initializing\n");
-    while (1) {
-        bwprintf(COM2, "Hello: Pre-Syscall\n");
-        int return_value = MyTid();
-        bwprintf(COM2, "Hello: Post-Syscall returned value was %u\n", return_value);
-        int parent_tid = MyParentTid();
-        bwprintf(COM2, "My Parent Tid is: %d\n", parent_tid);
-        Pass();
-        bwprintf(COM2, "Passing\n");
-        bwprintf(COM2, "Exiting!\n");
-        Exit();
-    }
-}
+void first();
 
 void initialize_kernel() {
     bwsetfifo(COM2, OFF);
@@ -84,13 +67,7 @@ int main() {
     // This has to be done after kernel initialization.
     initialize_nameserver();
 
-    //bwprintf(COM2, "Kernel Initialized\n");
-    //bwprintf(COM2, "Creating Task!\n");
-    //bwprintf(COM2, "Hello is %x\n", hello);
-    active = task_create(registration, 0, MEDIUM);
-    //bwprintf(COM2, "Task Created!\n");
-    //task_print(active);
-
+    active = task_create(first, 0, MEDIUM);
     make_ready(active);
 
     Request *req;

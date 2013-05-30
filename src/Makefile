@@ -2,6 +2,9 @@
 # Makefile for busy-wait IO tests
 #
 
+VPATH += libc/ test/ user/
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/rps
+
 ifeq ($(ARCH), x86)
 	include x86.mk
 else
@@ -24,13 +27,13 @@ opt: all
 DEPS = $(OBJECTS:.o=.depends)
 
 %.s : %.c
-	$(CC) -S $(CFLAGS) $<
+	$(CC) -S $(CFLAGS) $(INCLUDES) $<
 
 bwio.s : bwio.c
-	$(CC) -S $(CFLAGS) -O0 $<
+	$(CC) -S $(CFLAGS) $(INCLUDES) -O0 $<
 
 %.depends: %.c
-	$(CC) -M $(CFLAGS) $< > $@
+	$(CC) -M $(CFLAGS) $(INCLUDES) $< > $@
 
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
@@ -38,7 +41,7 @@ bwio.s : bwio.c
 kernel.elf : kernel.o context_switch.o syscall.o user.o time.o nameserver.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-test : test.o $(OBJECTS)
+scheduling_tests : scheduling_tests.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
 circular_queue_tests : circular_queue_tests.o $(OBJECTS)
@@ -51,7 +54,7 @@ ksyscalls_tests: ksyscalls_tests.o $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
-	-rm -f *.elf *.o kernel.map test `find ./*.s ! -name context_switch.s`
+	-rm -f *.depends *.elf *.o kernel.map `find ./*.s ! -name context_switch.s`
 
 install: kernel.elf
 	-cp kernel.elf /u/cs452/tftp/ARM/ai/

@@ -26,7 +26,7 @@ int Create(int priority, void(*code)());
 void Pass();
 void Exit();
 
-int Send(int tid, char *msg, int msglen, char *reply, int replylen);
-int Receive(int *tid, char *msg, int msglen);
-int Reply(int tid, char *reply, int replylen);
+int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen);
+int Receive(tid_t *tid, char *msg, int msglen);
+int Reply(tid_t tid, char *reply, int replylen);
 #endif

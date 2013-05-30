@@ -45,7 +45,7 @@ void Exit() {
     syscall(&req);
 }
 
-int Send(int tid, char *msg, int msglen, char *reply, int replylen) {
+int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen) {
     Request req;
     req.request = SEND;
     req.args[0] = (void *)tid;
@@ -56,7 +56,7 @@ int Send(int tid, char *msg, int msglen, char *reply, int replylen) {
     return syscall(&req);
 }
 
-int Receive(int *tid, char *msg, int msglen) {
+int Receive(tid_t *tid, char *msg, int msglen) {
     Request req;
     req.request = RECEIVE;
     req.args[0] = tid;
@@ -65,7 +65,7 @@ int Receive(int *tid, char *msg, int msglen) {
     return syscall(&req);
 }
 
-int Reply(int tid, char *reply, int replylen) {
+int Reply(tid_t tid, char *reply, int replylen) {
     Request req;
     req.request = REPLY;
     req.args[0] = (void *)tid;
