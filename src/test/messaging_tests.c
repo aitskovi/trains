@@ -111,8 +111,8 @@ void messaging_recieve_partial_message() {
     result = msg_recieve(b, &src, rcvd, rcvd_len);
     assert(src == 0);
     assert(result == 4);
-    rcvd[5] = 0;
-    assert(strcmp(rcvd, "abcd"));
+    rcvd[4] = 0;
+    assert(!strcmp(rcvd, "abcd"));
 }
 
 void messaging_reply_non_blocked_test() {
@@ -162,7 +162,7 @@ void messaging_reply_partial_message_test() {
     int rply_len = 7;
     result = msg_reply(0, rply, rply_len);
     assert(result == 4);
-    reply[5] = 0;
+    reply[4] = 0;
     assert(strcmp("fedc", reply) == 0);
 }
 
