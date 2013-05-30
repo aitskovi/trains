@@ -1,0 +1,92 @@
+\documentclass{article}
+
+\title{CS 452 Kernel 2 Documentation}
+\author{
+  Avi Itskovich, 20332164
+  \and
+  Alex Ianus, 20342535
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+This documentation covers the implementation of the Kernel for Assignment 2. This assignment covered message passing and the name server. A Rock/Paper/Scisssors game was implemented as a user service. The new system calls are: 
+\begin{itemize}
+  \item int Send(int priority, (void *code)())
+  \item int Recieve()
+  \item int Reply()
+  \item int WhoIs(char *name)
+  \item int RegisterAs(char *name)
+\end{itemize}
+As part of our work, we also cleaned up scheduling a bit to make it faster. The kernel runs the user task defined by the assignment, and provides the requested output.
+
+\section{Operating Instructions}
+\begin{enumerate}
+  \item load -b 0x00218000 -h 10.15.167.4 "ARM/ai/kernel2.elf"
+  \item go
+\end{enumerate}
+
+\section{Submitted Files}
+\begin{itemize}
+    \item
+\end{itemize}
+
+\section{Kernel Description}
+
+\subsection{Messaging}
+
+Messaging in our system is implemented in two parts. One part handles the actual movement of data between buffers and maintaining messaging ordering while the second part handles scheduling, and error verification. The code is in two seperate files:
+\begin{itemize}
+    \item messaging.{c/h} - Buffer management
+    \item ksyscall.{c/h} - Scheduling
+\end{itemize}
+The reasoning behind is to seperate areas of concern. The buffer management layer returns appropriate error codes so scheduling layer can respond and change task states appropriately.
+
+\subsubsection{Buffer Management}
+
+In our messaging system each task has associated with it:
+\begin{itemize}
+    \item queue of tids - A queue of tids that have a message for you.
+    \item char ** msg - A reference to the msg buffer that this task is sending.
+    \item int msglen - The length of the msg buffer you're referring to.
+    \item char ** rcv - A reference to the msg buffer you recieve data in.
+    \item int rcvlen - The length of the rcv buffer.
+    \item int *src - A reference to an integer which is filled with the src tid of the msg.
+\end{itemize}
+
+The cost of adding an extra task is then: 20 bytes + size of the queue. In the future we're going to replace the queue with a list of task pointers which should make our memory cost per task 28 bytes.
+
+Some interesting parts of the system are our re-use of the rcv, rcvlen items for both sending and recieving. In the case that Recieve(), blocks we put the data for recieve into rcv, rcvlen and src. This allows us to later use these buffers when someone else sends to us. Similarly, a call to Send fills rcv, rcvlen, and src with the buffers for reply.
+
+We know that only one of those can happen at a time, so there will be no overwriting conflicts.
+
+\subsubsection{Task Scheduling}
+
+To indicate blocked tasks we simply change their "task state" to an appropriate value. These values are determined based on the return codes from the buffer management system.
+
+\subsection{NameServer}
+
+Since we do not plan on supporting short-lived tasks, we decided to make the NameServer slower but simpler. Our NameServer simply stores an array of registrations. A registration is simply a tid -> name mapping. The WhoIs request will traverse this list, trying to find one where the name matches the one we requested. The tid of that registration will be returned if no matching registration is found, an error code is returned. RegisterAs, will similarly traverse the list until it either find a registration with a matching name which it will overwrite or an empty registration slot. If there are no empty slots an error will be returned.
+
+We plan to either change RegisterAs to block in the future, or create a seperate polling primitive to simplify synchronizing task startup.
+
+\subsection{Scheduling}
+
+For kernel 2, once we started timing things we noticed that our old method of scheduling was unoptimal. We previously used a circular buffer as a queue and decided to switch to using linked list with the next pointers inside the task descriptors. The reasoning behind this is a decreased space requirement, as well as it being extendible to other parts of the system where we need lists of tasks or tids.
+
+\subsection{Utilities}
+
+As part of implementing different parts of the system we started having to add some basic utility functions. These include memcpy, strlen, and streq. These are currently implemented in a simple way to save time. We will later optimize these as required.
+
+\subsection{Timing}
+
+\subsection{Rock/Paper/Scissors}
+
+\subsection{Known Bugs}
+\begin{itemize}
+    \item Add bugs
+\end{itemize}
+\end{document}
