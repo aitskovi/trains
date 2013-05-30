@@ -152,7 +152,18 @@ void kmy_parent_tid_test() {
     assert(t1->return_value == 0);
     assert(t2->state == READY);
     assert(t2->return_value == 1);
+}
 
+void kcreate_test() {
+    reset();
+
+    kcreate(t2, MEDIUM, 0);
+    assert(t2->state == READY);
+    assert(t2->return_value > t2->tid);
+
+    Task *child = task_get(t2->return_value);
+    assert(child != 0);
+    assert(child->state == READY);
 }
 
 int main() {
@@ -162,5 +173,6 @@ int main() {
     ksend_transaction_failed();
     kmytid_test();
     kmy_parent_tid_test();
+    kcreate_test();
     return 0;
 }

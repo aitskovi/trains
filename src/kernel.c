@@ -52,19 +52,7 @@ void handle(Task *task, Request *req) {
         kmytid(task);
         break;
     case CREATE:
-        if ((int) req->args[0] < 0 || (int) req->args[0] > NUM_PRIORITIES) {
-            task_set_return_value(task, -1);
-            make_ready(task);
-            return;
-        }
-        Task *child = task_create(req->args[1], task->tid, (enum task_priority)req->args[0]);
-        if (!child) {
-            task_set_return_value(task, -2);
-        } else {
-            make_ready(child);
-            task_set_return_value(task, child->tid);
-        }
-        make_ready(task);
+        kcreate(task, (int)req->args[0] /* priority */, req->args[1] /* code */);
         break;
     case MY_PARENT_TID:
         kmy_parent_tid(task);
