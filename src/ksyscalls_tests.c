@@ -142,11 +142,25 @@ void kmytid_test() {
     assert(t1->return_value == 1);
 }
 
+void kmy_parent_tid_test() {
+    reset();
+
+    kmy_parent_tid(t1);
+    kmy_parent_tid(t2);
+
+    assert(t1->state == READY);
+    assert(t1->return_value == 0);
+    assert(t2->state == READY);
+    assert(t2->return_value == 1);
+
+}
+
 int main() {
     kmessaging_test();
     krecieve_blocking_test();
     kreply_non_blocked_test();
     ksend_transaction_failed();
     kmytid_test();
+    kmy_parent_tid_test();
     return 0;
 }

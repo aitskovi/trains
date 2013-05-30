@@ -97,3 +97,10 @@ int kmytid(Task *task) {
 
     return 0;
 }
+
+int kmy_parent_tid(Task *task) {
+    task_set_return_value(task, task->parent_tid);
+    make_ready(task);
+
+    return 0;
+}

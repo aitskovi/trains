@@ -67,8 +67,7 @@ void handle(Task *task, Request *req) {
         make_ready(task);
         break;
     case MY_PARENT_TID:
-        task_set_return_value(task, task->parent_tid);
-        make_ready(task);
+        kmy_parent_tid(task);
         break;
     case PASS:
         make_ready(task);
