@@ -19,4 +19,5 @@ void first() {
     for (i = 0; i < NUM_CLIENTS; ++i) {
         Create(MEDIUM, rps_client);
     }
+    Exit();
 }
