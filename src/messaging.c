@@ -105,3 +105,20 @@ int msg_reply(int tid, char *reply, int replylen) {
 
     return replylen;
 }
+
+/**
+ * Pops the next tid of waiters.
+ */
+int msg_pop(int tid) {
+    struct circular_queue *mailbox = &mailboxes[tid];
+
+    if (circular_queue_empty(mailbox)) return -1;
+
+    int next = (int)circular_queue_pop(mailbox);
+    send_buffers[next] = 0;
+    send_buffer_lengths[next] = 0;
+    receive_buffers[next] = 0;
+    receive_buffer_lengths[next] = 0;
+
+    return next;
+}

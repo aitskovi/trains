@@ -116,9 +116,63 @@ void kreply_non_blocked_test() {
     assert(strcmp(rcvd, msg) == 0);
 }
 
+void ksend_transaction_failed() {
+    reset();
+
+    char *msg = "Hello!";
+    int msglen = 7;
+    char reply[5];
+    int replylen = 5;
+    ksend(t0, t1->tid, msg, msglen, reply, replylen);
+
+    assert(t0->state == SEND_BLOCKED);
+
+    kexit(t1);
+    assert(t0->state == READY);
+    assert(t0->return_value == -3);
+    assert(t1->state == ZOMBIE);
+}
+
+void kmytid_test() {
+    reset();
+
+    kmytid(t1);
+
+    assert(t1->state == READY);
+    assert(t1->return_value == 1);
+}
+
+void kmy_parent_tid_test() {
+    reset();
+
+    kmy_parent_tid(t1);
+    kmy_parent_tid(t2);
+
+    assert(t1->state == READY);
+    assert(t1->return_value == 0);
+    assert(t2->state == READY);
+    assert(t2->return_value == 1);
+}
+
+void kcreate_test() {
+    reset();
+
+    kcreate(t2, MEDIUM, 0);
+    assert(t2->state == READY);
+    assert(t2->return_value > t2->tid);
+
+    Task *child = task_get(t2->return_value);
+    assert(child != 0);
+    assert(child->state == READY);
+}
+
 int main() {
     kmessaging_test();
     krecieve_blocking_test();
     kreply_non_blocked_test();
+    ksend_transaction_failed();
+    kmytid_test();
+    kmy_parent_tid_test();
+    kcreate_test();
     return 0;
 }

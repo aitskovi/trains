@@ -48,4 +48,9 @@ int msg_recieve(int dst, int *src, char *msg, int msglen);
  */
 int msg_reply(int tid, char *reply, int replylen);
 
+/**
+ * Pop a tid of the recieving mailbox.
+ */
+int msg_pop(int tid);
+
 #endif

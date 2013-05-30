@@ -77,3 +77,49 @@ int kreply(Task *active, int tid, char *reply, int replylen) {
     return 0;
 }
 
+int kexit(Task *active) {
+    active->state = ZOMBIE;
+
+    // Cleanup any leftover sends.
+    int next;
+    while ((next = msg_pop(active->tid)) != -1) {
+        Task *task = task_get(next);
+        task_set_return_value(task, -3);
+        make_ready(task);
+    }
+
+    return 0;
+}
+
+int kmytid(Task *task) {
+    task_set_return_value(task, task->tid);
+    make_ready(task);
+
+    return 0;
+}
+
+int kmy_parent_tid(Task *task) {
+    task_set_return_value(task, task->parent_tid);
+    make_ready(task);
+
+    return 0;
+}
+
+int kcreate(struct Task *task, int priority, void(*code)()) {
+    if (priority < 0 || priority > NUM_PRIORITIES) {
+        task_set_return_value(task, -1);
+        make_ready(task);
+        return 0;
+    }
+
+    Task *child = task_create(code, task->tid, (enum task_priority)priority);
+    if (!child) {
+        task_set_return_value(task, -2);
+    } else {
+        make_ready(child);
+        task_set_return_value(task, child->tid);
+    }
+    make_ready(task);
+
+    return 0;
+}
