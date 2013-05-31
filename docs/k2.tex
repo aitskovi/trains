@@ -15,9 +15,12 @@
 
 This documentation covers the implementation of the Kernel for Assignment 2. This assignment covered message passing and the name server. A Rock/Paper/Scisssors game was implemented as a user service. The new system calls are: 
 \begin{itemize}
-  \item int Send(int priority, (void *code)())
-  \item int Recieve()
-  \item int Reply()
+  \item int Send(tid\_t tid, char *msg, int msglen, char *reply, int replylen);
+  \item int Receive(tid\_t *tid, char *msg, int msglen);
+  \item int Reply(tid\_t tid, char *reply, int replylen);
+\end{itemize}
+The NameServer has the following interface:
+\begin{itemize}
   \item int WhoIs(char *name)
   \item int RegisterAs(char *name)
 \end{itemize}
@@ -25,16 +28,72 @@ As part of our work, we also cleaned up scheduling a bit to make it faster. The 
 
 \section{Operating Instructions}
 \begin{enumerate}
-  \item load -b 0x00218000 -h 10.15.167.4 "ARM/ai/kernel2.elf"
+  \item load -b 0x00218000 -h 10.15.167.4 \$executable
   \item go
   \item After each round of rock/paper/scissors, press any key to continue
 \end{enumerate}
 
 \section{Submitted Files}
-\begin{itemize}
-    \item
-\end{itemize}
+Root directory: /u1/aianus/handin/kernel2/
 
+\subsection{Executable}
+56b3fd7399843384a7c0bc4cd208076a  /kernel2.elf
+\subsection{Code}
+\begin{verbatim}
+862df1e336ef89d83bceadc522085dd1  /include/user/user.h
+331b47449d891d458b0647da2c2924de  /include/user/rps/rpsserver.h
+a53c63ad1757b25362486bce6ef7c90d  /include/user/rps/rps.h
+a4e2596082274858565d2979a282471f  /include/bwio.h
+6cdb12520192310b9710cdf69b99c1a8  /include/time.h
+7a139daaf3199b29a9fd5eda47ce189e  /include/switch.h
+55353a3d6941ddade6341237cc792e28  /include/ts7200.h
+570c77afbd19a6a0be4419d136ee9a1f  /include/user/rps/rpsclient.h
+7424d31ca0b6fa2a57bd201806250007  /include/task.h
+7f58a66fb1e50a35ed82254e79ba9720  /include/nameservice.h
+91ad87b52b69ec80fea53f8d7a8c2af8  /include/ksyscalls.h
+bf705acd9b43d3159d764776a5c6a47a  /include/nameserver.h
+f5d65e70556962f5effba160e9bbd0a0  /include/messaging.h
+5c61838a4125651ebe41601ccd881455  /include/libc/random.h
+e564acc538ea26924272762d1ee04b70  /include/memory.h
+081b58b1ad6e401d9648cb88ffb30301  /include/request.h
+01aac0aa7082faf2f8d55f186e85b71d  /include/libc/syscall.h
+b044b4c9d77f1d0dd9b7a2961e45a67a  /include/kmemory.h
+65779c1b19758a33bae259538343ca1a  /include/circular_queue.h
+3be92892b8ee93e81efc6ebe68a3b40d  /include/scheduling.h
+3f34ab2a8151fc445ead37814f231fb5  /include/string.h
+25eb71b421bb2f87aeb04ac92067400b  /src/Makefile
+77697972cdac93a02951f8476ce29379  /src/messaging.c
+25757ddee6d82a16be926075e04b4972  /src/bwio.c
+bbc18cdf4279b08157d9d762f80e4182  /src/nameservice.c
+fddd22bf24ea4deccffe52426a50bef7  /src/user/kernel2.c
+a9bf6b72bc1cbd8d7d53a47b412d91de  /src/user/timings.c
+1e3f84b77a97255d6251ddf262835725  /src/user/kernel1.c
+5dc90c360348cd3ea4afabe3d8523a83  /src/user/user.c
+07bbcfad3498b3bd65cb8c675481895d  /src/nameserver.c
+8b5ae02bd24de4355a0f7c5fb17e87dc  /src/user/rps/rpsserver.c
+ff88b36ce25b85c91b2c730c2a0ecf1f  /src/user/rps/rpsclient.c
+6df1e9b9ed9a35592b579ccf162e8910  /src/context_switch.s
+cbc4b3cdae62ea6a211c5a0f834e646c  /src/scheduling.c
+6d5afd3fb8acbda06a47d1d0472d4c33  /src/circular_queue.c
+0481652272aaa7a6056452de82d076bc  /src/ksyscalls.c
+fddc6dcd961f2d55477b27a2c2740bcc  /src/task.c
+c456af14dceec31738d7b7bd196026cb  /src/libc/time.c
+428d29b72bb432d11e63812e3f19dedd  /src/libc/random.c
+e9226f0231100a2c130805c65611c712  /src/libc/syscall.c
+162d862ddd1fe9dee232d635307f5891  /src/libc/memory.c
+17b79aee81f0e087bb0298b74ae82aae  /src/x86.mk
+2e6e7d91fdc2902f90a16534f18837d1  /src/string.c
+7a1f27a3517346480a2a24254e7422d5  /src/test/messaging_tests.c
+eac4e9c57a05abcae635c4016302db11  /src/circular_queue_tests
+b3cef9ea48ced4f926c4bb2dd8f42947  /src/messaging_tests
+6f028faf32aa5991d9ceb153812a7f35  /src/test/circular_queue_tests.c
+c3b46c3acfa81d47b2e01f9e1a223543  /src/test/scheduling_tests.c
+bb61149f36d647bef19aa6e71e64ec0d  /src/test/ksyscalls_tests.c
+d74a90ad47cd3c986e93c8ab6d49b567  /src/arm.mk
+f2bfaadeeac0046f9cc19153dadfc00d  /src/kernel.c
+3d07be1b7e34d5dddb0f2981f80eeed9  /src/switch.c
+24c1f75f5c74bcb0502e86129fdfeee6  /src/orex.ld
+\end{verbatim}
 \section{Kernel Description}
 
 \subsection{Messaging}
@@ -84,7 +143,7 @@ As part of implementing different parts of the system we started having to add s
 
 \subsection{Timing}
 
-Timing is done using the 40-bit timer running at 938khz to get maximum granularity in the timing results. Timing is accomplished by creating a timer struct, resetting it (which stored the current time), and then reading the elapsed time (by getting the current time and subtracting the stored time).
+Timing is done using the 40-bit timer running at 983khz to get maximum granularity in the timing results. Timing is accomplished by creating a timer struct, resetting it (which stored the current time), and then reading the elapsed time (by getting the current time and subtracting the stored time).
 
 \subsection{Rock/Paper/Scissors}
 The user programs used to test send/receive/reply are a RockPaperScissors server and a set of RockPaperScissors clients. 
@@ -118,7 +177,7 @@ Each of the six clients first looks up the tid of the server using the nameserve
 64 bytes	on	no	on	06	27
 \end{verbatim}
 
-We see a lot of time being spent in memcpy, as evidenced by large (~100\%) increases in latency when the message length is changed from 4 bytes to 64 bytes. We also see that memory accesses are taking the vast majority of the time, since turning caches on is good for >13x improvement in latency.
+We see a lot of time being spent in memcpy, as evidenced by large (~100\%) increases in latency when the message length is changed from 4 bytes to 64 bytes. We also see that memory accesses are taking the vast majority of the time, since turning caches on is good for 13x improvement in latency.
 
 \subsection{Output}
 \begin{verbatim}
