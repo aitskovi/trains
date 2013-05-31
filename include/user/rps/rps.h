@@ -20,14 +20,15 @@ enum RPSMoves {
     NONE,
     ROCK,
     PAPER,
-    SCISSORS
+    SCISSORS,
+    FORFEIT
 };
 
 enum RPSResults {
     WIN,
     LOSE,
     DRAW,
-    FORFEIT
+    OPPONENT_FORFEITED
 };
 
 typedef struct RPSMessage {

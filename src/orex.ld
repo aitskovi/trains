@@ -12,6 +12,7 @@ data : /* Initialized data. */
 {
 _DataStart = . ;
 *(.data)
+*(.data.*)
 _DataEnd = . ;
 } >ram
 

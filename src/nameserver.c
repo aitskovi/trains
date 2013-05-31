@@ -67,7 +67,7 @@ int WhoIs(char *name) {
 }
 
 void NameServer() {
-    bwprintf(COM2, "NameServer: Starting Up\n");
+//    bwprintf(COM2, "NameServer: Starting Up\n");
     int src;
     struct NameServerRequest req;
 
@@ -78,17 +78,17 @@ void NameServer() {
 
         switch(req.operation) {
             case REGISTER_AS: 
-                bwprintf(COM2, "NameServer: Received RegisterAs\n");
-                bwprintf(COM2, "NameServer: Registering %d as %s\n", src, req.data);
+//                bwprintf(COM2, "NameServer: Received RegisterAs\n");
+//                bwprintf(COM2, "NameServer: Registering %d as %s\n", src, req.data);
                 reply.result = nameservice_register(req.data, src);
                 break;
             case WHO_IS:
-                bwprintf(COM2, "NameServer: Received WhoIs\n");
-                bwprintf(COM2, "NameServer: Looking Up %s\n", req.data);
+//                bwprintf(COM2, "NameServer: Received WhoIs\n");
+//                bwprintf(COM2, "NameServer: Looking Up %s\n", req.data);
                 reply.result = nameservice_lookup(req.data);
                 break;
             default:
-                bwprintf(COM2, "NameServer: Received Invalid Request\n");
+//                bwprintf(COM2, "NameServer: Received Invalid Request\n");
                 break;
         }
 
@@ -102,10 +102,10 @@ void initialize_nameserver() {
     initialize_nameservice();
 
     // Initalize the NameServerTask
-    bwprintf(COM2, "Creating NameServer\n", nameserver_tid);
+//    bwprintf(COM2, "Creating NameServer\n", nameserver_tid);
     Task *task = task_create(NameServer, -1, HIGH);
     nameserver_tid = task->tid;
     make_ready(task);
-    bwprintf(COM2, "NameServer created in task <%d>\n", nameserver_tid);
+//    bwprintf(COM2, "NameServer created in task <%d>\n", nameserver_tid);
 
 }

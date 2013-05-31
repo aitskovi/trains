@@ -46,6 +46,8 @@ void Exit() {
 }
 
 int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen) {
+//    tid_t me = MyTid();
+//    bwprintf(COM2, "%d is sending a message to %d\n", me, tid);
     Request req;
     req.request = SEND;
     req.args[0] = (void *)tid;
@@ -57,6 +59,8 @@ int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen) {
 }
 
 int Receive(tid_t *tid, char *msg, int msglen) {
+//    tid_t me = MyTid();
+//    bwprintf(COM2, "%d is waiting for a message\n", me);
     Request req;
     req.request = RECEIVE;
     req.args[0] = tid;
@@ -66,6 +70,8 @@ int Receive(tid_t *tid, char *msg, int msglen) {
 }
 
 int Reply(tid_t tid, char *reply, int replylen) {
+//    tid_t me = MyTid();
+//    bwprintf(COM2, "%d is replying to %d\n", me, tid);
     Request req;
     req.request = REPLY;
     req.args[0] = (void *)tid;
