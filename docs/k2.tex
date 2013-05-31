@@ -27,6 +27,7 @@ As part of our work, we also cleaned up scheduling a bit to make it faster. The 
 \begin{enumerate}
   \item load -b 0x00218000 -h 10.15.167.4 "ARM/ai/kernel2.elf"
   \item go
+  \item After each round of rock/paper/scissors, press any key to continue
 \end{enumerate}
 
 \section{Submitted Files}
@@ -79,14 +80,90 @@ For kernel 2, once we started timing things we noticed that our old method of sc
 
 \subsection{Utilities}
 
-As part of implementing different parts of the system we started having to add some basic utility functions. These include memcpy, strlen, and streq. These are currently implemented in a simple way to save time. We will later optimize these as required.
+As part of implementing different parts of the system we started having to add some basic utility functions. These include memcpy, memset, strlen, and streq. These are currently implemented in a simple way to save time. We will later optimize these as required.
 
 \subsection{Timing}
 
-\subsection{Rock/Paper/Scissors}
+Timing is done using the 40-bit timer running at 938khz to get maximum granularity in the timing results. Timing is accomplished by creating a timer struct, resetting it (which stored the current time), and then reading the elapsed time (by getting the current time and subtracting the stored time).
 
-\subsection{Known Bugs}
+\subsection{Rock/Paper/Scissors}
+The user programs used to test send/receive/reply are a RockPaperScissors server and a set of RockPaperScissors clients. 
+
+\subsubsection{RPSServer}
+The server first registers itself with the nameserver and then enters an infinite messaging handling loop.
+If it receives a SIGNUP message it places the client task on a queue. Once there are two clients on the queue, they are popped off, turned into a match, and unblocked with a GOAHEAD reply.
+If a PLAY message is received, the play is registered, and if both players in a match have played they are unblocked with a RESULT reply.
+If a QUIT message is received, a "FORFEIT" play is registered and the quitting task is immediately unblocked. Their opponent is notified by receiving a "FORFEIT" result instead of WIN, LOSE, or DRAW.
+
+\subsubsection{RPSClient}
+Each of the six clients first looks up the tid of the server using the nameserver. It then signs up for a game, blocks until it has an opponent, plays two rounds (printing the results as they find out), and then QUITs and exits.
+
+\subsection{Performance Measurements}
+\begin{verbatim}
+4 bytes		off	yes	off	06	528
+64 bytes	off	yes	off	06	1065
+4 bytes		on	yes	off	06	38
+64 bytes	on	yes	off	06	73
+4 bytes		off	no	off	06	532
+64 bytes	off	no	off	06	1050
+4 bytes		on	no	off	06	38
+64 bytes	on	no	off	06	72
+4 bytes		off	yes	on	06	261
+64 bytes	off	yes	on	06	422
+4 bytes		on	yes	on	06	18
+64 bytes	on	yes	on	06	27
+4 bytes		off	no	on	06	265
+64 bytes	off	no	on	06	429
+4 bytes		on	no	on	06	19
+64 bytes	on	no	on	06	27
+\end{verbatim}
+
+We see a lot of time being spent in memcpy, as evidenced by large (~100\%) increases in latency when the message length is changed from 4 bytes to 64 bytes. We also see that memory accesses are taking the vast majority of the time, since turning caches on is good for >13x improvement in latency.
+
+\subsection{Output}
+\begin{verbatim}
+RPS Client Task 3 starting
+RPS Client Task 4 starting
+RPS Client Task 5 starting
+RPS Client Task 6 starting
+RPS Client Task 7 starting
+RPS Client Task 8 starting
+RPS Client Task 3 signed up
+RPS Client Task 4 signed up
+RPS Client Task 5 signed up
+RPS Client Task 6 signed up
+RPS Client Task 7 signed up
+RPS Client Task 8 signed up
+Round ended with 3 playing Paper and 4 playing Rock
+Press any key to continue 
+I, task 3, won
+I, task 4, lost
+Round ended with 5 playing Paper and 6 playing Rock
+Press any key to continue 
+I, task 5, won
+I, task 6, lost
+Round ended with 7 playing Paper and 8 playing Rock
+Press any key to continue 
+I, task 7, won
+I, task 8, lost
+Round ended with 3 playing Paper and 4 playing Paper
+Press any key to continue 
+I, task 3, drew
+I, task 4, drew
+Round ended with 5 playing Paper and 6 playing Paper
+Press any key to continue 
+I, task 5, drew
+I, task 6, drew
+Round ended with 7 playing Rock and 8 playing Scissors
+Press any key to continue 
+I, task 7, won
+I, task 8, lost
+\end{verbatim}
+
+The output shows the six client tasks starting up and signing up for a game. They each then play two rounds of rock paper scissors before exiting. The rock paper scissors server emits the result of each round after it's completed. Since the clients signed up in order (3, then 4, then 5, then 6, then 7, then 8) and since they are put on a queue when they sign up, we see client 3 playing with client 4, client 5 playing with client 6, and client 7 playing with client 8.
+
+\subsection{Known Bugs and Limitations}
 \begin{itemize}
-    \item Add bugs
+    \item The timing will roll over if the OS is running for over 79 minutes since we only consider the low byte of the 40-bit timer value
 \end{itemize}
 \end{document}
