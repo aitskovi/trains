@@ -55,6 +55,11 @@ typedef struct Task {
     enum task_state state;
 
     /**
+     * Used for task queueing.
+     */
+    struct Task *next;
+
+    /**
      * The stack for this task.
      */
     unsigned char stack[STACK_SIZE];
