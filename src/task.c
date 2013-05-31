@@ -18,6 +18,7 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
 
     Task *t = &tasks[next_tid++];
 
+    t->next = 0;
     t->tid = next_tid - 1;
     t->sp = (int *) (t->stack + STACK_SIZE);
     t->sp -= 10; // Make room for 14 registers
