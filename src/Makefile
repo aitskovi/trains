@@ -11,7 +11,8 @@ else
 	include arm.mk
 endif
 
-ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o
+ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_arm.o
+X86OBJECTS = log_x86.o
 OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameservice.o string.o random.o
 
 all: kerneltimings.elf kernel2.elf
@@ -48,16 +49,16 @@ kernel2.elf : kernel2.o rpsclient.o rpsserver.o $(ARMOBJECTS) $(OBJECTS)
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-scheduling_tests : scheduling_tests.o $(OBJECTS)
+scheduling_tests : scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
-circular_queue_tests : circular_queue_tests.o $(OBJECTS)
+circular_queue_tests : circular_queue_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
-messaging_tests: messaging_tests.o $(OBJECTS)
+messaging_tests: messaging_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
-ksyscalls_tests: ksyscalls_tests.o $(OBJECTS)
+ksyscalls_tests: ksyscalls_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
