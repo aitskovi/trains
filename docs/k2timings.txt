@@ -1,0 +1,16 @@
+4 bytes	off	yes	off	06	528
+64 bytes	off	yes	off	06	1065
+4 bytes	on	yes	off	06	38
+64 bytes	on	yes	off	06	73
+4 bytes	off	no	off	06	532
+64 bytes	off	no	off	06	1050
+4 bytes	on	no	off	06	38
+64 bytes	on	no	off	06	72
+4 bytes	off	yes	on	06	261
+64 bytes	off	yes	on	06	422
+4 bytes	on	yes	on	06	18
+64 bytes	on	yes	on	06	27
+4 bytes	off	no	on	06	265
+64 bytes	off	no	on	06	429
+4 bytes	on	no	on	06	19
+64 bytes	on	no	on	06	27

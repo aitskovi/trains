@@ -13,11 +13,25 @@ static Task *active;
 
 void first();
 
+void enable_cache() {
+    asm("mov r1, #0" "\n\t"
+        "mcr p15, 0, r1, c7, c5, 0" "\n\t"
+        "mrc p15, 0, r1, c1, c0, 0" "\n\t"
+        "orr r1, r1, #4096" "\n\t"
+        "orr r1, r1, #4" "\n\t"
+        "mcr p15, 0, r1, c1, c0, 0"
+        :
+        :
+        : "r1");
+}
+
 void initialize_kernel() {
     bwsetfifo(COM2, OFF);
 
     void (**syscall_handler)() = (void (**)())0x28;
     *syscall_handler = &kernel_enter;
+
+    enable_cache();
 
     initialize_time();
     initialize_scheduling();
@@ -67,7 +81,7 @@ int main() {
     // This has to be done after kernel initialization.
     initialize_nameserver();
 
-    active = task_create(first, 0, MEDIUM);
+    active = task_create(first, 0, HIGH);
     make_ready(active);
 
     Request *req;
