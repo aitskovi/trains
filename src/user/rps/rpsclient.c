@@ -20,9 +20,7 @@ void rps_client () {
     bwprintf(COM2, "RPS Client Task %d starting\n", me);
 
     Random random;
-    Time time;
-    get_time(&time);
-    seed_random(&random, me * 1000);
+    seed_random(&random, me * 1234);
 
     tid_t rps_server = -1;
     while (rps_server < 0) {
