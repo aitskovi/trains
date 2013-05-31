@@ -169,8 +169,6 @@ void rps_server () {
                     t2Reply.result = WIN;
                     break;
                 }
-
-                // TODO bwgetc here to pause?
                 bwprintf (COM2,
                           "Round ended with %d playing %s and %d playing %s\n",
                           match->task1,
@@ -187,14 +185,19 @@ void rps_server () {
             }
             break;
         case QUIT:
-            bwprintf(COM2, "RPS Server got a QUIT from %d\n", tid);
+            //bwprintf(COM2, "RPS Server got a QUIT from %d\n", tid);
             match = find_match_containing_tid(matches, num_matches, tid);
             if (match->task1 == tid) {
                 match->t1Move = FORFEIT;
+                if (match->t2Move == FORFEIT) {
+                    reset_match_spot(match);
+                }
             } else {
                 match->t2Move = FORFEIT;
+                if (match->t1Move == FORFEIT) {
+                    reset_match_spot(match);
+                }
             }
-            // TODO What happens if they both FORFEIT at the same time
             reply.type = QUIT;
             Reply(tid, (char*) &reply, sizeof(reply));
             break;

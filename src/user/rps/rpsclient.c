@@ -20,7 +20,7 @@ void rps_client () {
     bwprintf(COM2, "RPS Client Task %d starting\n", me);
 
     Random random;
-    seed_random(&random, me * 1234);
+    seed_random(&random, me * 1234567);
 
     tid_t rps_server = -1;
     while (rps_server < 0) {
@@ -54,8 +54,8 @@ void rps_client () {
         }
     }
 
-//    msg.type = QUIT;
-//    Send(rps_server, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    msg.type = QUIT;
+    Send(rps_server, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
 
     Exit();
 

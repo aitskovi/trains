@@ -9,7 +9,7 @@
 #include <rpsserver.h>
 #include <syscall.h>
 
-#define NUM_CLIENTS 4
+#define NUM_CLIENTS 6
 
 void first() {
     // Spawn rps server

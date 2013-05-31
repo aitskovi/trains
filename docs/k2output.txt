@@ -1,0 +1,37 @@
+RPS Client Task 3 starting
+RPS Client Task 4 starting
+RPS Client Task 5 starting
+RPS Client Task 6 starting
+RPS Client Task 7 starting
+RPS Client Task 8 starting
+RPS Client Task 3 signed up
+RPS Client Task 4 signed up
+RPS Client Task 5 signed up
+RPS Client Task 6 signed up
+RPS Client Task 7 signed up
+RPS Client Task 8 signed up
+Round ended with 3 playing Paper and 4 playing Rock
+Press any key to continue 
+I, task 3, won
+I, task 4, lost
+Round ended with 5 playing Paper and 6 playing Rock
+Press any key to continue 
+I, task 5, won
+I, task 6, lost
+Round ended with 7 playing Paper and 8 playing Rock
+Press any key to continue 
+I, task 7, won
+I, task 8, lost
+Round ended with 3 playing Paper and 4 playing Paper
+Press any key to continue 
+I, task 3, drew
+I, task 4, drew
+Round ended with 5 playing Paper and 6 playing Paper
+Press any key to continue 
+I, task 5, drew
+I, task 6, drew
+Round ended with 7 playing Rock and 8 playing Scissors
+Press any key to continue 
+I, task 7, won
+I, task 8, lost
+
