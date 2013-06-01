@@ -9,16 +9,45 @@
 #include <ksyscalls.h>
 #include <nameserver.h>
 #include <memory.h>
+#include <ts7200.h>
 
 static Task *active;
 
 void first();
+
+void interrupt() {
+    log("Interrupted!\n");
+}
+
+void initialize_irq() {
+    //int *status = VIC_IRQ_STATUS_OFFSET + VIC_FIQ_STATUS_OFFSET;
+    int *enabled = (int *)(VIC1_BASE + VIC_INT_ENABLE_OFFSET);
+    log("Interrupts are %x\n", *enabled);
+    *enabled = 0x7f7ffff; // Enable ALL Interrupts
+    log("Interrupts are %x\n", *enabled);
+
+    // Enable interrupts in the cpu!
+    asm("msr cpsr_c, #147");
+
+    // Try to generate an intterupt.
+    int *irq_status = (int *)(VIC1_BASE + VIC_IRQ_STATUS_OFFSET);
+    log("Interrupt Status: %x\n", *irq_status);
+    log("Generating Interrupt\n");
+    int *soft_int = (int *)(VIC1_BASE + VIC_SOFT_INT_OFFSET);
+    soft_int = 0xf000;
+    log("Generated Interrupt!\n");
+    irq_status = (int *)(VIC1_BASE + VIC_IRQ_STATUS_OFFSET);
+    log("Interrupt Status: %x\n", *irq_status);
+}
 
 void initialize_kernel() {
     bwsetfifo(COM2, OFF);
 
     void (**syscall_handler)() = (void (**)())0x28;
     *syscall_handler = &kernel_enter;
+
+    void (**irq_handler)() = (void (**)())0x38;
+    *irq_handler = &interrupt;
 
     initialize_memory();
     initialize_time();
@@ -68,6 +97,7 @@ int main() {
 
     // This has to be done after kernel initialization.
     initialize_nameserver();
+    initialize_irq();
 
     active = task_create(first, 0, HIGH);
     make_ready(active);
