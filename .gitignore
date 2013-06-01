@@ -31,3 +31,6 @@
 *.pdf
 *.log
 *.gz
+
+# Test Binaries
+*_tests
