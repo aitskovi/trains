@@ -22,6 +22,9 @@ tests: test circular_queue_tests messaging_tests ksyscalls_tests
 opt: CFLAGS+=-O2
 opt: all
 
+dbg: CFLAGS+=-DDEBUG
+dbg: all
+
 .SUFFIXES:
 
 .SECONDARY:
