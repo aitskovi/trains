@@ -1,5 +1,5 @@
-#ifndef _ASSERT_H_
-#define _ASSERT_H_
+#ifndef _DASSERT_H_
+#define _DASSERT_H_
 
 #include <log.h>
 
