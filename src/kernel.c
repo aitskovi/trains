@@ -20,24 +20,15 @@ void interrupt() {
 }
 
 void initialize_irq() {
-    //int *status = VIC_IRQ_STATUS_OFFSET + VIC_FIQ_STATUS_OFFSET;
     int *enabled = (int *)(VIC1_BASE + VIC_INT_ENABLE_OFFSET);
     log("Interrupts are %x\n", *enabled);
-    *enabled = 0x7f7ffff; // Enable ALL Interrupts
+    *enabled = 0x1; // Enable ALL Interrupts
     log("Interrupts are %x\n", *enabled);
-
-    // Enable interrupts in the cpu!
-    asm("msr cpsr_c, #147");
-
-    // Try to generate an intterupt.
-    int *irq_status = (int *)(VIC1_BASE + VIC_IRQ_STATUS_OFFSET);
-    log("Interrupt Status: %x\n", *irq_status);
-    log("Generating Interrupt\n");
-    int *soft_int = (int *)(VIC1_BASE + VIC_SOFT_INT_OFFSET);
-    soft_int = 0xf000;
-    log("Generated Interrupt!\n");
-    irq_status = (int *)(VIC1_BASE + VIC_IRQ_STATUS_OFFSET);
-    log("Interrupt Status: %x\n", *irq_status);
+    //int *soft_int = (int *)(VIC1_BASE + VIC_SOFT_INT_OFFSET);
+   // log("Soft Int is %x\n", soft_int);
+    //int *soft_int_clear = (int *)(VIC1_BASE + VIC_SOFT_INT_CLEAR_OFFSET);
+    //*soft_int_clear = 0xffff;
+    //log("Soft Int is %x\n", soft_int);
 }
 
 void initialize_kernel() {
@@ -47,13 +38,14 @@ void initialize_kernel() {
     *syscall_handler = &kernel_enter;
 
     void (**irq_handler)() = (void (**)())0x38;
-    *irq_handler = &interrupt;
+    *irq_handler = &irq_enter;
 
     initialize_memory();
     initialize_time();
     initialize_scheduling();
     initialize_tasks();
     initialize_messaging();
+    initialize_irq();
 }
 
 /**
@@ -97,7 +89,7 @@ int main() {
 
     // This has to be done after kernel initialization.
     initialize_nameserver();
-    initialize_irq();
+    //initialize_irq();
 
     active = task_create(first, 0, HIGH);
     make_ready(active);
@@ -105,7 +97,14 @@ int main() {
     Request *req;
     while((active = schedule())) {
         req = kernel_exit(active);
-        handle(active, req);
+        log("Got Request: %x\n", req);
+        if (req == 0) {
+            int *soft_int_clear = (int *)(VIC1_BASE + VIC_SOFT_INT_CLEAR_OFFSET);
+            *soft_int_clear = 0x1;
+            make_ready(active);
+        } else {
+            handle(active, req);
+        }
     }
 
     return 0;

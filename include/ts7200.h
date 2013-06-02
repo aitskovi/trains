@@ -85,8 +85,8 @@
 #define UART_HDLCSTS_OFFSET	0x21c
 
 // Vector Interrupt Controllers
-#define VIC1_BASE 0x800B0000
-#define VIC2_BASE 0x800C0000
+#define VIC1_BASE 0x800b0000
+#define VIC2_BASE 0x800c0000
 
 // Interrupt Controller Offsets
 #define VIC_IRQ_STATUS_OFFSET     0x00
