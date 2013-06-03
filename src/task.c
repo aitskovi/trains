@@ -1,6 +1,7 @@
 #include <task.h>
 
 #include <bwio.h>
+#include <dassert.h>
 
 #define SL 6
 #define FP 7
@@ -17,6 +18,10 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
     if (next_tid == MAX_TASKS) return 0;
 
     Task *t = &tasks[next_tid++];
+
+    // Allocate a stack for us from our heap.
+    t->stack = kmalloc(STACK_SIZE);
+    dassert(t->stack != 0, "Task Stack Allocation Failed");
 
     t->next = 0;
     t->tid = next_tid - 1;

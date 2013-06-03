@@ -3,7 +3,7 @@
 
 #include <scheduling.h>
 
-#define STACK_SIZE 1048576 // 1mb stack
+#define STACK_SIZE 1024 * 50 // 50kb stack
 
 #define MAX_TASKS 10
 
@@ -64,7 +64,7 @@ typedef struct Task {
     /**
      * The stack for this task.
      */
-    unsigned char stack[STACK_SIZE];
+    unsigned char *stack;
 } Task;
 
 void task_print(Task *t);
