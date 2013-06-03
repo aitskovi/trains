@@ -71,6 +71,6 @@ clean:
 	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
 
 install: all
-	-cp kernel2.elf kerneltimings.elf /u/cs452/tftp/ARM/ai/
+	-cp kernel2.elf kerneltimings.elf /u/cs452/tftp/ARM/$(USER)/
 
 -include $(DEPS)
