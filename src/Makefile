@@ -17,7 +17,7 @@ OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksysc
 
 all: kerneltimings.elf kernel2.elf
 
-tests: test circular_queue_tests messaging_tests ksyscalls_tests
+tests: test circular_queue_tests messaging_tests ksyscalls_tests memory_tests
 
 opt: CFLAGS+=-O2
 opt: all
@@ -64,6 +64,9 @@ messaging_tests: messaging_tests.o $(OBJECTS) $(X86OBJECTS)
 ksyscalls_tests: ksyscalls_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
+memory_tests: memory_tests.o $(OBJECTS) $(X86OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
 clean:
 	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
 

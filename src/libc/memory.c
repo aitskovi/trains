@@ -1,4 +1,12 @@
-void * memcpy (void *destination, void *source, unsigned int len) {
+#include <memory.h>
+#include <log.h>
+
+#define HEAP_SIZE 1024 * 1024
+
+static char heap[HEAP_SIZE];
+static char *free;
+
+void *memcpy(void *destination, void *source, unsigned int len) {
     char *dst = (char *)destination;
     char *src = (char *)source;
 
@@ -10,7 +18,7 @@ void * memcpy (void *destination, void *source, unsigned int len) {
     return destination;
 }
 
-void * memset (void *destination, unsigned char value, unsigned int len) {
+void *memset(void *destination, unsigned char value, unsigned int len) {
     unsigned char *dst = (unsigned char *)destination;
 
     unsigned int i;
@@ -19,4 +27,22 @@ void * memset (void *destination, unsigned char value, unsigned int len) {
     }
 
     return destination;
+}
+
+void initialize_memory() {
+    dlog("Initializing Memory System\n");
+    free = heap;
+    dlog("Initialized Memory System\n");
+}
+
+void *kmalloc(unsigned int size) {
+    if (free + size > heap + HEAP_SIZE) {
+        dlog("Heap unable to serve request for: %d\n", size);
+        return 0;
+    }
+
+    void *ret = free;
+    free += size;
+
+    return ret;
 }
