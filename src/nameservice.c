@@ -3,20 +3,12 @@
 #include <string.h>
 #include <memory.h>
 
-#define MAX_REGISTRATIONS 50
-#define MAX_NAME_LENGTH 10
-
-struct Registration {
-    char name[MAX_NAME_LENGTH];
-    int tid;
-};
-
-static struct Registration registrations[MAX_REGISTRATIONS];
-
-int nameservice_register(char *name, int tid) {
+int nameservice_register(struct NameService *service, char *name, int tid) {
     // Verify Name Length
     int name_length = strlen(name);
     if (name_length > MAX_NAME_LENGTH - 1) return -1;
+
+    struct Registration *registrations = service->registrations;
 
     int i;
     for (i = 0; i < MAX_REGISTRATIONS; ++i) {
@@ -40,7 +32,9 @@ int nameservice_register(char *name, int tid) {
     return -2;
 }
 
-int nameservice_lookup(char *name) {
+int nameservice_lookup(struct NameService *service, char *name) {
+   struct Registration *registrations = service->registrations;
+
    int i; 
    for (i = 0; i < MAX_REGISTRATIONS; ++i) {
        struct Registration *reg = &registrations[i];
@@ -50,7 +44,9 @@ int nameservice_lookup(char *name) {
    return -1;
 }
 
-void initialize_nameservice() {
+void nameservice_initialize(struct NameService *service) {
+    struct Registration *registrations = service->registrations;
+
     // Initialize the Registration Structs.
     int i;
     for (i = 0; i < MAX_REGISTRATIONS; ++i) {
