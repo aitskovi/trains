@@ -3,6 +3,10 @@
 
 #include <log.h>
 
-#define dassert(exp, description) if (!(exp)) dlog("\nExpression Failed: %s\n %s\n", #exp, description);
+#ifdef DEBUG
+    #define dassert(exp, description) if (!(exp)) log("\nExpression Failed: %s\n %s\n", #exp, description)
+#else
+    #define dassert(exp, description) do {} while(0)
+#endif
 
 #endif
