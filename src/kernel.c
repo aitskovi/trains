@@ -8,6 +8,7 @@
 #include <messaging.h>
 #include <ksyscalls.h>
 #include <nameserver.h>
+#include <memory.h>
 
 static Task *active;
 
@@ -19,6 +20,7 @@ void initialize_kernel() {
     void (**syscall_handler)() = (void (**)())0x28;
     *syscall_handler = &kernel_enter;
 
+    initialize_memory();
     initialize_time();
     initialize_scheduling();
     initialize_tasks();
