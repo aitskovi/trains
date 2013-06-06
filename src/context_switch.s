@@ -4,83 +4,57 @@
 	.global	kernel_exit
 	.type	kernel_exit, %function
 kernel_exit:
-	mov	ip, sp
-	stmfd	sp!, {r4, r5, r6, sl, fp, ip, lr, pc}
-	sub	fp, ip, #4
-	sub	sp, sp, #4
-    mov	r6, r0
+	stmfd sp!, {r0, r4, r5, r6, r7, r8, r9, sl, fp, lr} @ Store kernel registers
 
-	stmfd sp!, {r6, r7, r8, r9, sl, fp, ip, lr} @ Store kernel registers
-
-	mov r0, r6 @ Load address of TD
-	bl task_get_sp(PLT) @ Get stack pointer from TD
-	mov r5, r0 @ Save sp in r5
-
-	mov r0, r6 @ Load address of TD
-	bl task_get_spsr(PLT) @ Get spsr from TD
-	msr spsr, r0 @ Save spsr
-
-	mov r0, r6 @ Load address of TD
-	bl task_get_return_value(PLT) @ Get return value from TD
-	mov r4, r0
-
-	mov r0, r6 @ Load address of TD
-	bl task_get_pc(PLT) @ Get pc from TD
-	mov r14, r0
+    ldr r1, [r0, #4] @ Load SP from Task
 
 	msr cpsr_c, #159 @ Change to system state
-	mov sp, r5 @ Install stack pointer of regular process
-	mov r0, r4 @ Install return value
-	ldmfd sp!, {r4, r5, r6, r7, r8, r9, sl, fp, ip, lr} @ Reload user registers
+	mov sp, r1 @ Install stack pointer of regular process
+
+	ldmfd sp!, {r0, r1, r2, r4, r5, r6, r7, r8, r9, sl, fp, lr} @ Reload user registers
 
 	msr cpsr_c, #147 @ Change to svc state
-	movs pc, r14 @ GO!
+                 @ Return Value is already installed in R0
+
+    msr spsr, r1 @ SPSR is in R1
+	movs pc, r2 @ GO!(Old PC was in R2)
 
     .size	kernel_exit, .-kernel_exit
 	.align	2
 	.global	kernel_enter
 	.type	kernel_enter, %function
 kernel_enter:
+
+    @ Grab the Kernel data about this task
+    mrs r1, spsr
+    mov r2, lr
+
 	@ Change to system state
 	msr cpsr_c, #159
+
 	@ Save user state
-	stmfd sp!, {r4, r5, r6, r7, r8, r9, sl, fp, ip, lr}
+	stmfd sp!, {r0, r1, r2, r4, r5, r6, r7, r8, r9, sl, fp, lr}
+
+    @ Grab the user's sp.
+    mov r1, sp
 
 	@ Change to svc state
 	msr cpsr_c, #147
-	@ Backup scratch registers
-	mov r4, r0
-	mov r5, r1
-	@ Backup PC
-	mov r1, lr
+
+    @ Backup Request
+    mov ip, r0
 
     @ Load kernel state
-    ldmia sp!, {r6, r7, r8, r9, sl, fp, ip, lr}
+    ldmia sp!, {r0, r4, r5, r6, r7, r8, r9, sl, fp, lr}
 
-    mov r0, r6 @ Load address of TD
-					   @ LR already in r1
-	bl task_save_pc
+    @ Store user's sp
+    str r1, [r0, #4]
 
-	@ Change to system state
-	msr cpsr_c, #159
-	mov r1, sp
-	@ Change to svc state
-	msr cpsr_c, #147
+    @ Install Request Param
+    mov r0, ip
 
-	@ Save SP to TD
-	mov r0, r6         @ Load address of TD
-					   @ SP already in r1
-	bl task_save_sp
-
-    @ Save SPSR to TD
-    mov r0, r6         @ Load address of TD
-	mrs r1, spsr	   @ SPSR already in r1
-    bl task_save_spsr
-
-    mov r0, r4
-    mov r1, r5
-
-	ldmfd	sp, {r3, r4, r5, r6, sl, fp, sp, pc}
+    @ Into the Kernel.
+    mov pc, lr
 
 	.size	kernel_enter, .-kernel_enter
     .align	2
@@ -91,7 +65,7 @@ irq_enter:
 	msr cpsr_c, #159
     
 	@ Save scratch registers.
-	stmfd sp!, {r0, r1, r2, r3}
+	stmfd sp!, {r0, r1, r2, r3, ip}
 
     @ Change to IRQ Mode
     msr cpsr_c, #146
@@ -134,7 +108,7 @@ irq_enter:
     msr cpsr_c, #159
 
     @ Reload scratch register state
-    ldmfd sp!, {r0, r1, r2, r3}
+    ldmfd sp!, {r0, r1, r2, r3, ip}
 
     @Switch to Interrupt Mode
     msr cpsr_c, #146
