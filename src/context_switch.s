@@ -86,6 +86,9 @@ irq_enter:
     @ Insert special value into r0
     mov r0, #0
 
+    @ Make our spsr the correct one.
+    msr spsr_c, #146
+
     @ Enter the Kernel
     bl kernel_enter
 
