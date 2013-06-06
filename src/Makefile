@@ -11,7 +11,7 @@ else
 	include arm.mk
 endif
 
-ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_arm.o
+ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_arm.o memcpy.o
 X86OBJECTS = log_x86.o
 OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameservice.o string.o random.o
 

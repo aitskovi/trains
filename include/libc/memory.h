@@ -1,12 +1,13 @@
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
 
+#include <memcpy.h>
+
 #define HEAP_SIZE 1024 * 1024
 
 /**
  * Memory Utilities.
  */
-void *memcpy(void *destination, void *source, unsigned int len);
 void *memset(void *destination, unsigned char value, unsigned int len);
 
 /**
