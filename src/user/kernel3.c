@@ -24,19 +24,23 @@ void first() {
     enable_interrupt(TIMER_3_INTERRUPT);
 
     int* ldr = (int *)(TIMER3_BASE + LDR_OFFSET);
-    int* val = (int *)(TIMER3_BASE + VAL_OFFSET);
     int* crtl = (int *)(TIMER3_BASE + CRTL_OFFSET);
 
     // Disable the clock.
     *crtl = 1 * MODE_MASK;
 
     // Set it's load value.
-    *ldr = 200;
+    *ldr = 2000;
 
     // Start the clock.
     *crtl = ENABLE_MASK + MODE_MASK;
 
     log("First: Timer Initialized\n");
 
+    log("First: AwaitingTimer\n");
+    AwaitEvent(TIMER_3_EVENT);
+    log("First: AwaitedTimer\n");
+
+    log("First: Exiting\n");
     Exit();
 }

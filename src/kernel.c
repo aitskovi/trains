@@ -84,6 +84,9 @@ void handle(Task *task, Request *req) {
     case REPLY:
         kreply(task, (int)req->args[0], (char *)req->args[1], (int)req->args[2]);
         break;
+    case AWAIT_EVENT:
+        kawait(task, (int)req->args[0]);
+        break;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);
         break;

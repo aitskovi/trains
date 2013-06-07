@@ -14,6 +14,7 @@ enum syscall_number {
     SEND,
     RECEIVE,
     REPLY,
+    AWAIT_EVENT,
     NUM_SYSCALLS,
 };
 
@@ -31,4 +32,6 @@ void Exit();
 int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen);
 int Receive(tid_t *tid, char *msg, int msglen);
 int Reply(tid_t tid, char *reply, int replylen);
+
+int AwaitEvent(int event);
 #endif
