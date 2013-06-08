@@ -13,7 +13,6 @@ endif
 
 ARMOBJECTS = kernel.o\
 			 context_switch.o\
-			 syscall.o\
 			 user.o\
 			 fine_timer.o\
 			 nameserver.o\
@@ -22,8 +21,10 @@ ARMOBJECTS = kernel.o\
 			 idle.o\
 			 clock_server.o\
 			 clock_notifier.o\
-			 event.o
-X86OBJECTS = log_x86.o
+			 event.o\
+			 swi_arm.o
+X86OBJECTS = log_x86.o\
+	   		 swi_x86.o
 OBJECTS = bwio.o\
 		  scheduling.o\
 		  circular_queue.o\
@@ -36,7 +37,9 @@ OBJECTS = bwio.o\
 		  random.o\
 		  bits.o\
 		  heap_priority_queue.o\
-		  waiting.o
+		  waiting.o\
+		  syscall.o\
+		  verify.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 
