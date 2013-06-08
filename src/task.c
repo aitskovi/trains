@@ -2,11 +2,23 @@
 
 #include <bwio.h>
 #include <dassert.h>
+#include <memory.h>
 
-#define SL 6
-#define FP 7
-#define IP 8
-#define LR 9
+enum trap_frame {
+    RVALUE = 0,
+    SPSR,
+    PC,
+    R4,
+    R5,
+    R6,
+    R7,
+    R8,
+    R9,
+    SL,
+    FP,
+    LR,
+    TRAP_FRAME_SIZE
+};
 
 #define USER_MODE_SPSR 0x10
 
@@ -19,67 +31,52 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
 
     Task *t = &tasks[next_tid++];
 
+    // Set-up our bookkeeping info. 
+    t->tid = next_tid - 1;
+    t->parent_tid = parent_tid;
+    t->priority = priority;
+    t->state = UNKNOWN;
+    t->next = 0;
+
     // Allocate a stack for us from our heap.
     t->stack = kmalloc(STACK_SIZE);
     dassert(t->stack != 0, "Task Stack Allocation Failed");
 
-    t->next = 0;
-    t->tid = next_tid - 1;
     t->sp = (int *) (t->stack + STACK_SIZE);
-    t->sp -= 10; // Make room for 14 registers
-    t->spsr = USER_MODE_SPSR;
+    t->sp -= TRAP_FRAME_SIZE;   // Make room for the trap frame.
 
-    int i;
-    for (i = 0; i < 6; ++i) {
-        t->sp[i] = 0;
-    }
-
+    // Generate the trap frame.
+    t->sp[RVALUE] = 0;
+    t->sp[SPSR] = USER_MODE_SPSR;
+    t->sp[PC] = code;
+    t->sp[R4] = 0;
+    t->sp[R5] = 0;
+    t->sp[R6] = 0;
+    t->sp[R7] = 0;
+    t->sp[R8] = 0;
+    t->sp[R9] = 0;
     t->sp[SL] = (unsigned int) (t->stack + STACK_SIZE);
-    t->sp[IP] = 0;
-    t->sp[FP] = t->sp[SL];
-    t->sp[LR] = (unsigned int) code; // TODO change this to an exit function
+    t->sp[FP] = 0;
+    t->sp[LR] = code;
 
-    t->pc = code;
-
-    t->parent_tid = parent_tid;
-    t->priority = priority;
-    t->state = UNKNOWN;
     return t;
 }
 
+int task_get_return_value(Task *t) {
+    return (int)t->sp[RVALUE];
+}
+
 void task_set_return_value(Task *t, int value) {
-    t->return_value = value;
+    t->sp[RVALUE] = value;
 }
 
 int *task_get_sp(Task *t) {
     return t->sp;
 }
 
-int task_get_return_value(Task *t) {
-    return t->return_value;
-}
-
-unsigned int task_get_spsr(Task *t) {
-    return t->spsr;
-}
-
-void * task_get_pc(Task *t) {
-    return t->pc;
-}
-
-void task_save_pc(Task *t, void *pc) {
-    t->pc = pc;
-    //bwprintf(COM2, "Saved pc: %x\n", t->pc);
-}
-
 void task_save_sp(Task *t, int *sp) {
     t->sp = sp;
     //bwprintf(COM2, "Saved sp: %x\n", t->sp);
-}
-
-void task_save_spsr(Task *t, unsigned int spsr) {
-    t->spsr = spsr;
-    //bwprintf(COM2, "Saved spsr: %x\n", t->spsr);
 }
 
 Task *task_get(tid_t tid) {
@@ -95,8 +92,8 @@ int task_is_invalid(tid_t tid) {
 }
 
 void task_print(Task *t) {
-    bwprintf(COM2, "TD address:%x Task id:%d, sp: %x, spsr: %x\n\r", t, t->tid,
-            t->sp, t->spsr);
+    bwprintf(COM2, "TD address:%x Task id:%d, sp: %x", t, t->tid,
+            t->sp);
 }
 
 void initialize_tasks() {

@@ -9,10 +9,36 @@
 #include <ksyscalls.h>
 #include <nameserver.h>
 #include <memory.h>
+#include <ts7200.h>
 
 static Task *active;
 
 void first();
+
+void interrupt() {
+    log("Interrupted!\n");
+}
+
+void initialize_irq() {
+    int *enabled = (int *)(VIC1_BASE + VIC_INT_ENABLE_OFFSET);
+    log("Interrupts are %x\n", *enabled);
+    *enabled = 0x1; // Enable ALL Interrupts
+    log("Interrupts are %x\n", *enabled);
+    //int *soft_int = (int *)(VIC1_BASE + VIC_SOFT_INT_OFFSET);
+   // log("Soft Int is %x\n", soft_int);
+    //int *soft_int_clear = (int *)(VIC1_BASE + VIC_SOFT_INT_CLEAR_OFFSET);
+    //*soft_int_clear = 0xffff;
+    //log("Soft Int is %x\n", soft_int);
+}
+
+void initialize_cache() {
+    asm("mov r1, #0");
+    asm("mcr p15, 0, r1, c7, c5, 0");
+    asm("mrc p15, 0, r1, c1, c0, 0");
+    asm("orr r1, r1, #4096");
+    asm("orr r1, r1, #4");
+    asm("mcr p15, 0, r1, c1, c0, 0");
+}
 
 void initialize_kernel() {
     bwsetfifo(COM2, OFF);
@@ -20,11 +46,16 @@ void initialize_kernel() {
     void (**syscall_handler)() = (void (**)())0x28;
     *syscall_handler = &kernel_enter;
 
+    void (**irq_handler)() = (void (**)())0x38;
+    *irq_handler = &irq_enter;
+
+    initialize_cache();
     initialize_memory();
     initialize_time();
     initialize_scheduling();
     initialize_tasks();
     initialize_messaging();
+    initialize_irq();
 }
 
 /**
@@ -68,6 +99,7 @@ int main() {
 
     // This has to be done after kernel initialization.
     initialize_nameserver();
+    //initialize_irq();
 
     active = task_create(first, 0, HIGH);
     make_ready(active);
@@ -75,7 +107,14 @@ int main() {
     Request *req;
     while((active = schedule())) {
         req = kernel_exit(active);
-        handle(active, req);
+        log("Got Request: %x\n", req);
+        if (req == 0) {
+            int *soft_int_clear = (int *)(VIC1_BASE + VIC_SOFT_INT_CLEAR_OFFSET);
+            *soft_int_clear = 0x1;
+            make_ready(active);
+        } else {
+            handle(active, req);
+        }
     }
 
     return 0;

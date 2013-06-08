@@ -84,4 +84,18 @@
 #define UART_HDLCRIB_OFFSET	0x218
 #define UART_HDLCSTS_OFFSET	0x21c
 
+// Vector Interrupt Controllers
+#define VIC1_BASE 0x800b0000
+#define VIC2_BASE 0x800c0000
 
+// Interrupt Controller Offsets
+#define VIC_IRQ_STATUS_OFFSET     0x00
+#define VIC_FIQ_STATUS_OFFSET     0x04
+#define VIC_RAW_INTR_OFFSET       0x08
+#define VIC_INT_SELECT_OFFSET     0x0c
+#define VIC_INT_ENABLE_OFFSET     0x10
+#define VIC_INT_EN_CLEAR_OFFSET   0x14
+#define VIC_SOFT_INT_OFFSET       0x18
+#define VIC_SOFT_INT_CLEAR_OFFSET 0x1c
+#define VIC_PROTECTION_OFFSET     0x20
+#define VIC_VECT_ADDR_OFFSET      0x30

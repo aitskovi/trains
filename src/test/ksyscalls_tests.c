@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include <memory.h>
 #include <messaging.h>
 #include <scheduling.h>
 #include <task.h>
@@ -15,6 +16,7 @@ static Task *t2;
  * Kernel state reset before syscall tests.
  */
 void reset() {
+    initialize_memory();
     initialize_tasks();
     initialize_scheduling();
     initialize_messaging();
@@ -43,7 +45,7 @@ void kmessaging_test() {
     assert(t0->state == RPLY_BLOCKED);
     assert(t1->state == READY);
     assert(src == 0);
-    assert(t1->return_value == 7);
+    assert(task_get_return_value(t1) == 7);
     assert(strcmp(rcvd, msg) == 0);
 
     char *rply = "Hey!";
@@ -52,8 +54,8 @@ void kmessaging_test() {
 
     assert(t1->state == READY);
     assert(t0->state == READY);
-    assert(t1->return_value == 0);
-    assert(t0->return_value == 5);
+    assert(task_get_return_value(t1) == 0);
+    assert(task_get_return_value(t0) == 5);
     assert(strcmp(reply, rply) == 0);
 }
 
@@ -75,7 +77,7 @@ void krecieve_blocking_test() {
 
     assert(t0->state == RPLY_BLOCKED);
     assert(t1->state == READY);
-    assert(t1->return_value == 7);
+    assert(task_get_return_value(t1) == 7);
     assert(src == 0);
     assert(strcmp(rcvd, msg) == 0);
 }
@@ -89,7 +91,7 @@ void kreply_non_blocked_test() {
 
     // Check that reply fails!
     assert(t1->state == READY);
-    assert(t1->return_value == -3);
+    assert(task_get_return_value(t1) == -3);
 
     char *msg = "Hello!";
     int msglen = 7;
@@ -102,7 +104,7 @@ void kreply_non_blocked_test() {
     // Check that it fails again!
     kreply(t1, t0->tid, rply, rplylen);
     assert(t1->state == READY);
-    assert(t1->return_value == -3);
+    assert(task_get_return_value(t1) == -3);
 
     int src;
     char rcvd[7];
@@ -112,7 +114,7 @@ void kreply_non_blocked_test() {
     assert(t0->state == RPLY_BLOCKED);
     assert(t1->state == READY);
     assert(src == 0);
-    assert(t1->return_value == 7);
+    assert(task_get_return_value(t1) == 7);
     assert(strcmp(rcvd, msg) == 0);
 }
 
@@ -129,7 +131,7 @@ void ksend_transaction_failed() {
 
     kexit(t1);
     assert(t0->state == READY);
-    assert(t0->return_value == -3);
+    assert(task_get_return_value(t0) == -3);
     assert(t1->state == ZOMBIE);
 }
 
@@ -139,7 +141,7 @@ void kmytid_test() {
     kmytid(t1);
 
     assert(t1->state == READY);
-    assert(t1->return_value == 1);
+    assert(task_get_return_value(t1) == 1);
 }
 
 void kmy_parent_tid_test() {
@@ -149,9 +151,9 @@ void kmy_parent_tid_test() {
     kmy_parent_tid(t2);
 
     assert(t1->state == READY);
-    assert(t1->return_value == 0);
+    assert(task_get_return_value(t1) == 0);
     assert(t2->state == READY);
-    assert(t2->return_value == 1);
+    assert(task_get_return_value(t2) == 1);
 }
 
 void kcreate_test() {
@@ -159,9 +161,9 @@ void kcreate_test() {
 
     kcreate(t2, MEDIUM, 0);
     assert(t2->state == READY);
-    assert(t2->return_value > t2->tid);
+    assert(task_get_return_value(t2) > t2->tid);
 
-    Task *child = task_get(t2->return_value);
+    Task *child = task_get(task_get_return_value(t2));
     assert(child != 0);
     assert(child->state == READY);
 }
