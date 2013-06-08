@@ -1,15 +1,10 @@
 #include <log.h>
+
+#include <idle.h>
 #include <interrupt.h>
 #include <scheduling.h>
 #include <syscall.h>
 #include <ts7200.h>
-
-void idle() {
-    log("Idle: Initializing\n");
-
-    for(;;) {
-    }
-}
 
 void first() {
     // Setup the timer interrupt.
