@@ -2,8 +2,8 @@
 # Makefile for busy-wait IO tests
 #
 
-VPATH += libc/ test/ user/ user/rps user/libc
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps
+VPATH += libc/ test/ user/ user/rps user/libc user/clock
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock
 
 ifeq ($(ARCH), x86)
 	include x86.mk
@@ -11,13 +11,25 @@ else
 	include arm.mk
 endif
 
-ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_arm.o interrupt.o idle.o
+ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_arm.o interrupt.o idle.o clock_server.o
 X86OBJECTS = log_x86.o
-OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameservice.o string.o random.o event.o bits.o
+OBJECTS = bwio.o\
+		  scheduling.o\
+		  circular_queue.o\
+		  task.o\
+		  messaging.o\
+		  memory.o\
+		  ksyscalls.o\
+		  nameservice.o\
+		  string.o\
+		  random.o\
+		  event.o\
+		  bits.o\
+		  heap_priority_queue.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 
-tests: test circular_queue_tests messaging_tests ksyscalls_tests memory_tests
+tests: test circular_queue_tests messaging_tests ksyscalls_tests memory_tests priority_queue_tests
 
 opt: CFLAGS+=-O2
 opt: all
@@ -59,6 +71,9 @@ scheduling_tests : scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
 circular_queue_tests : circular_queue_tests.o $(OBJECTS) $(X86OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+	
+priority_queue_tests : priority_queue_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
 messaging_tests: messaging_tests.o $(OBJECTS) $(X86OBJECTS)
