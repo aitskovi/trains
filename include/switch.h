@@ -6,5 +6,6 @@ struct Request;
 
 struct Request *kernel_exit(struct Task *t);
 void kernel_enter();
+void irq_enter();
 
 #endif

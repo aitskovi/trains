@@ -15,7 +15,7 @@ ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_
 X86OBJECTS = log_x86.o
 OBJECTS = bwio.o scheduling.o circular_queue.o task.o messaging.o memory.o ksyscalls.o nameservice.o string.o random.o
 
-all: kerneltimings.elf kernel2.elf
+all: kerneltimings.elf kernel2.elf kernel3.elf
 
 tests: test circular_queue_tests messaging_tests ksyscalls_tests memory_tests
 
@@ -48,6 +48,9 @@ kernel.elf : $(ARMOBJECTS) $(OBJECTS)
 	
 kernel2.elf : kernel2.o rpsclient.o rpsserver.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+kernel3.elf : kernel3.o $(ARMOBJECTS) $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
@@ -71,6 +74,6 @@ clean:
 	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
 
 install: all
-	-cp kernel2.elf kerneltimings.elf /u/cs452/tftp/ARM/$(USER)/
+	-cp kernel2.elf kernel3.elf kerneltimings.elf /u/cs452/tftp/ARM/$(USER)/
 
 -include $(DEPS)

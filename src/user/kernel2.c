@@ -8,6 +8,7 @@
 #include <rpsclient.h>
 #include <rpsserver.h>
 #include <syscall.h>
+#include <ts7200.h>
 
 #define NUM_CLIENTS 6
 
