@@ -18,7 +18,7 @@ int process_interrupt(int *data) {
 
     switch(interrupt) {
         case TIMER_3_INTERRUPT:
-            log("Recieved Timer Interrupt\n");
+            dlog("Recieved Timer Interrupt\n");
             clear_interrupt(interrupt);
             return TIMER_3_EVENT;
         default:

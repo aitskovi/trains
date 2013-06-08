@@ -10,6 +10,7 @@
 #include <nameserver.h>
 #include <memory.h>
 #include <ts7200.h>
+#include <log.h>
 
 static Task *active;
 
@@ -49,7 +50,7 @@ void initialize_kernel() {
 void handle(Task *task, Request *req) {
     // Handle Interrupts.
     if (req == 0) {
-        log("Handling Interrupt\n");
+        dlog("Handling Interrupt\n");
         int data;
         int event = process_interrupt(&data); 
         kevent(event, data);
