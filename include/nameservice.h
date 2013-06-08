@@ -1,7 +1,7 @@
 #ifndef _NAMESERVICE_H_
 #define _NAMESERVICE_H_
 
-#define MAX_NAME_LENGTH 10
+#define MAX_NAME_LENGTH 20
 #define MAX_REGISTRATIONS 50
 
 struct Registration {

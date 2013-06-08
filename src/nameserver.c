@@ -5,6 +5,7 @@
 #include <syscall.h>
 #include <task.h>
 #include <scheduling.h>
+#include <log.h>
 
 enum nameserver_operation {
     REGISTER_AS,
@@ -80,17 +81,17 @@ void NameServer() {
 
         switch(req.operation) {
             case REGISTER_AS: 
-//                bwprintf(COM2, "NameServer: Received RegisterAs\n");
-//                bwprintf(COM2, "NameServer: Registering %d as %s\n", src, req.data);
+                dlog("NameServer: Received RegisterAs\n");
+                dlog("NameServer: Registering %d as %s\n", src, req.data);
                 reply.result = nameservice_register(&service, req.data, src);
                 break;
             case WHO_IS:
-//                bwprintf(COM2, "NameServer: Received WhoIs\n");
-//                bwprintf(COM2, "NameServer: Looking Up %s\n", req.data);
+                dlog("NameServer: Received WhoIs\n");
+                dlog("NameServer: Looking Up %s\n", req.data);
                 reply.result = nameservice_lookup(&service, req.data);
                 break;
             default:
-//                bwprintf(COM2, "NameServer: Received Invalid Request\n");
+                log("NameServer: Received Invalid Request\n");
                 break;
         }
 

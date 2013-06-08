@@ -7,6 +7,7 @@
 
 #include <nameserver.h>
 #include <clock_server.h>
+#include <clock_notifier.h>
 #include <syscall.h>
 #include <heap_priority_queue.h>
 #include <dassert.h>
@@ -60,8 +61,13 @@ void clock_server() {
     PriorityQueueElement buffer[MAX_BLOCKED_TASKS + 1];
     HeapPriorityQueue blocked_tasks = priority_queue_create(buffer, MAX_BLOCKED_TASKS + 1);
 
+    dlog("Clock Server: Initialized\n");
     server_tid = MyTid();
     RegisterAs("ClockServer");
+    dlog("Clock Server: Registered\n");
+
+    Create(REALTIME, clock_notifier);
+    dlog("Clock Server: Notifier Created\n");
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
@@ -69,6 +75,7 @@ void clock_server() {
         switch(msg.type) {
         case TICK_REQUEST:
             time++;
+            dlog("Ticking %u!\n", time);
             // Unblock all waiting tasks whose time has arrived
             while (priority_queue_size(&blocked_tasks)) {
                 PriorityQueueElement head = priority_queue_peek(&blocked_tasks);
