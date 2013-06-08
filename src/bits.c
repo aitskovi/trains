@@ -1,3 +1,6 @@
+/**
+ * Take from the Linux Kernel.
+ */
 int ffs(int x) {
     int r = 1;
 
