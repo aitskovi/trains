@@ -62,6 +62,10 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
     return t;
 }
 
+int task_get_return_value(Task *t) {
+    return (int)t->sp[RVALUE];
+}
+
 void task_set_return_value(Task *t, int value) {
     t->sp[RVALUE] = value;
 }

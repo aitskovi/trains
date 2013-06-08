@@ -53,7 +53,8 @@ void task_print(Task *t);
 int *task_get_sp(Task *t);
 void task_save_sp(Task *t, int *sp);
 
-void task_set_return_value (Task *t, int value);
+int task_get_return_value(Task *t);
+void task_set_return_value(Task *t, int value);
 
 Task *task_get(tid_t tid);
 
