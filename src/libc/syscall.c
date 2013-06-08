@@ -80,3 +80,9 @@ int Reply(tid_t tid, char *reply, int replylen) {
     return syscall(&req);
 }
 
+int AwaitEvent(int event) {
+    Request req;
+    req.request = AWAIT_EVENT;
+    req.args[0] = (void *)event;
+    return syscall(&req);
+}
