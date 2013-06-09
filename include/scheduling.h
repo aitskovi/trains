@@ -12,9 +12,13 @@ struct Task;
 
 enum task_priority {
 	REALTIME,
+	HIGHEST,
+	HIGHER,
 	HIGH,
 	MEDIUM,
 	LOW,
+	LOWER,
+	LOWEST,
 	NUM_PRIORITIES
 };
 
