@@ -1,0 +1,130 @@
+\documentclass{article}
+
+\title{CS 452 Kernel 2 Documentation}
+\author{
+  Avi Itskovich, 20332164
+  \and
+  Alex Ianus, 20342535
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+This documentation covers the implementation of the Kernel for Assignment 3. This assignment covered AwaitEvent and the ClockServer. The new system calls are: 
+\begin{itemize}
+  \item int AwaitEvent(int eventid)
+\end{itemize}
+The ClockServer has the following interface:
+\begin{itemize}
+  \item int Delay(int ticks)
+  \item int Time()
+  \item int DelayUntil(int ticks)
+\end{itemize}
+
+\section{Operating Instructions}
+\begin{enumerate}
+  \item load -b 0x00218000 -h 10.15.167.4 \$executable
+  \item go
+\end{enumerate}
+
+\section{Submitted Files}
+Root directory: /u1/aianus/handin/kernel3/
+
+\subsection{Executable}
+56b3fd7399843384a7c0bc4cd208076a  /kernel3.elf
+\subsection{Code}
+
+\section{Kernel Description}
+
+\subsection{Interrupts}
+
+Our interrupt system can be divided into two parts: handling interrupts as they occur and managing them (enable/disable) and bubbling up events to the system.
+
+\subsubsection{Interrupt Handling}
+
+Interrupt handling is all done through a simple set of primitives available in "interrupt.c". These primitives allow you to enable, disable, generate and clear a specific interrupt. Interrupts are defined in an enum and as we have more interesting interrupts we add them to the enum.
+
+\subsubsection{Event Management}
+
+\subsection{Context Switch}
+
+For this assignment we re-wrote a majority of our context switch code for simplification. Although, our old code was perfectly useful for hardware interrupts, we wanted to speed up our context switch and make it easier to read.
+
+\subsection{Hardware Interrupt}
+
+Our Hardware Interrupt context switch is implemented through a wrapping mechanism. We introduce a new entry point, irq\_enter, which saves the scratch registers on the user's stack before jumping (bl) into our regular mechanism of entering the kernel (kernel\_enter). By using bl to jump into kernel\_enter, we modify the link register so when kernel\_exit completed if you entered kernel\_enter through the irq handler, you come back to it so we can unwrap the scratch registers.
+
+\subsubsection{irq\_enter:}
+\begin{enumerate}
+    \item Change to System Mode.
+    \item Save scratch registers onto user stack (r0, r1, r2, r3, ip).
+    \item Change to IRQ Mode.
+    \item Grab LR/SPSR.
+    \item Change to System Mode. 
+    \item Save LR/SPSR onto user stack.
+    \item Change to Supervisor Mode.
+    \item Insert special value (0) into r0 to represent irq interrupt.
+    \item Change our supervisor\_spsr to IRQ Mode.
+    \item Jump into Kernel Enter.
+\end{enumerate}
+
+\subsubsection{irq\_exit:}
+\begin{enumerate}
+    \item Switch to System Mode.
+    \item Unload LR/SPSR.
+    \item Switch to Interrupt Mode.
+    \item Install LR/SPSR.
+    \item Switch to System Mode.
+    \item Reload Scratch Registers (r0, r1, r2, r3, ip)
+    \item Switch to IRQ Mode
+    \item Jump back into program and install correct cpsr.
+\end{enumerate}
+
+Note that irq\_exit does not exist as a label, and is simply a convention to refer to the lines after "bl kernel\_enter".
+
+\subsection{Software Interrupt}
+
+During the implementation of this assignment we decided to overhaul our basic context switch as well. Previously, we stored a lot of data in the Task Descriptor. We have now moved almost all of this data into the user stack. The only information we maintain in the task descriptor is the stack pointer itself. Our new kernel\_enter and kernel\_exit function as follows:
+
+\subsubsection{kernel\_exit:}
+\begin{enumerate}
+    \item Save Kernel State (including r0 since it contains our task descriptor memory location).
+    \item Load the SP for task from it's task descriptor.
+    \item Change to System Mode. 
+    \item Install Stack Pointer.
+    \item Unload User Registers + PC/SPSR from User Stack.
+    \item Change to Supervisor Mode.
+    \item Install SPSR
+    \item Jump to user PC and install correct cpsr.
+\end{enumerate}
+
+\subsubsection{kernel\_enter:}
+\begin{enumerate}
+   \item Save SPSR/Link Register into Common Registers.
+   \item Change to System State.
+   \item Save User State + SPSR/Link Register on Stack.
+   \item Grab User SP in Common Register.
+   \item Change to Supervisor State.
+   \item Backup Request in Scratch Register.
+   \item Load Kernel State.
+   \item Store User's SP into Task Descriptor (memory address is in r0).
+   \item Install the backed up Request in r0.
+   \item Jump into the Kernel.
+\end{enumerate}
+
+
+\subsubsection{Idle Task}
+
+\subsection{Clock Server}
+
+\subsubsection{Server}
+
+\subsubsection{Notifier}
+
+\subsection{User Tasks}
+
+\subsection{Known Bugs and Limitations}
+\end{document}
