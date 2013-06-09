@@ -115,16 +115,70 @@ During the implementation of this assignment we decided to overhaul our basic co
    \item Jump into the Kernel.
 \end{enumerate}
 
-
 \subsubsection{Idle Task}
 
 \subsection{Clock Server}
 
 \subsubsection{Server}
+The clock server, running at priority HIGHEST, is implemented as an infinite message handling loop. 
+
+On a tick message, the internal time of the clock server is incremented by one. Furthermore, any tasks on top of the priority queue whose deadline has passed are unblocked with a Reply.
+
+On a delay message, the sending task is placed in the priority queue with priority equal to the deadline which is equal to the current time + the specified delay.
+
+On a delay_until message, the deadline is compared to the current time and if it has not yet passed the task is placed on the priority queue with priority equal to the deadline. If the deadline has already passed, the task is not placed on the queue but is immediately unblocked with a Reply.
+
+On a time message, a reply is immediately issued with the current time in ticks.
+
+The priority queue is implemented as a heap so that the most frequent operation, checking the deadline of the head of the queue, is done in very fast constant time. Furthermore, popping and pushing tasks from/onto the queue is also very fast, running in O(logn) time. In addition, the heap is implemented as an array, which should give good cache performance as all the elements are in contiguous memory.
 
 \subsubsection{Notifier}
 
-\subsection{User Tasks}
+\subsection{Output and Analysis}
+\begin{verbatim}
+Delay number 1 completed for task 4 having delay interval 10
+Delay number 2 completed for task 4 having delay interval 10
+Delay number 1 completed for task 5 having delay interval 23
+Delay number 3 completed for task 4 having delay interval 10
+Delay number 1 completed for task 6 having delay interval 33
+Delay number 4 completed for task 4 having delay interval 10
+Delay number 2 completed for task 5 having delay interval 23
+Delay number 5 completed for task 4 having delay interval 10
+Delay number 6 completed for task 4 having delay interval 10
+Delay number 2 completed for task 6 having delay interval 33
+Delay number 3 completed for task 5 having delay interval 23
+Delay number 1 completed for task 7 having delay interval 71
+Delay number 7 completed for task 4 having delay interval 10
+Delay number 8 completed for task 4 having delay interval 10
+Delay number 4 completed for task 5 having delay interval 23
+Delay number 9 completed for task 4 having delay interval 10
+Delay number 3 completed for task 6 having delay interval 33
+Delay number 10 completed for task 4 having delay interval 10
+Delay number 5 completed for task 5 having delay interval 23
+Delay number 11 completed for task 4 having delay interval 10
+Delay number 12 completed for task 4 having delay interval 10
+Delay number 4 completed for task 6 having delay interval 33
+Delay number 13 completed for task 4 having delay interval 10
+Delay number 6 completed for task 5 having delay interval 23
+Delay number 2 completed for task 7 having delay interval 71
+Delay number 14 completed for task 4 having delay interval 10
+Delay number 15 completed for task 4 having delay interval 10
+Delay number 7 completed for task 5 having delay interval 23
+Delay number 5 completed for task 6 having delay interval 33
+Delay number 16 completed for task 4 having delay interval 10
+Delay number 17 completed for task 4 having delay interval 10
+Delay number 8 completed for task 5 having delay interval 23
+Delay number 18 completed for task 4 having delay interval 10
+Delay number 6 completed for task 6 having delay interval 33
+Delay number 19 completed for task 4 having delay interval 10
+Delay number 9 completed for task 5 having delay interval 23
+Delay number 3 completed for task 7 having delay interval 71
+Delay number 20 completed for task 4 having delay interval 10
+\end{verbatim}
+
+If we map each line to the delay number * the delay interval we see a sequence that is almost strictly increasing, with a few exceptions (such as Delay #1 for task 7 with interval 71 occurring before Delay #7 for task 4 with interval 10).  We speculate this drift is caused by the time it takes the task to print its status message after each delay. This is a known pitfall in using Delay repeatedly instead of using DelayUntil which would allow us to measure and bound the drift. 
 
 \subsection{Known Bugs and Limitations}
+
+
 \end{document}
