@@ -16,7 +16,7 @@ void enable_timer() {
     *crtl = 1 * MODE_MASK;
 
     // Set it's load value.
-    *ldr = 2000;
+    *ldr = 2000 / TICK_FREQUENCY;
 
     // Start the clock.
     *crtl = ENABLE_MASK + MODE_MASK;
@@ -42,7 +42,6 @@ void clock_notifier() {
 
     for(;;) {
         int error = AwaitEvent(TIMER_3_EVENT);
-        dlog("Clock Notifier: Tick\n");
         if (error < 0) {
             dlog("Recieved an error waiting for Timer\n");
             continue;

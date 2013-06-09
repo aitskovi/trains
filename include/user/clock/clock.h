@@ -8,6 +8,9 @@
 #ifndef CLOCK_H_
 #define CLOCK_H_
 
+// Tick frequency in hertz
+#define TICK_FREQUENCY 100
+
 typedef unsigned int time_t;
 
 enum ClockMessageType {
