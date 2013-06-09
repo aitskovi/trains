@@ -3,6 +3,7 @@
 #include <bwio.h>
 #include <dassert.h>
 #include <memory.h>
+#include <syscall.h>
 
 enum trap_frame {
     RVALUE = 0,
@@ -57,7 +58,7 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
     t->sp[R9] = 0;
     t->sp[SL] = (unsigned int) (t->stack + STACK_SIZE);
     t->sp[FP] = 0;
-    t->sp[LR] = code;
+    t->sp[LR] = Exit;
 
     return t;
 }
