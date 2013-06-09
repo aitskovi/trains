@@ -20,4 +20,20 @@ int kawait(struct Task *task, int event);
  */
 int kevent(int event, int data);
 
+/**
+ * Verify if the event is valid.
+ */
+int is_valid_event(int event);
+
+/**
+ * Enable an event. This ensures that the correct interrupts are
+ * turned on, so the event will fire.
+ */
+int enable_event(int event);
+
+/**
+ * Initialize the event system.
+ */
+void initialize_events();
+
 #endif

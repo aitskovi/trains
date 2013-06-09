@@ -3,6 +3,18 @@
 #include <bits.h>
 #include <log.h>
 
+#define NUM_VICS 2
+#define VIC_SIZE 32
+
+void initialize_interrupts() {
+
+    // Disable all the interrupts to start.
+    int i;
+    for (i = 0; i < NUM_VICS + VIC_SIZE; ++i) {
+        disable_interrupt(i);
+    }
+}
+
 int process_interrupt(int *data) {
     // Process one interrupt.
     int interrupt = 0;
@@ -26,6 +38,21 @@ int process_interrupt(int *data) {
     }
 
     return -1;
+}
+
+int disable_interrupt(enum interrupt interrupt) {
+    int base = interrupt < 32 ? VIC1_BASE : VIC2_BASE;
+
+    int shift = interrupt < 32 ? interrupt : interrupt - 32;
+    int bit = 1 << shift;
+
+    // Invert the bits, so all except the selected bit are 1.
+    bit = ~bit;
+
+    int *disabled = (int *)(base + VIC_INT_ENABLE_OFFSET);
+    *disabled &= bit;
+
+    return 0;
 }
 
 int enable_interrupt(enum interrupt interrupt) {

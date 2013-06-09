@@ -1,5 +1,6 @@
 #include <event.h>
 
+#include <interrupt.h>
 #include <log.h>
 #include <task.h>
 
@@ -13,7 +14,7 @@ static Task *waiters[NUM_EVENTS];
 
 int kawait(Task *task, int event) {
    // Verify the event is valid.
-   if (event < 0 || event >= NUM_EVENTS) {
+   if (!is_valid_event(event)) {
        task_set_return_value(task, INVALID_EVENT);
        return INVALID_EVENT;
    }
@@ -41,7 +42,27 @@ int kevent(int event, int data) {
     return 0;
 }
 
+int is_valid_event(int event) {
+   return (event >= 0 || event < NUM_EVENTS);
+}
+
+int enable_event(int event) {
+    if (!is_valid_event(event)) return INVALID_EVENT;
+
+    switch(event) {
+        case TIMER_3_EVENT:
+            enable_interrupt(TIMER_3_INTERRUPT);
+            break;
+        default:
+            log("Enabling Invalid Interrupt\n");
+    }
+
+    return 0;
+}
+
 void initialize_events() {
+    initialize_interrupts();
+
     int i;
     for (i = 0; i < NUM_EVENTS; ++i) {
         waiters[i] = 0;

@@ -2,14 +2,13 @@
 
 #include <clock.h>
 #include <event.h>
-#include <interrupt.h>
 #include <syscall.h>
 #include <nameserver.h>
 #include <log.h>
 #include <dassert.h>
 
 void enable_timer() {
-    enable_interrupt(TIMER_3_INTERRUPT);
+    enable_event(TIMER_3_EVENT);
     int* ldr = (int *)(TIMER3_BASE + LDR_OFFSET);
     int* crtl = (int *)(TIMER3_BASE + CRTL_OFFSET);
 
