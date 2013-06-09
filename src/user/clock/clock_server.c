@@ -22,8 +22,8 @@ int Time() {
     ClockMessage msg, reply;
     msg.type = TIME_REQUEST;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    dassert(msg.type == TIME_RESPONSE, "Invalid response from clock server");
-    return msg.time;
+    dassert(reply.type == TIME_RESPONSE, "Invalid response from clock server");
+    return reply.time;
 }
 
 int DelayUntil(int time) {
@@ -34,7 +34,7 @@ int DelayUntil(int time) {
     msg.type = DELAY_UNTIL_REQUEST;
     msg.time = time;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    dassert(msg.type == DELAY_RESPONSE, "Invalid response from clock server");
+    dassert(reply.type == DELAY_RESPONSE, "Invalid response from clock server");
     return 0;
 }
 
@@ -48,7 +48,7 @@ int Delay(int ticks) {
     msg.type = DELAY_REQUEST;
     msg.delay = ticks;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    dassert(msg.type == DELAY_RESPONSE, "Invalid response from clock server");
+    dassert(reply.type == DELAY_RESPONSE, "Invalid response from clock server");
     return 0;
 }
 
@@ -109,6 +109,7 @@ void clock_server() {
             element.data = (void *) tid;
             element.priority = time + msg.delay;
             priority_queue_insert(&blocked_tasks, element);
+            dlog("Received delay request from task %u at time %u", tid, time);
             break;
         default:
             log("Clock server received an invalid message\n");

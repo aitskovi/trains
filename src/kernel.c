@@ -50,7 +50,6 @@ void initialize_kernel() {
 void handle(Task *task, Request *req) {
     // Handle Interrupts.
     if (req == 0) {
-        dlog("Handling Interrupt\n");
         int data;
         int event = process_interrupt(&data); 
         kevent(event, data);
@@ -100,7 +99,7 @@ int main() {
     // This has to be done after kernel initialization.
     initialize_nameserver();
 
-    active = task_create(first, 0, HIGH);
+    active = task_create(first, 0, REALTIME);
     make_ready(active);
 
     Request *req;

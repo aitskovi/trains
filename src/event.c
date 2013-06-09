@@ -55,6 +55,7 @@ int enable_event(int event) {
             break;
         default:
             log("Enabling Invalid Interrupt\n");
+            break;
     }
 
     return 0;
