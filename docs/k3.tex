@@ -16,6 +16,8 @@
 This documentation covers the implementation of the Kernel for Assignment 3. This assignment covered AwaitEvent and the ClockServer. The new system calls are: 
 \begin{itemize}
   \item int AwaitEvent(int eventid)
+  \item int WaitTid(int tid)
+  \item int Shutdown()
 \end{itemize}
 The ClockServer has the following interface:
 \begin{itemize}
@@ -192,6 +194,16 @@ Delay number 20 completed for task 4 having delay interval 10
 \end{verbatim}
 
 If we map each line to the delay number * the delay interval we see a sequence that is almost strictly increasing, with a few exceptions (such as Delay \#1 for task 7 with interval 71 occurring before Delay \#7 for task 4 with interval 10).  We speculate this drift is caused by the time it takes the task to print its status message after each delay. This is a known pitfall in using Delay repeatedly instead of using DelayUntil which would allow us to measure and bound the drift. 
+
+\subsection{WaitTid}
+
+We implemented WaitTid to make termination simpler in our user programs. Although we could have done something like a Send back to our parent task once we terminate, we decided against because it is more prone to programmer error. Instead we use the Exit call which all programs do anyways to notify tasks that are waiting on it to exit that it is complete. Our "first" program now calls WaitTid on each of it's child tids that it wants to terminate and once those have completed calls shutdown to exit the kernel.
+
+WaitTid is implemented through a simple linked list of task ptrs. We re-use the next ptr that we had originally used in the scheduler for the waiter list. The amount of extra space required to implement WaitTid is 4 bytes * MAX_TASKS, since we only store the head of the waiter list. Waiting on a task is an O(1) operation (adding to the head of a linked list). Unblocking tasks is at most O(n), but we are already unblocking send blocked tasks which also costs O(n) so it is okay for us to take on the extra hit here.
+
+\subsection{Shutdown}
+
+Shutdown is implemented simply. Once shutdown is called, instead of scheduling the next task we simply exit the FOR(;;) loop and thereby terminate the system going back to Redboot.
 
 \subsection{Addendum}
 
