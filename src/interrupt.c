@@ -46,11 +46,8 @@ int disable_interrupt(enum interrupt interrupt) {
     int shift = interrupt < 32 ? interrupt : interrupt - 32;
     int bit = 1 << shift;
 
-    // Invert the bits, so all except the selected bit are 1.
-    bit = ~bit;
-
-    int *disabled = (int *)(base + VIC_INT_ENABLE_OFFSET);
-    *disabled &= bit;
+    int *disabled = (int *)(base + VIC_INT_EN_CLEAR_OFFSET);
+    *disabled |= bit;
 
     return 0;
 }

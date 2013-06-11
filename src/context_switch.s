@@ -8,12 +8,12 @@ kernel_exit:
 
     ldr r1, [r0, #4] @ Load SP from Task
 
-	msr cpsr_c, #159 @ Change to system state
+	msr cpsr_c, #223 @ Change to system state
 	mov sp, r1 @ Install stack pointer of regular process
 
 	ldmfd sp!, {r0, r1, r2, r4, r5, r6, r7, r8, r9, sl, fp, lr} @ Reload user registers
 
-	msr cpsr_c, #147 @ Change to svc state
+	msr cpsr_c, #211 @ Change to svc state
                  @ Return Value is already installed in R0
 
     msr spsr, r1 @ SPSR is in R1
@@ -30,7 +30,7 @@ kernel_enter:
     mov r2, lr
 
 	@ Change to system state
-	msr cpsr_c, #159
+	msr cpsr_c, #223
 
 	@ Save user state
 	stmfd sp!, {r0, r1, r2, r4, r5, r6, r7, r8, r9, sl, fp, lr}
@@ -39,7 +39,7 @@ kernel_enter:
     mov r1, sp
 
 	@ Change to svc state
-	msr cpsr_c, #147
+	msr cpsr_c, #211
 
     @ Backup Request
     mov ip, r0
@@ -62,32 +62,32 @@ kernel_enter:
 	.type	irq_enter, %function
 irq_enter:
     @ Change to system state
-	msr cpsr_c, #159
+	msr cpsr_c, #223
     
 	@ Save scratch registers.
 	stmfd sp!, {r0, r1, r2, r3, ip}
 
     @ Change to IRQ Mode
-    msr cpsr_c, #146
+    msr cpsr_c, #210
 
     @ Grab PC/SPSR
     mov r0, lr
     mrs r1, spsr 
 
     @ Switch to System Mode
-    msr cpsr_c, #159
+    msr cpsr_c, #223
 
     @ Save LR/SPSR
     stmfd sp!, {r0, r1}
 
     @ Into Supervisor Mode!
-    msr cpsr_c, #147
+    msr cpsr_c, #211
 
     @ Insert special value into r0
     mov r0, #0
 
     @ Make our spsr the correct one.
-    msr spsr_c, #146
+    msr spsr_c, #210
 
     @ Enter the Kernel
     bl kernel_enter
@@ -95,26 +95,26 @@ irq_enter:
     @ !!! BACK FROM THE KERNEL !!!
 
     @ Switch to System Mode.
-    msr cpsr_c, #159
+    msr cpsr_c, #223
 
     @ Unload LR/SPSR
     ldmfd sp!, {r0, r1}
 
     @ Back to Interrupt Mode
-    msr cpsr_c, #146
+    msr cpsr_c, #210
 
     @ Install LR/SPSR
     mov lr, r0
     msr spsr, r1
 
     @ Switch to System Mode
-    msr cpsr_c, #159
+    msr cpsr_c, #223
 
     @ Reload scratch register state
     ldmfd sp!, {r0, r1, r2, r3, ip}
 
     @Switch to Interrupt Mode
-    msr cpsr_c, #146
+    msr cpsr_c, #210
 
     @Back to Work!
     subs pc, lr, #4
