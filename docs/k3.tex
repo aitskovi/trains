@@ -37,9 +37,83 @@ The appropriate client tasks to test this were also implemented.
 Root directory: /u1/aianus/cs452/handin/kernel3/
 
 \subsection{Executable}
-56b3fd7399843384a7c0bc4cd208076a  /kernel3.elf
+\begin{verbatim}
+b14f26808ede69d80c9dcc2b4f8490bf  ./kernel3.elf
+\end{verbatim}
 \subsection{Code}
-
+\begin{verbatim}
+7a43181f7908eef779e270832fcd9148  ./include/bits.h
+d39148360f7d205cb98a36d0a0c61aad  ./include/bwio.h
+65779c1b19758a33bae259538343ca1a  ./include/circular_queue.h
+be2b7410d592676f04ff4d48aa5189b7  ./include/event.h
+0f441d8f0617a666e04bd48fcae98934  ./include/interrupt.h
+b044b4c9d77f1d0dd9b7a2961e45a67a  ./include/kmemory.h
+9b78bb4a50534ccd3108a1909d0f93cf  ./include/ksyscalls.h
+7a3e309d49993b24f39a167f0f408af2  ./include/libc/dassert.h
+e31e1aa5f0cf7747c5ca02d9219265d0  ./include/libc/fine_timer.h
+8aa1b9a0f41dfeed6de08a271dba5a96  ./include/libc/heap_priority_queue.h
+c94aef973f79346c0f65cb42d3a4f92e  ./include/libc/log.h
+5c61838a4125651ebe41601ccd881455  ./include/libc/random.h
+ea6da646f6f0125c2c3d7c58f8ec5add  ./include/libc/syscall.h
+4f590e6dac2e78c18f7082bb2f3b6b92  ./include/memory.h
+f5d65e70556962f5effba160e9bbd0a0  ./include/messaging.h
+bf705acd9b43d3159d764776a5c6a47a  ./include/nameserver.h
+a4b612d477dfd0e5af41e091ebe485c7  ./include/nameservice.h
+081b58b1ad6e401d9648cb88ffb30301  ./include/request.h
+18060a9170044e77e2c91364f48054f8  ./include/scheduling.h
+3f34ab2a8151fc445ead37814f231fb5  ./include/string.h
+ccac3c439d86709412554719f50434cc  ./include/switch.h
+9941a141c4fc24ccb7888f1a33f28f1e  ./include/task.h
+027d930da4ccbbe691b9a6eaf6488c9d  ./include/ts7200.h
+92023eb7f5b51008caee8b80306fde73  ./include/user/clock/clock.h
+67d3408c795e016994abc7daccaf2dfb  ./include/user/clock/clock_notifier.h
+e9f7e445c32353f3b72917ecf553de05  ./include/user/clock/clock_server.h
+c43444432320abfb09777821a38ae8a7  ./include/user/idle.h
+a53c63ad1757b25362486bce6ef7c90d  ./include/user/rps/rps.h
+570c77afbd19a6a0be4419d136ee9a1f  ./include/user/rps/rpsclient.h
+331b47449d891d458b0647da2c2924de  ./include/user/rps/rpsserver.h
+862df1e336ef89d83bceadc522085dd1  ./include/user/user.h
+94833a9ccce763038303123e95428de8  ./include/waiting.h
+c946f75ca4551a445ac3eda46091b7be  ./src/bits.c
+25757ddee6d82a16be926075e04b4972  ./src/bwio.c
+6d5afd3fb8acbda06a47d1d0472d4c33  ./src/circular_queue.c
+d6332831f9ea3b52c905ddc59952ed22  ./src/event.c
+2e631d9cf59f75a3c44e100db0673a9c  ./src/interrupt.c
+82f09f2e13a953ad6ef1a01bba21a6be  ./src/kernel.c
+0b13bcc76733e2c2d97c2c66be1de5b7  ./src/ksyscalls.c
+df0e33ec5df1306650e909e7463c3834  ./src/libc/fine_timer.c
+6f89e16a8c7746ec3c059cedf58171ee  ./src/libc/heap_priority_queue.c
+5fc41e8a4b051578f782dc89eefa8d54  ./src/libc/log_arm.c
+686d7bdcad6b2a66f66e983565ffc8df  ./src/libc/log_x86.c
+18c9fceb4c8379e97a1536c5f76b59df  ./src/libc/memory.c
+428d29b72bb432d11e63812e3f19dedd  ./src/libc/random.c
+8e2a9827fd752cd6e32094c2596f7642  ./src/libc/syscall.c
+77697972cdac93a02951f8476ce29379  ./src/messaging.c
+753fb968cab4c991df90b7bee8d9f537  ./src/nameserver.c
+af3d35b80511f9dd9565d41583f00315  ./src/nameservice.c
+24c1f75f5c74bcb0502e86129fdfeee6  ./src/orex.ld
+cbc4b3cdae62ea6a211c5a0f834e646c  ./src/scheduling.c
+2e6e7d91fdc2902f90a16534f18837d1  ./src/string.c
+3d07be1b7e34d5dddb0f2981f80eeed9  ./src/switch.c
+d78fe35273c566dda31577699c95b6ab  ./src/task.c
+6f028faf32aa5991d9ceb153812a7f35  ./src/test/circular_queue_tests.c
+60717386c53f8d45228bb945cf8242fb  ./src/test/ksyscalls_tests.c
+4eb9af7de10d0189f0c57e83bcdd3e83  ./src/test/memory_tests.c
+7a1f27a3517346480a2a24254e7422d5  ./src/test/messaging_tests.c
+535c57bf8e16fea12c0e1fb2e983ee4b  ./src/test/priority_queue_tests.c
+c3b46c3acfa81d47b2e01f9e1a223543  ./src/test/scheduling_tests.c
+ea278c94bfbbf69c9b7c5eb865532005  ./src/user/clock/clock_notifier.c
+a055c29d271770794159781fbf86bbad  ./src/user/clock/clock_server.c
+d1996992d6f04747c72547b4eea54dfe  ./src/user/idle.c
+1e3f84b77a97255d6251ddf262835725  ./src/user/kernel1.c
+b23bda2d5f268ed1a85959e266882360  ./src/user/kernel2.c
+d8e09c1a0766a1ee4d3f8c6b9c8dc7f8  ./src/user/kernel3.c
+46a424731361d6176718c8b7c737bc55  ./src/user/rps/rpsclient.c
+8b5ae02bd24de4355a0f7c5fb17e87dc  ./src/user/rps/rpsserver.c
+fa6b70558103fa109c508faa51d5071e  ./src/user/timings.c
+95197606aa508ee5043c16021c0f6234  ./src/user/user.c
+f90b3c33dead7ca55d9192d8112cdc4f  ./src/waiting.c
+\end{verbatim}
 \section{Kernel Description}
 
 \subsection{Interrupts}
@@ -135,7 +209,7 @@ The idle task is implemented as simple for(;;) loop. It has the lowest priority,
 \subsection{Clock Server}
 
 \subsubsection{Server}
-The clock server, running at priority HIGHEST, is implemented as an infinite message handling loop. 
+The clock server, running at priority HIGHEST, is implemented as an infinite message handling loop. It is important that the clock server run at a high priority because we could have other important tasks blocked on a delay and we want them to be unblocked ASAP when their deadline is reached. Additionally, clock server is unlikely to cause any starvation issues since it is almost always blocked waiting for a message.
 
 On a tick message, the internal time of the clock server is incremented by one. Furthermore, any tasks on top of the priority queue whose deadline has passed are unblocked with a Reply.
 
