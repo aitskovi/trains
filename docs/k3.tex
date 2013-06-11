@@ -152,6 +152,7 @@ The priority queue is implemented as a heap so that the most frequent operation,
 The clock notifier is implemented as simply as possible. It first looks up the ClockServer. Although it is spawned by the ClockServer, and could simply use it's ParentTid for this. We preferred to make our code more bulletproof and leave out this assumption. After it has found the ClockServer, we enable the TIMER\_3\_EVENT we listen to and setup the timer with the appropriate values. The notifier then listens to ticks and sends them to the clock server as they occur. The notifier is run at the highest priority (REALTIME) in our system because we want it to respond as quickly as possible.
 
 \subsection{Output and Analysis}
+\subsubsection{Client task output}
 \begin{verbatim}
 Delay number 1 completed for task 4 having delay interval 10
 Delay number 2 completed for task 4 having delay interval 10
@@ -195,11 +196,27 @@ Delay number 20 completed for task 4 having delay interval 10
 
 If we map each line to the delay number * the delay interval we see a sequence that is almost strictly increasing, with a few exceptions (such as Delay \#1 for task 7 with interval 71 occurring before Delay \#7 for task 4 with interval 10).  We speculate this drift is caused by the time it takes the task to print its status message after each delay. This is a known pitfall in using Delay repeatedly instead of using DelayUntil which would allow us to measure and bound the drift. 
 
+\subsubsection{Timing stats}
+\begin{verbatim}
+Task runtime info:
+Task 0 ran for 255us or 0 percent of the time
+Task 1 ran for 12317us or 0 percent of the time
+Task 2 ran for 2112405us or 90 percent of the time
+Task 3 ran for 1775us or 0 percent of the time
+Task 4 ran for 103355us or 4 percent of the time
+Task 5 ran for 46086us or 1 percent of the time
+Task 6 ran for 30726us or 1 percent of the time
+Task 7 ran for 15846us or 0 percent of the time
+Task 8 ran for 1142us or 0 percent of the time
+\end{verbatim}
+
+Here we can see the breakdown of how much CPU time is spent executing each task. As expected, the idle task (task 2), is taking up the majority of the CPU since it is executing whenever the other tasks are blocked on a Delay call. Also as expected, the more times a client needs to wake up and print, the more CPU time is spent servicing it.
+
 \subsection{WaitTid}
 
 We implemented WaitTid to make termination simpler in our user programs. Although we could have done something like a Send back to our parent task once we terminate, we decided against because it is more prone to programmer error. Instead we use the Exit call which all programs do anyways to notify tasks that are waiting on it to exit that it is complete. Our "first" program now calls WaitTid on each of it's child tids that it wants to terminate and once those have completed calls shutdown to exit the kernel.
 
-WaitTid is implemented through a simple linked list of task ptrs. We re-use the next ptr that we had originally used in the scheduler for the waiter list. The amount of extra space required to implement WaitTid is 4 bytes * MAX_TASKS, since we only store the head of the waiter list. Waiting on a task is an O(1) operation (adding to the head of a linked list). Unblocking tasks is at most O(n), but we are already unblocking send blocked tasks which also costs O(n) so it is okay for us to take on the extra hit here.
+WaitTid is implemented through a simple linked list of task ptrs. We re-use the next ptr that we had originally used in the scheduler for the waiter list. The amount of extra space required to implement WaitTid is 4 bytes * MAX\_TASKS, since we only store the head of the waiter list. Waiting on a task is an O(1) operation (adding to the head of a linked list). Unblocking tasks is at most O(n), but we are already unblocking send blocked tasks which also costs O(n) so it is okay for us to take on the extra hit here.
 
 \subsection{Shutdown}
 
