@@ -7,12 +7,13 @@
 
 #include <bwio.h>
 #include <syscall.h>
-#include <time.h>
+#include <fine_timer.h>
+#include <log.h>
 
 #define MESSAGE_LENGTH 64
 #define LOOPS 10
 
-static Timer timer;
+static FineTimer timer;
 
 void consumer() {
     int src, length, result;
@@ -34,22 +35,22 @@ void producer() {
 
     unsigned int i;
     for (i = 0; i < LOOPS; ++i) {
-        timer_reset(&timer);
-        int result = Send(consumer_tid, msg, MESSAGE_LENGTH, reply, MESSAGE_LENGTH);
-        bwprintf(COM2, "SEND/RECEIVE/REPLY took %uus\n", timer_elapsed(&timer).useconds);
+        fine_timer_reset(&timer);
+        Send(consumer_tid, msg, MESSAGE_LENGTH, reply, MESSAGE_LENGTH);
+        log("SEND/RECEIVE/REPLY took %uus\n", fine_time_to_usec(fine_timer_elapsed(&timer)));
     }
     Exit();
 }
 
 void first() {
-    Timer timer;
+    FineTimer timer;
 
     unsigned int i;
     for (i = 0; i < 4; ++i) {
-        timer_reset(&timer);
+        fine_timer_reset(&timer);
         Pass();
-        Time elapsed = timer_elapsed(&timer);
-        bwprintf(COM2, "Round trip took %u usec\n", elapsed.useconds);
+        unsigned int elapsed = fine_timer_elapsed(&timer);
+        log("Round trip took %u usec\n", fine_time_to_usec(elapsed));
     }
 
     Create(MEDIUM, producer);

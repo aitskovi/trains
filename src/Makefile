@@ -15,7 +15,7 @@ ARMOBJECTS = kernel.o\
 			 context_switch.o\
 			 syscall.o\
 			 user.o\
-			 time.o\
+			 fine_timer.o\
 			 nameserver.o\
 			 log_arm.o\
 			 interrupt.o\

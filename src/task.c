@@ -38,6 +38,7 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
     t->priority = priority;
     t->state = UNKNOWN;
     t->next = 0;
+    t->cpu_time = 0;
 
     // Allocate a stack for us from our heap.
     t->stack = kmalloc(STACK_SIZE);
@@ -95,6 +96,11 @@ int task_is_invalid(tid_t tid) {
 void task_print(Task *t) {
     bwprintf(COM2, "TD address:%x Task id:%d, sp: %x", t, t->tid,
             t->sp);
+}
+
+Task * get_tasks(unsigned int *size) {
+    *size = next_tid;
+    return tasks;
 }
 
 void initialize_tasks() {

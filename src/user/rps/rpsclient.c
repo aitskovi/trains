@@ -11,7 +11,6 @@
 #include <rpsclient.h>
 #include <bwio.h>
 #include <random.h>
-#include <time.h>
 
 #define GAMES_TO_PLAY 2
 

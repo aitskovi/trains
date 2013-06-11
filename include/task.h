@@ -41,6 +41,11 @@ typedef struct Task {
     struct Task *next;
 
     /**
+     * Used to store how long a task has been active
+     */
+    unsigned int cpu_time;
+
+    /**
      * The stack for this task.
      */
     unsigned char *stack;
@@ -61,5 +66,7 @@ Task *task_get(tid_t tid);
 int task_is_invalid(tid_t tid);
 
 void initialize_tasks();
+
+Task * get_tasks(unsigned int *size);
 
 #endif

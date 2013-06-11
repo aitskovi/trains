@@ -3,7 +3,6 @@
 #include <bwio.h>
 #include <syscall.h>
 #include <task.h>
-#include <time.h>
 #include <nameserver.h>
 #include <circular_queue.h>
 

@@ -4,7 +4,7 @@
 #include <task.h>
 #include <request.h>
 #include <scheduling.h>
-#include <time.h>
+#include <fine_timer.h>
 #include <messaging.h>
 #include <ksyscalls.h>
 #include <nameserver.h>
@@ -37,7 +37,7 @@ void initialize_kernel() {
 
     initialize_cache();
     initialize_memory();
-    initialize_time();
+    initialize_fine_timer();
     initialize_scheduling();
     initialize_tasks();
     initialize_messaging();
@@ -102,6 +102,22 @@ int handle(Task *task, Request *req) {
     return 0;
 }
 
+void dump_timing_info() {
+    unsigned int num_tasks, i, total_cpu_time;
+    Task *tasks = get_tasks(&num_tasks);
+    total_cpu_time = 0;
+    for (i = 0; i < num_tasks; ++i) {
+        total_cpu_time += tasks[i].cpu_time;
+    }
+    log("\nTask runtime info:\n");
+    for (i = 0; i < num_tasks; ++i) {
+        unsigned int microseconds;
+        microseconds = fine_time_to_usec(tasks[i].cpu_time);
+        float percent = 100.0f * tasks[i].cpu_time / total_cpu_time;
+        log("Task %u ran for %uus or %u percent of the time\n", tasks[i].tid, microseconds, (int) percent);
+    }
+}
+
 int main() {
     initialize_kernel();
 
@@ -112,11 +128,19 @@ int main() {
     make_ready(active);
 
     Request *req;
+    FineTimer timer;
     while((active = schedule())) {
+        fine_timer_reset(&timer);
         req = kernel_exit(active);
+        active->cpu_time += fine_timer_elapsed(&timer);
         int shutdown = handle(active, req);
         if (shutdown) break;
     }
+
+    // Print out runtime stats
+    dump_timing_info();
+
+    log ("Kernel exiting\n");
 
     return 0;
 }
