@@ -5,14 +5,17 @@
 
 #define NUM_VICS 2
 #define VIC_SIZE 32
+#define VIC_2_INT_ENABLE_BITS 0xf97865fb
+#define VIC_1_INT_ENABLE_BITS 0x7f7ffff
+
+void disable_interrupts() {
+    *(int *)(VIC1_BASE + VIC_INT_EN_CLEAR_OFFSET) = VIC_1_INT_ENABLE_BITS;
+    *(int *)(VIC2_BASE + VIC_INT_EN_CLEAR_OFFSET) = VIC_2_INT_ENABLE_BITS;
+}
 
 void initialize_interrupts() {
-
     // Disable all the interrupts to start.
-    int i;
-    for (i = 0; i < NUM_VICS + VIC_SIZE; ++i) {
-        disable_interrupt(i);
-    }
+    disable_interrupts();
 }
 
 int process_interrupt(int *data) {

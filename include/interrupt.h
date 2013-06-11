@@ -19,6 +19,8 @@ enum clear {
  */
 void initialize_interrupts();
 
+void disable_interrupts();
+
 /**
  * Based on the interrupt, find what event has occured
  * and return it along with the volatile data. This also

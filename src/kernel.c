@@ -12,6 +12,7 @@
 #include <ts7200.h>
 #include <log.h>
 #include <waiting.h>
+#include <interrupt.h>
 
 static Task *active;
 
@@ -141,6 +142,6 @@ int main() {
     dump_timing_info();
 
     log ("Kernel exiting\n");
-
+    disable_interrupts();
     return 0;
 }
