@@ -16,6 +16,7 @@ enum syscall_number {
     REPLY,
     AWAIT_EVENT,
     WAIT_TID,
+    SHUTDOWN,
     NUM_SYSCALLS,
 };
 
@@ -37,4 +38,6 @@ int Receive(tid_t *tid, char *msg, int msglen);
 int Reply(tid_t tid, char *reply, int replylen);
 
 int AwaitEvent(int event);
+
+void Shutdown();
 #endif

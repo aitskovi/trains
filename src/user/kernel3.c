@@ -82,5 +82,6 @@ void first() {
     WaitTid(six);
 
     log("First: Exiting\n");
-    Exit();
+
+    Shutdown();
 }

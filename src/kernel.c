@@ -49,14 +49,14 @@ void initialize_kernel() {
  * Handles a request for a task.
  *
  */
-void handle(Task *task, Request *req) {
+int handle(Task *task, Request *req) {
     // Handle Interrupts.
     if (req == 0) {
         int data;
         int event = process_interrupt(&data); 
         kevent(event, data);
         make_ready(task);
-        return;
+        return 0;
     }
 
 
@@ -92,10 +92,14 @@ void handle(Task *task, Request *req) {
     case WAIT_TID:
         kwait_tid(task, (int)req->args[0]);
         break;
+    case SHUTDOWN:
+        return -1;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);
         break;
     }
+
+    return 0;
 }
 
 int main() {
@@ -110,7 +114,8 @@ int main() {
     Request *req;
     while((active = schedule())) {
         req = kernel_exit(active);
-        handle(active, req);
+        int shutdown = handle(active, req);
+        if (shutdown) break;
     }
 
     return 0;

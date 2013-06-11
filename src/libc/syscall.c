@@ -93,3 +93,9 @@ int WaitTid(int tid) {
     req.args[0] = (void *)tid;
     return syscall(&req);
 }
+
+void Shutdown() {
+    Request req;
+    req.request = SHUTDOWN;
+    syscall(&req);
+}
