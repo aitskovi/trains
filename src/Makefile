@@ -11,7 +11,18 @@ else
 	include arm.mk
 endif
 
-ARMOBJECTS = kernel.o context_switch.o syscall.o user.o time.o nameserver.o log_arm.o interrupt.o idle.o clock_server.o clock_notifier.o
+ARMOBJECTS = kernel.o\
+			 context_switch.o\
+			 syscall.o\
+			 user.o\
+			 time.o\
+			 nameserver.o\
+			 log_arm.o\
+			 interrupt.o\
+			 idle.o\
+			 clock_server.o\
+			 clock_notifier.o\
+			 event.o
 X86OBJECTS = log_x86.o
 OBJECTS = bwio.o\
 		  scheduling.o\
@@ -23,9 +34,9 @@ OBJECTS = bwio.o\
 		  nameservice.o\
 		  string.o\
 		  random.o\
-		  event.o\
 		  bits.o\
-		  heap_priority_queue.o
+		  heap_priority_queue.o\
+		  waiting.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 

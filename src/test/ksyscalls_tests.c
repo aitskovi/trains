@@ -168,6 +168,29 @@ void kcreate_test() {
     assert(child->state == READY);
 }
 
+void kwait_tid_test() {
+    reset();
+
+    kexit(t0);
+    assert(t0->state == ZOMBIE);
+
+    // Shouldn't block when calling wait on ZOMBIE task
+    kwait_tid(t1, t0->tid);
+    assert(t1->state == READY);
+    assert(task_get_return_value(t1) == 0);
+    assert(t0->state == ZOMBIE);
+
+    // Should block on non zombie.
+    kwait_tid(t1, t2->tid);
+    assert(t2->state != ZOMBIE);
+    assert(t1->state == WAIT_BLOCKED);
+
+    // Should unblock when non zombie exits.
+    kexit(t2);
+    assert(t2->state == ZOMBIE);
+    assert(t1->state == READY);
+}
+
 int main() {
     kmessaging_test();
     krecieve_blocking_test();
@@ -176,5 +199,6 @@ int main() {
     kmytid_test();
     kmy_parent_tid_test();
     kcreate_test();
+    kwait_tid_test();
     return 0;
 }

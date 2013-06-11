@@ -10,5 +10,6 @@ int kexit(struct Task *active);
 int kmytid(struct Task *active);
 int kmy_parent_tid(struct Task *active);
 int kcreate(struct Task *active, int priority, void(*code)());
+int kwait_tid(struct Task *active, int tid);
 
 #endif

@@ -30,6 +30,7 @@ enum task_state {
     RPLY_BLOCKED,
     RECV_BLOCKED,
     EVT_BLOCKED,
+    WAIT_BLOCKED,
     ZOMBIE,
 };
 

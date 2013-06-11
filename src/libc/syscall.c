@@ -86,3 +86,10 @@ int AwaitEvent(int event) {
     req.args[0] = (void *)event;
     return syscall(&req);
 }
+
+int WaitTid(int tid) {
+    Request req;
+    req.request = WAIT_TID;
+    req.args[0] = (void *)tid;
+    return syscall(&req);
+}

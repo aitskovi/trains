@@ -15,6 +15,7 @@ enum syscall_number {
     RECEIVE,
     REPLY,
     AWAIT_EVENT,
+    WAIT_TID,
     NUM_SYSCALLS,
 };
 
@@ -25,6 +26,8 @@ int syscall(struct Request *req);
 
 int MyTid();
 int MyParentTid();
+int WaitTid(int tid);
+
 int Create(int priority, void(*code)());
 void Pass();
 void Exit();

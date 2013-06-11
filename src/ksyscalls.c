@@ -3,6 +3,7 @@
 #include <task.h>
 #include <scheduling.h>
 #include <messaging.h>
+#include <waiting.h>
 
 int ksend(Task *active, int tid, char *msg, int msglen, char *reply, int replylen) {
     // TODO Make sure you're not sending message to yourself.
@@ -88,6 +89,13 @@ int kexit(Task *active) {
         make_ready(task);
     }
 
+    // Unblock any tasks that are waiting on this task to exit.
+    Task *waiter;
+    while ((waiter = waiting_pop(active))) {
+        task_set_return_value(waiter, 0);
+        make_ready(waiter);
+    }
+
     return 0;
 }
 
@@ -120,6 +128,27 @@ int kcreate(struct Task *task, int priority, void(*code)()) {
         task_set_return_value(task, child->tid);
     }
     make_ready(task);
+
+    return 0;
+}
+
+int kwait_tid(Task *active, int tid) {
+    Task *task = task_get(tid);
+    if (!task) {
+        task_set_return_value(active, -1);
+        make_ready(active);
+        return 0;
+    }
+
+    int error = waiting_add(task, active);
+    if (!error) {
+        // Block until task completes.
+        active->state = WAIT_BLOCKED;
+    } else {
+        // Task has already completed, just reschedule right away.
+        task_set_return_value(active, 0);
+        make_ready(active);
+    }
 
     return 0;
 }

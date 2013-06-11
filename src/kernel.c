@@ -11,6 +11,7 @@
 #include <memory.h>
 #include <ts7200.h>
 #include <log.h>
+#include <waiting.h>
 
 static Task *active;
 
@@ -41,6 +42,7 @@ void initialize_kernel() {
     initialize_tasks();
     initialize_messaging();
     initialize_events();
+    initialize_waiting();
 }
 
 /**
@@ -86,6 +88,9 @@ void handle(Task *task, Request *req) {
         break;
     case AWAIT_EVENT:
         kawait(task, (int)req->args[0]);
+        break;
+    case WAIT_TID:
+        kwait_tid(task, (int)req->args[0]);
         break;
     default:
         bwprintf(COM2, "Undefined request number %u\n", req->request);

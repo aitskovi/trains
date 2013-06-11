@@ -75,6 +75,12 @@ void first() {
         Reply(tid, (char *) &reply, sizeof(reply));
     }
 
+    // Wait for all children to exit.
+    WaitTid(three);
+    WaitTid(four);
+    WaitTid(five);
+    WaitTid(six);
+
     log("First: Exiting\n");
     Exit();
 }
