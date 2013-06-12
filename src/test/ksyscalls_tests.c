@@ -213,14 +213,14 @@ int main() {
     suite.setup = reset;
     suite.num_tests = 0;
 
-    vsuite_add_test(&suite, "kmessaging_test", kmessaging_test);
-    vsuite_add_test(&suite, "kreceive_blocking_test", krecieve_blocking_test);
-    vsuite_add_test(&suite, "kreply_non_blocked_test", kreply_non_blocked_test);
-    vsuite_add_test(&suite, "ksend_transaction_failed", ksend_transaction_failed);
-    vsuite_add_test(&suite, "kmytid_test", kmytid_test);
-    vsuite_add_test(&suite, "kmy_parent_tid_test", kmy_parent_tid_test);
-    vsuite_add_test(&suite, "kcreate_test", kcreate_test);
-    vsuite_add_test(&suite, "kwait_tid_test", kwait_tid_test);
+    vsuite_add_test(&suite, kmessaging_test);
+    vsuite_add_test(&suite, krecieve_blocking_test);
+    vsuite_add_test(&suite, kreply_non_blocked_test);
+    vsuite_add_test(&suite, ksend_transaction_failed);
+    vsuite_add_test(&suite, kmytid_test);
+    vsuite_add_test(&suite, kmy_parent_tid_test);
+    vsuite_add_test(&suite, kcreate_test);
+    vsuite_add_test(&suite, kwait_tid_test);
     vsuite_run(&suite);
     return 0;
 }

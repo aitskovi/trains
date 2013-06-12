@@ -1,7 +1,7 @@
 #include <log.h>
 #include <verify.h>
 
-int vsuite_add_test(struct vsuite* suite, char *name, int(*test)()) {
+int __vsuite_add_test(struct vsuite* suite, char *name, int(*test)()) {
     if (suite->num_tests >= MAX_NUM_TESTS) {
         log("Unable to add Test\n");
         return -1; 

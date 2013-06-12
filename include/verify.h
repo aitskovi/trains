@@ -8,6 +8,8 @@
     return -1;\ 
 }
 
+#define vsuite_add_test(suite, test) __vsuite_add_test((suite), #test, test)
+
 struct vtest {
     char *name;
     int(*test)();
@@ -22,7 +24,6 @@ struct vsuite {
     int num_tests;
 };
 
-int vsuite_add_test();
 int vsuite_run(struct vsuite* suite);
 
 #endif
