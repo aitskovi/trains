@@ -207,9 +207,7 @@ int kwait_tid_test() {
     return 0;
 }
 
-int main() {
-    verify_initialize();
-
+struct vsuite* syscalls_suite() {
     struct vsuite *suite = vsuite_create("Syscalls Tests", reset);
     vsuite_add_test(suite, kmessaging_test);
     vsuite_add_test(suite, krecieve_blocking_test);
@@ -219,7 +217,6 @@ int main() {
     vsuite_add_test(suite, kmy_parent_tid_test);
     vsuite_add_test(suite, kcreate_test);
     vsuite_add_test(suite, kwait_tid_test);
-    vsuite_run(suite);
 
-    return 0;
+    return suite;
 }
