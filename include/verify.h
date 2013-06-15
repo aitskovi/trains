@@ -20,10 +20,13 @@ int vtest_run();
 struct vsuite {
     char *name;
     void(*setup)();
-    struct vtest tests[50];
+    struct vtest *tests[MAX_NUM_TESTS];
     int num_tests;
 };
 
+struct vsuite* vsuite_create(char *name, void(*setup)());
 int vsuite_run(struct vsuite* suite);
+
+void verify_initialize();
 
 #endif

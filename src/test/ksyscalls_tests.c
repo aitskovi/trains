@@ -208,19 +208,18 @@ int kwait_tid_test() {
 }
 
 int main() {
-    struct vsuite suite;
-    suite.name= "Syscalls Tests";
-    suite.setup = reset;
-    suite.num_tests = 0;
+    verify_initialize();
 
-    vsuite_add_test(&suite, kmessaging_test);
-    vsuite_add_test(&suite, krecieve_blocking_test);
-    vsuite_add_test(&suite, kreply_non_blocked_test);
-    vsuite_add_test(&suite, ksend_transaction_failed);
-    vsuite_add_test(&suite, kmytid_test);
-    vsuite_add_test(&suite, kmy_parent_tid_test);
-    vsuite_add_test(&suite, kcreate_test);
-    vsuite_add_test(&suite, kwait_tid_test);
-    vsuite_run(&suite);
+    struct vsuite *suite = vsuite_create("Syscalls Tests", reset);
+    vsuite_add_test(suite, kmessaging_test);
+    vsuite_add_test(suite, krecieve_blocking_test);
+    vsuite_add_test(suite, kreply_non_blocked_test);
+    vsuite_add_test(suite, ksend_transaction_failed);
+    vsuite_add_test(suite, kmytid_test);
+    vsuite_add_test(suite, kmy_parent_tid_test);
+    vsuite_add_test(suite, kcreate_test);
+    vsuite_add_test(suite, kwait_tid_test);
+    vsuite_run(suite);
+
     return 0;
 }
