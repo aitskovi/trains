@@ -7,6 +7,7 @@ int main() {
     vsuite_run(messaging_suite());
     vsuite_run(circular_queue_suite());
     vsuite_run(memory_suite());
+    vsuite_run(priority_queue_suite());
 
     return 0;
 }
