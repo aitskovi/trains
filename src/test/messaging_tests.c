@@ -5,7 +5,6 @@
 #include <messaging.h>
 
 #include <string.h>
-#include <stdio.h>
 #include <verify.h>
 
 int messaging_basic_test() {
