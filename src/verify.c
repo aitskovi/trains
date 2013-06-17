@@ -75,7 +75,7 @@ int vsuite_run(struct vsuite* suite) {
     }
     
     log("Completed Suite: %s\n", suite->name);
-    log("Tests Passed: %d, Failed: %d, Run: %d\n", num_passed, suite->num_tests - num_passed, suite->num_tests);
+    log("Tests Passed: %d, Failed: %d, Run: %d\n\n", num_passed, suite->num_tests - num_passed, suite->num_tests);
 
     return 0;
 }
