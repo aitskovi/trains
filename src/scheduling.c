@@ -7,9 +7,11 @@
 
 #include <scheduling.h>
 
+#include <bits.h>
 #include <task.h>
 #include <circular_queue.h>
 
+static int available;
 static Task *queue_heads[NUM_PRIORITIES];
 static Task *queue_tails[NUM_PRIORITIES];
 
@@ -19,23 +21,26 @@ void initialize_scheduling () {
         queue_heads[i] = 0;
         queue_tails[i] = 0;
 	}
+    available = 0;
 }
 
 Task * schedule () {
     unsigned int i;
     Task *result;
-    for (i = 0; i < NUM_PRIORITIES; ++i) {
-        if ((result = queue_heads[i])) {
-            if (queue_tails[i] == result) queue_tails[i] = 0;
 
-            queue_heads[i] = result->next;
-            result->state = ACTIVE;
-            result->next = 0;
+    int priority = ffs(available) - 1;
 
-            return result;
-        }
+    if (priority < 0) return 0;
+
+    result = queue_heads[priority];
+    if (queue_tails[priority] == result) {
+        queue_tails[priority] = 0;
+        available &= ~(1 << priority);
     }
-    return 0;
+    queue_heads[priority] = result->next;
+    result->state = ACTIVE;
+    result->next = 0;
+    return result;
 }
 
 void make_ready(Task *task) {
@@ -46,7 +51,10 @@ void make_ready(Task *task) {
     if (queue_tails[priority] != 0) queue_tails[priority]->next = task;
 
     // If no one is in the list, we're the new head!
-    if (queue_heads[priority] == 0) queue_heads[priority] = task;
+    if (queue_heads[priority] == 0) {
+        queue_heads[priority] = task;
+        available |= (1 << priority);
+    }
 
     // We're always the new tail.
     queue_tails[priority] = task;
