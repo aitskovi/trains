@@ -81,6 +81,10 @@ void task_save_sp(Task *t, int *sp) {
     //bwprintf(COM2, "Saved sp: %x\n", t->sp);
 }
 
+void *task_get_pc(Task *t) {
+    return t->sp[PC];
+}
+
 Task *task_get(tid_t tid) {
     if (tid < next_tid && tid >= 0) return &tasks[tid];
     else return 0;

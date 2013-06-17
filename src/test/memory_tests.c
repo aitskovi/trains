@@ -1,34 +1,36 @@
-#include <assert.h>
 #include <memory.h>
 
-void reset() {
+#include <verify.h>
+
+void memory_reset() {
     initialize_memory();
 }
 
-void test_kmalloc_basic() {
-    reset();
-
+int test_kmalloc_basic() {
     int *data = kmalloc(sizeof(int));
-    assert(data != 0);
-}
+    vassert(data != 0);
 
-void test_kmalloc_full() {
-    reset();
-
-    int *data = kmalloc(HEAP_SIZE);
-    assert(data != 0);
-}
-
-void test_kmalloc_invalid() {
-    reset();
-
-    void *data = kmalloc(HEAP_SIZE + 1);
-    assert(data == 0);
-}
-
-int main() {
-    test_kmalloc_basic();
-    test_kmalloc_full();
-    test_kmalloc_invalid();
     return 0;
+}
+
+int test_kmalloc_full() {
+    int *data = kmalloc(HEAP_SIZE);
+    vassert(data != 0);
+
+    return 0;
+}
+
+int test_kmalloc_invalid() {
+    void *data = kmalloc(HEAP_SIZE + 1);
+    vassert(data == 0);
+
+    return 0;
+}
+
+struct vsuite *memory_suite() {
+    struct vsuite *suite = vsuite_create("Memory Tests", memory_reset);
+    vsuite_add_test(suite, test_kmalloc_basic);
+    vsuite_add_test(suite, test_kmalloc_full);
+    vsuite_add_test(suite, test_kmalloc_invalid);
+    return suite;
 }

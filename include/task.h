@@ -55,6 +55,8 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
 
 void task_print(Task *t);
 
+void *task_get_pc(Task *t);
+
 int *task_get_sp(Task *t);
 void task_save_sp(Task *t, int *sp);
 

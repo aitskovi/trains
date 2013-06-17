@@ -13,7 +13,6 @@ endif
 
 ARMOBJECTS = kernel.o\
 			 context_switch.o\
-			 syscall.o\
 			 user.o\
 			 fine_timer.o\
 			 nameserver.o\
@@ -22,8 +21,10 @@ ARMOBJECTS = kernel.o\
 			 idle.o\
 			 clock_server.o\
 			 clock_notifier.o\
-			 event.o
-X86OBJECTS = log_x86.o
+			 event.o\
+			 swi_arm.o
+X86OBJECTS = log_x86.o\
+	   		 swi_x86.o
 OBJECTS = bwio.o\
 		  scheduling.o\
 		  circular_queue.o\
@@ -36,11 +37,13 @@ OBJECTS = bwio.o\
 		  random.o\
 		  bits.o\
 		  heap_priority_queue.o\
-		  waiting.o
+		  waiting.o\
+		  syscall.o\
+		  verify.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 
-tests: test circular_queue_tests messaging_tests ksyscalls_tests memory_tests priority_queue_tests
+tests: unit_tests
 
 opt: CFLAGS+=-O2
 opt: all
@@ -78,24 +81,9 @@ kernel3.elf : kernel3.o $(ARMOBJECTS) $(OBJECTS)
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-scheduling_tests : scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-
-circular_queue_tests : circular_queue_tests.o $(OBJECTS) $(X86OBJECTS)
+unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-priority_queue_tests : priority_queue_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-
-messaging_tests: messaging_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-
-ksyscalls_tests: ksyscalls_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-	
-memory_tests: memory_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-
 clean:
 	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
 
