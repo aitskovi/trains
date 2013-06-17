@@ -217,6 +217,5 @@ struct vsuite* syscalls_suite() {
     vsuite_add_test(suite, kmy_parent_tid_test);
     vsuite_add_test(suite, kcreate_test);
     vsuite_add_test(suite, kwait_tid_test);
-
     return suite;
 }

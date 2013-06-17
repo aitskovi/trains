@@ -43,7 +43,7 @@ OBJECTS = bwio.o\
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 
-tests: test unit_tests memory_tests priority_queue_tests
+tests: test unit_tests priority_queue_tests
 
 opt: CFLAGS+=-O2
 opt: all
@@ -87,12 +87,9 @@ scheduling_tests : scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
 priority_queue_tests : priority_queue_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 
-unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o $(OBJECTS) $(X86OBJECTS)
+unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-memory_tests: memory_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-
 clean:
 	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
 
