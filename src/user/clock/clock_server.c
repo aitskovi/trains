@@ -76,10 +76,12 @@ void clock_server() {
         case TICK_REQUEST:
             time++;
             dlog("Ticking %u!\n", time);
+            reply.type = TICK_RESPONSE;
+            Reply(tid, (char *) &reply, sizeof(reply));
             // Unblock all waiting tasks whose time has arrived
             while (priority_queue_size(&blocked_tasks)) {
                 PriorityQueueElement head = priority_queue_peek(&blocked_tasks);
-                if (head.priority < time) {
+                if (head.priority <= time) {
                     priority_queue_extract(&blocked_tasks);
                     reply.type = DELAY_RESPONSE;
                     Reply((tid_t) head.data, (char *) &reply, sizeof(reply));
@@ -87,8 +89,6 @@ void clock_server() {
                     break;
                 }
             }
-            reply.type = TICK_RESPONSE;
-            Reply(tid, (char *) &reply, sizeof(reply));
             break;
         case TIME_REQUEST:
             reply.type = TIME_RESPONSE;
