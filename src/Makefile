@@ -43,7 +43,7 @@ OBJECTS = bwio.o\
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 
-tests: test unit_tests priority_queue_tests
+tests: unit_tests
 
 opt: CFLAGS+=-O2
 opt: all
@@ -81,10 +81,7 @@ kernel3.elf : kernel3.o $(ARMOBJECTS) $(OBJECTS)
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-scheduling_tests : scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
-	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
-
-unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o $(OBJECTS) $(X86OBJECTS)
+unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:

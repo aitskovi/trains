@@ -8,6 +8,7 @@ int main() {
     vsuite_run(circular_queue_suite());
     vsuite_run(memory_suite());
     vsuite_run(priority_queue_suite());
+    vsuite_run(scheduling_suite());
 
     return 0;
 }

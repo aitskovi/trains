@@ -10,55 +10,63 @@
 #include <circular_queue.h>
 #include <scheduling.h>
 #include <task.h>
-#include <assert.h>
+#include <verify.h>
 
 void testTask () {
     return;
 }
 
-int main () {
-
+void scheduling_suite_reset() {
     initialize_tasks();
     initialize_scheduling();
+}
 
+int scheduling_operations_test() {
     Task *mediumTask = task_create(testTask, 0, MEDIUM);
-    assert (mediumTask->parent_tid == 0);
-    assert (mediumTask->pc == testTask);
-    assert (mediumTask->priority == MEDIUM);
-    assert (mediumTask->tid == 0);
+    vassert (mediumTask->parent_tid == 0);
+    vassert (task_get_pc(mediumTask) == testTask);
+    vassert (mediumTask->priority == MEDIUM);
+    vassert (mediumTask->tid == 0);
 
     Task *highTask = task_create(testTask, 0, HIGH);
-    assert (highTask->tid == 1);
+    vassert (highTask->tid == 1);
 
     // Queues should be empty
-    assert (!schedule());
+    vassert (!schedule());
 
     // Make one ready
     make_ready(mediumTask);
 
     // Should be the next one up
-    assert (mediumTask == schedule());
+    vassert (mediumTask == schedule());
 
     // Should now be empty again
-    assert (!schedule());
+    vassert (!schedule());
 
     // Now make both ready
     make_ready(mediumTask);
     make_ready(highTask);
 
     // Should be scheduled in priority order
-    assert (highTask == schedule());
-    assert (mediumTask == schedule());
-    assert (!schedule());
+    vassert (highTask == schedule());
+    vassert (mediumTask == schedule());
+    vassert (!schedule());
 
     // Medium should not run so long as high is ready
     make_ready(mediumTask);
     make_ready(highTask);
 
-    assert (highTask == schedule());
+    vassert (highTask == schedule());
     make_ready(highTask);
-    assert (highTask == schedule());
-    assert (mediumTask == schedule());
-    assert (!schedule());
+    vassert (highTask == schedule());
+    vassert (mediumTask == schedule());
+    vassert (!schedule());
 
+    return 0;
+}
+
+struct vsuite *scheduling_suite() {
+    struct vsuite *suite = vsuite_create("Scheduling Tests", scheduling_suite_reset);
+    vsuite_add_test(suite, scheduling_operations_test);
+    return suite;
 }
