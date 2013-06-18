@@ -50,7 +50,7 @@ int uart_read(int channel) {
 		break;
 	}
 
-    dassert(*flags & TXFF_MASK, "Not ready to Recieve\n");
+    dassert(*flags & RXFF_MASK, "Not ready to Recieve\n");
 
 	c = *data;
 	return c;

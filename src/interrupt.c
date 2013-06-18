@@ -51,11 +51,16 @@ int process_uart_interrupt(int channel, int *data) {
     // Recieve Interrupt
     if (interrupt & RIS_MASK) {
         dlog("Recieve Interrupt\n");
+
+        *data = uart_read(channel);
+
+        return channel == COM1 ? UART_1_RCV_EVENT : UART_2_RCV_EVENT;
     }
 
     // Recieve Timeout Interrupt
     if (interrupt & RTIS_MASK) {
         dlog("Timeout Interrupt\n");
+        dassert(false, "Recieved Unhandled Interrupt\n");
     }
 
     return event;
