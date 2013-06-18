@@ -4,6 +4,7 @@
 #include <interrupt.h>
 #include <log.h>
 #include <task.h>
+#include <uart.h>
 
 #define INVALID_EVENT -1
 #define CORRUPTED_VOLATILE_DATA -2
@@ -70,6 +71,18 @@ int enable_event(int event) {
     switch(event) {
         case TIMER_3_EVENT:
             enable_interrupt(TIMER_3_INTERRUPT);
+            break;
+        case UART_2_TX_EVENT:
+            enable_interrupt(UART_2_INTERRUPT);
+            uart_enable_interrupt(COM2, T_INTERRUPT);
+            break;
+        case UART_1_TX_EVENT:
+            enable_interrupt(UART_1_INTERRUPT);
+            uart_enable_interrupt(COM1, T_INTERRUPT);
+            break;
+        case UART_1_CTS_EVENT:
+            enable_interrupt(UART_1_INTERRUPT);
+            uart_enable_interrupt(COM1, MS_INTERRUPT);
             break;
         default:
             log("Enabling Invalid Interrupt\n");

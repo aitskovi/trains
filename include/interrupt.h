@@ -2,9 +2,12 @@
 #define _INTERRUPT_H_
 
 #include <event.h>
+#include <ts7200.h>
 
 enum interrupt {
     TIMER_3_INTERRUPT = 51,
+    UART_1_INTERRUPT = 52,
+    UART_2_INTERRUPT = 54,
 };
 
 enum clear {

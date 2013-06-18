@@ -39,7 +39,8 @@ OBJECTS = bwio.o\
 		  heap_priority_queue.o\
 		  waiting.o\
 		  syscall.o\
-		  verify.o
+		  verify.o\
+		  uart.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf
 

@@ -7,6 +7,11 @@ struct Task;
 
 enum event {
     TIMER_3_EVENT,
+    UART_1_RCV_EVENT,
+    UART_1_TX_EVENT,
+    UART_1_CTS_EVENT,
+    UART_2_RCV_EVENT,
+    UART_2_TX_EVENT,
     NUM_EVENTS
 };
 
