@@ -36,6 +36,13 @@ void write_notifier() {
     enable_event(UART_1_CTS_EVENT);
     dlog("Write Notifier: Set-up UART\n");
 
+    dlog("Write Notifier: Setting up Notifier State\n");
+    if (!uart_getcts(COM1)) {
+        dlog("Write Notifier: Waiting For CTS\n");
+        AwaitEvent(UART_1_CTS_EVENT);
+    }
+    dlog("Write Notifier: Set up Notifier State\n");
+
     for (;;) {
         dlog("Waiting for Transmit\n");
         int error = AwaitEvent(UART_1_TX_EVENT);
@@ -51,11 +58,12 @@ void write_notifier() {
 
         dassert(rply.type == WRITE_EVENT_RESPONSE, "Invalid Response from WriteServer");
 
-        dlog("Waiting for CTS\n");
+        dlog("Waiting for CTS 1\n");
         error = AwaitEvent(UART_1_CTS_EVENT);
-        if (error < 0) {
-            dlog("Recieved an error waiting for WRITE_EVENT\n");
-        }
+        dassert(error >= 0, "Error waiting for CTS_EVENT\n");
+        dlog("Waiting for CTS 2\n");
+        error = AwaitEvent(UART_1_CTS_EVENT);
+        dassert(error >= 0, "Error waiting for CTS_EVENT\n");
     }
 
     Exit();

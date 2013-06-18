@@ -34,6 +34,8 @@ int uart_disable_interrupt(int channel, enum uart_interrupt);
  */
 int uart_enable_interrupt(int channel, enum uart_interrupt interrupt);
 
+int uart_getcts(int channel);
+
 int uart_setfifo(int channel, int state);
 int uart_setspeed(int channel, int speed);
 int uart_setstop(int channel, int num);

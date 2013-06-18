@@ -128,6 +128,23 @@ int uart_disable_interrupt(int channel, enum uart_interrupt interrupt) {
     return 0;
 }
 
+int uart_getcts(int channel) {
+	int *flags;
+	switch(channel) {
+	case COM1:
+		flags = (int *)(UART1_BASE + UART_FLAG_OFFSET);
+		break;
+	case COM2:
+		flags = (int *)(UART2_BASE + UART_FLAG_OFFSET);
+		break;
+	default:
+		return -1;
+		break;
+	}
+
+    return *flags & CTS_MASK;
+}
+
 /*
  * The UARTs are initialized by RedBoot to the following state
  * 	115,200 bps

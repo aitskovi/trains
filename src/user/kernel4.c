@@ -28,7 +28,7 @@ void train_set_speed(int train, int speed) {
 void writer() {
     //log("Writer: Initializing\n");
 
-    train_set_speed(35, 8);
+    train_set_speed(47, 8);
     /*
     Putc(COM2, 'H');
     Putc(COM2, 'e');
