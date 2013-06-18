@@ -1,12 +1,12 @@
 #ifndef _WRITE_SERVICE_H_
 #define _WRITE_SERVICE_H_
 
-struct circular_queue;
+#include <circular_queue.h>
 
 struct WriteService {
     int channel;
     int writable;
-    struct circular_queue *queue;
+    struct circular_queue queue;
 };
 
 void writeservice_initialize(struct WriteService *service, int channel);

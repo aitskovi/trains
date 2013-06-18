@@ -7,7 +7,7 @@
 void writeservice_initialize(struct WriteService *service, int channel) {
     service->channel = channel;
     service->writable = 0;
-    circular_queue_initialize(service->queue);
+    circular_queue_initialize(&service->queue);
 }
 
 /**
@@ -16,7 +16,7 @@ void writeservice_initialize(struct WriteService *service, int channel) {
 int writeservice_enqueue(struct WriteService *service, char c) {
     dassert(service != 0, "Invalid Service");
 
-    return circular_queue_push(service->queue, (void *)(int)c);
+    return circular_queue_push(&service->queue, (void *)(int)c);
 }
 
 /**
@@ -26,11 +26,11 @@ int writeservice_flush(struct WriteService *service) {
     dassert(service != 0, "Invalid Service");
 
     if (!service->writable) return -2;
-    else if (circular_queue_empty(service->queue)) return 0;
+    else if (circular_queue_empty(&service->queue)) return 0;
 
     service->writable = 0;
     log("Writing to the uart\n");
-    return uart_write(service->channel, (char)circular_queue_pop(service->queue));
+    return uart_write(service->channel, (char)circular_queue_pop(&service->queue));
 }
 
 /**

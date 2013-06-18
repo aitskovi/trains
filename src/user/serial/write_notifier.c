@@ -19,7 +19,7 @@ void write_notifier() {
     char *reply;
     Recieve(&tid, reply, replylen);
     */
-    int channel = COM2;
+    int channel = COM1;
 
     int server_tid = -1;
     do {

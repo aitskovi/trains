@@ -52,7 +52,6 @@ void WriteServer() {
 
     int tid;
     WriteMessage msg;
-    WriteMessage rply;
     for (;;) {
         Receive(&tid, (char *)&msg, sizeof(msg));
 
