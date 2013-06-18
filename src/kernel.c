@@ -122,9 +122,6 @@ void dump_timing_info() {
 int main() {
     initialize_kernel();
 
-    // This has to be done after kernel initialization.
-    initialize_nameserver();
-
     active = task_create(first, 0, REALTIME);
     make_ready(active);
 
