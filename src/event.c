@@ -1,5 +1,6 @@
 #include <event.h>
 
+#include <circular_queue.h>
 #include <interrupt.h>
 #include <log.h>
 #include <task.h>
@@ -11,6 +12,7 @@
 #define TOO_MANY_WAITERS -4
 
 static Task *waiters[NUM_EVENTS];
+static struct circular_queue queues[NUM_EVENTS];
 
 int kawait(Task *task, int event) {
    // Verify the event is valid.
@@ -21,15 +23,31 @@ int kawait(Task *task, int event) {
 
    if (waiters[event]) return TOO_MANY_WAITERS;
 
-   waiters[event] = task;
-   task->state = EVT_BLOCKED;
+   struct circular_queue *queue = &queues[event];
+   if (circular_queue_empty(queue)) {
+       waiters[event] = task;
+       task->state = EVT_BLOCKED;
+   } else {
+       int data = (int)circular_queue_pop(queue);
+       task_set_return_value(task, data);
+       make_ready(task);
+   }
 
    return 0;
 }
 
 int kevent(int event, int data) {
+    if (event < 0 || event >= NUM_EVENTS) {
+        dlog("Invalid Event %d\n", event);
+        return -1;
+    }
+
     if (!waiters[event]) {
-        dlog("Recieved the event:%d, with no waiters\n", event);
+        struct circular_queue *queue = &queues[event];
+        int error = circular_queue_push(queue, (void *)data);
+        if (error) {
+            dlog("Filled queue for event:%d\n", event);
+        }
         return NO_WAITERS;
     }
 
@@ -67,5 +85,6 @@ void initialize_events() {
     int i;
     for (i = 0; i < NUM_EVENTS; ++i) {
         waiters[i] = 0;
+        circular_queue_initialize(&queues[i]);
     }
 }
