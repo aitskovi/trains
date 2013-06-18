@@ -64,23 +64,38 @@ int bwsetspeed( int channel, int speed ) {
 }
 
 int bwputc( int channel, char c ) {
-	int *flags, *data;
-	switch( channel ) {
-	case COM1:
-		flags = (int *)( UART1_BASE + UART_FLAG_OFFSET );
-		data = (int *)( UART1_BASE + UART_DATA_OFFSET );
-		break;
-	case COM2:
-		flags = (int *)( UART2_BASE + UART_FLAG_OFFSET );
-		data = (int *)( UART2_BASE + UART_DATA_OFFSET );
-		break;
-	default:
-		return -1;
-		break;
-	}
-	while( ( *flags & TXFF_MASK ) ) ;
-	*data = c;
-	return 0;
+    int *flags, *data, *ctlr;
+    switch( channel ) {
+        case COM1:
+            flags = (int *)( UART1_BASE + UART_FLAG_OFFSET );
+            data = (int *)( UART1_BASE + UART_DATA_OFFSET );
+            ctlr = (int *)( UART1_BASE + UART_CTLR_OFFSET );
+            break;
+        case COM2:
+            flags = (int *)( UART2_BASE + UART_FLAG_OFFSET );
+            data = (int *)( UART2_BASE + UART_DATA_OFFSET );
+            ctlr = (int *)( UART2_BASE + UART_CTLR_OFFSET );
+            break;
+        default:
+            return -1;
+            break;
+    }
+
+    // Save the old system state and turn off TXFF interrupt
+    // if necessary.
+    int interrupt = *ctlr & TIEN_MASK;
+    if (interrupt) *ctlr &= ~TIEN_MASK;
+
+    // Write the data out.
+    while( ( *flags & TXFF_MASK ) || ( *flags & TXBUSY_MASK ) ) ;
+    *data = c;
+
+    // Either turn write interrupt back on or wait until
+    // we can write again.
+    if (!interrupt) while(( *flags & TXFF_MASK ) || ( *flags & TXBUSY_MASK )) ;
+    else *ctlr |= TIEN_MASK;
+
+    return 0;
 }
 
 char c2x( char ch ) {
