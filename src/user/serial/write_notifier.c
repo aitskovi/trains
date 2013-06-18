@@ -58,12 +58,15 @@ void write_notifier() {
 
         dassert(rply.type == WRITE_EVENT_RESPONSE, "Invalid Response from WriteServer");
 
-        dlog("Waiting for CTS 1\n");
-        error = AwaitEvent(UART_1_CTS_EVENT);
-        dassert(error >= 0, "Error waiting for CTS_EVENT\n");
-        dlog("Waiting for CTS 2\n");
-        error = AwaitEvent(UART_1_CTS_EVENT);
-        dassert(error >= 0, "Error waiting for CTS_EVENT\n");
+        // This should usually run though twice, but may run once
+        // in exceptional cases.
+        do {
+            dlog("Waiting for CTS\n");
+            dlog("CTS Pre is %d\n", uart_getcts(COM1));
+            error = AwaitEvent(UART_1_CTS_EVENT);
+            dlog("CTS Post is %d\n", uart_getcts(COM1));
+            dassert(error >= 0, "Error waiting for CTS_EVENT\n");
+        } while(!uart_getcts(COM1));
     }
 
     Exit();
