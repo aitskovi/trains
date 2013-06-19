@@ -122,7 +122,7 @@ void dump_timing_info() {
 int main() {
     initialize_kernel();
 
-    active = task_create(first, 0, REALTIME);
+    active = task_create(first, 0, MEDIUM);
     make_ready(active);
 
     Request *req;

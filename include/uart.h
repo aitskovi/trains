@@ -1,6 +1,9 @@
 #ifndef _UART_H_
 #define _UART_H_
 
+#define ON 1
+#define OFF 0
+
 enum uart_interrupt {
     T_INTERRUPT,
     R_INTERRUPT,

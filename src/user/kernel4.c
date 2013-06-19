@@ -6,6 +6,7 @@
 #include <idle.h>
 #include <interrupt.h>
 #include <nameserver.h>
+#include <read_server.h>
 #include <scheduling.h>
 #include <syscall.h>
 #include <write_server.h>
@@ -38,6 +39,13 @@ void writer() {
     Putc(COM2, '\n');
     */
 
+    Putc(COM1, 133);
+    int i;
+    for (i = 0; i < 10; ++i) {
+        char a = (char)Getc(COM1);
+        log("Received: %x\n", a);
+    }
+
     Exit();
 }
 
@@ -59,6 +67,9 @@ void first() {
     // Write some shit.
     log("First: Creating WriteServer\n");
     Create(HIGHEST, WriteServer);
+
+    log("First: Creating ReadServer\n");
+    Create(HIGHEST, ReadServer);
 
     int writer_tid = Create(MEDIUM, writer);
 

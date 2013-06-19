@@ -22,6 +22,8 @@ ARMOBJECTS = kernel.o\
 			 clock_notifier.o\
 			 write_notifier.o\
 			 write_server.o\
+			 read_notifier.o\
+			 read_server.o\
 			 swi_arm.o
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
@@ -43,7 +45,8 @@ OBJECTS = bwio.o\
 		  event.o\
 		  interrupt.o\
 		  uart.o\
-		  write_service.o
+		  write_service.o\
+		  read_service.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf
 

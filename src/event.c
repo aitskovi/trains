@@ -94,6 +94,10 @@ int enable_event(int event) {
             enable_interrupt(UART_1_INTERRUPT);
             uart_enable_interrupt(COM1, MS_INTERRUPT);
             break;
+        case UART_1_RCV_EVENT:
+            enable_interrupt(UART_1_INTERRUPT);
+            uart_enable_interrupt(COM1, R_INTERRUPT);
+            break;
         default:
             log("Enabling Invalid Interrupt\n");
             break;
