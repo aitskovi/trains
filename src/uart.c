@@ -218,37 +218,3 @@ int uart_setstop(int channel, int num) {
 	*line = buf;
 	return 0;
 }
-
-void com1_initialize() {
-    /*
-    int *high = (int *)( UART1_BASE + UART_LCRH_OFFSET );
-    int *mid = (int *)( UART1_BASE + UART_LCRM_OFFSET );
-    int *low = (int *)( UART1_BASE + UART_LCRL_OFFSET );
-
-    *low = 0xbf; // Set speed correctly
-    *mid = 0;
-    *high = (*high & ~FEN_MASK) + STP2_MASK; // Disable FIFO and enable 2 stop
-
-    int i;
-    for (i = 0; i < 100; ++i) {}
-
-    int *ctlr = (int *)( UART1_BASE + UART_CTLR_OFFSET );
-    *ctlr = TIEN_MASK + MSIEN_MASK;
-    */
-}
-
-void com2_initialize() {
-}
-
-void uart_initialize(int channel) {
-    switch(channel) {
-        case COM1:
-            com1_initialize();
-            break;
-        case COM2:
-            com2_initialize();
-            break;
-        default:
-            log("Initializing Invalid UART\n");
-    }
-}

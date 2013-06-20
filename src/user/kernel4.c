@@ -67,7 +67,7 @@ void first() {
 
     // Setup the NameServer
     dlog("First: Creating NameServer\n");
-    Create(REALTIME, NameServer);
+    Create(HIGHEST, NameServer);
 
     // Setup the clockerver.
     dlog("First: Creating ClockServer\n");
