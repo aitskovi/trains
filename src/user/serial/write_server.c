@@ -37,28 +37,48 @@ int Putc(int channel, char ch) {
 }
 
 void WriteServer() {
-    dlog("Write Server: Initialized\n");
+    int tid, channel;
+    WriteMessage msg;
+    WriteMessage rply;
     struct WriteService service;
-    writeservice_initialize(&service, COM1);
+
+    dlog("Write Server: Waiting for Configuration\n");
+    Receive(&tid, (char *)&msg, sizeof(msg));
+    dassert(msg.type == WRITE_CONFIG_REQUEST, "Invalid Config Message");
+    rply.type = WRITE_CONFIG_RESPONSE;
+    Reply(tid, (char *)&rply, sizeof(rply));
+    channel = msg.data;
+    dlog("Write Server: Configured %d\n", channel);
+
+    dlog("Write Server: Initializing\n");
+    writeservice_initialize(&service, channel);
+    dlog("Write Server: Initialized\n");
 
     dlog("Write Server: Registering\n");
-    RegisterAs("UART1WriteServer");
-    com1_server_tid = MyTid();
+    if (channel == COM1) {
+        RegisterAs("UART1WriteServer");
+        com1_server_tid = MyTid();
+    } else {
+        RegisterAs("UART2WriteServer");
+        com2_server_tid = MyTid();
+    }
+    dlog("Write Server: Registered\n");
 
     dlog("Write Server: Creating Notifier\n");
-    Create(REALTIME, write_notifier);
+    int write_notifier_tid = Create(REALTIME, write_notifier);
+    msg.type = WRITE_CONFIG_REQUEST;
+    msg.data = channel;
+    Send(write_notifier_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    dassert(rply.type == WRITE_CONFIG_RESPONSE, "Invalid Config Reply");
+    dlog("Write Server: Created Notifier\n");
 
     dlog("Write Server: Serving Requests\n");
-
-    int tid;
-    WriteMessage msg;
     for (;;) {
         Receive(&tid, (char *)&msg, sizeof(msg));
 
         switch(msg.type) {
             case WRITE_EVENT_REQUEST: {
                 // Reply to Notifier right away.
-                WriteMessage rply;
                 rply.type = WRITE_EVENT_RESPONSE;
                 Reply(tid, (char *)&rply, sizeof(rply));
                 
@@ -66,7 +86,6 @@ void WriteServer() {
                 break;
             }
             case PUTC_REQUEST: {
-                WriteMessage rply;
                 rply.type = PUTC_RESPONSE;
                 Reply(tid, (char *)&rply, sizeof(rply));
 

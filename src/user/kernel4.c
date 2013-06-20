@@ -9,6 +9,7 @@
 #include <read_server.h>
 #include <scheduling.h>
 #include <syscall.h>
+#include <serial.h>
 #include <write_server.h>
 #include <bwio.h>
 #include <ts7200.h>
@@ -66,7 +67,13 @@ void first() {
 
     // Write some shit.
     log("First: Creating WriteServer\n");
-    Create(HIGHEST, WriteServer);
+    int write_server_tid = Create(HIGHEST, WriteServer);
+    log("First: Configuring WriteServer\n");
+    WriteMessage msg, rply;
+    msg.type = WRITE_CONFIG_REQUEST;
+    msg.data = COM1;
+    Send(write_server_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    dassert(rply.type == WRITE_CONFIG_RESPONSE, "Invalid Config Reply");
 
     log("First: Creating ReadServer\n");
     Create(HIGHEST, ReadServer);
