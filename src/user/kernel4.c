@@ -49,17 +49,11 @@ void writer() {
     */
     for (;;) {
         char c = (char)Getc(COM2);
-        Putc(COM2, c);
+        nbputc(COM2, c);
         if (c == 'q') break;
     }
 
-    Putc(COM2, '\n');
-    Putc(COM2, 'H');
-    Putc(COM2, 'e');
-    Putc(COM2, 'l');
-    Putc(COM2, 'l');
-    Putc(COM2, 'o');
-    Putc(COM2, '\n');
+    nbprintf(COM2, "Hello\n");
 
     Exit();
 }

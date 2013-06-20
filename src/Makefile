@@ -47,7 +47,9 @@ OBJECTS = bwio.o\
 		  uart.o\
 		  write_service.o\
 		  read_service.o\
-		  serial.o
+		  serial.o\
+		  conv.o\
+		  nbio.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf
 
