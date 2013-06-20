@@ -83,6 +83,10 @@ int enable_event(int event) {
             enable_interrupt(UART_2_INTERRUPT);
             uart_enable_interrupt(COM2, T_INTERRUPT);
             break;
+        case UART_2_RCV_EVENT:
+            enable_interrupt(UART_2_INTERRUPT);
+            uart_enable_interrupt(COM2, R_INTERRUPT);
+            break;
         case UART_1_TX_EVENT:
             enable_interrupt(UART_1_INTERRUPT);
             uart_enable_interrupt(COM1, T_INTERRUPT);

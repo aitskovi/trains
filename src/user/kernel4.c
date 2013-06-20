@@ -1,5 +1,4 @@
 #include <log.h>
-
 #include <clock_server.h>
 #include <dassert.h>
 #include <event.h>
@@ -40,48 +39,63 @@ void writer() {
     Putc(COM2, '\n');
     */
 
+    /*
     Putc(COM1, 133);
     int i;
     for (i = 0; i < 10; ++i) {
         char a = (char)Getc(COM1);
-        log("Received: %x\n", a);
+        dlog("Received: %x\n", a);
     }
+    */
+    for (;;) {
+        char c = (char)Getc(COM2);
+        Putc(COM2, c);
+        if (c == 'q') break;
+    }
+
+    Putc(COM2, '\n');
+    Putc(COM2, 'H');
+    Putc(COM2, 'e');
+    Putc(COM2, 'l');
+    Putc(COM2, 'l');
+    Putc(COM2, 'o');
+    Putc(COM2, '\n');
 
     Exit();
 }
 
 void first() {
     // Setup the timer.
-    log("First: Initializing\n");
-    log("First: Creating Idle Task\n");
+    dlog("First: Initializing\n");
+    dlog("First: Creating Idle Task\n");
     Create(LOWEST, idle);
-    log("First: Created Idle Task\n");
+    dlog("First: Created Idle Task\n");
 
     // Setup the NameServer
-    log("First: Creating NameServer\n");
+    dlog("First: Creating NameServer\n");
     Create(REALTIME, NameServer);
 
     // Setup the clockerver.
-    log("First: Creating ClockServer\n");
+    dlog("First: Creating ClockServer\n");
     Create(HIGHEST, clock_server);
 
     // Write some shit.
-    log("First: Creating WriteServer\n");
+    dlog("First: Creating WriteServer\n");
     int write_server_tid = Create(HIGHEST, WriteServer);
-    log("First: Configuring WriteServer\n");
-    configure_writer(write_server_tid, COM1);
+    dlog("First: Configuring WriteServer\n");
+    configure_writer(write_server_tid, COM2);
 
-    log("First: Creating ReadServer\n");
+    dlog("First: Creating ReadServer\n");
     int read_server_tid = Create(HIGHEST, ReadServer);
-    log("First: Configuring ReadServer\n");
-    configure_reader(read_server_tid, COM1);
+    dlog("First: Configuring ReadServer\n");
+    configure_reader(read_server_tid, COM2);
 
     int writer_tid = Create(MEDIUM, writer);
 
     // Wait for all children to exit.
     WaitTid(writer_tid);
 
-    log("First: Exiting\n");
+    dlog("First: Exiting\n");
 
     Shutdown();
 }
