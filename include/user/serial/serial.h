@@ -13,6 +13,8 @@ enum WriteMessageType {
 enum ReadMessageType {
     READ_EVENT_REQUEST,
     READ_EVENT_RESPONSE,
+    READ_CONFIG_REQUEST,
+    READ_CONFIG_RESPONSE,
     GETC_REQUEST,
     GETC_RESPONSE
 };

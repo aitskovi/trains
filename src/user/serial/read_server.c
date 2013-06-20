@@ -38,22 +38,43 @@ int Getc(int channel) {
 }
 
 void ReadServer() {
-    dlog("Read Server: Initialized\n");
-    struct ReadService service;
-    readservice_initialize(&service, COM1);
-
-    dlog("Read Server: Registering\n");
-    RegisterAs("UART1ReadServer");
-    com1_read_server_tid = MyTid();
-
-    dlog("Read Server: Creating Notifier\n");
-    Create(REALTIME, read_notifier);
-
-    dlog("Read Server: Serving Requests\n");
-
-    int tid;
+    int tid, channel;
     ReadMessage msg;
     ReadMessage rply;
+    struct ReadService service;
+
+    dlog("Read Server: Waiting for Configuration\n");
+    Receive(&tid, (char *)&msg, sizeof(msg));
+    dassert(msg.type == READ_CONFIG_REQUEST, "Invalid Config Message");
+    rply.type = READ_CONFIG_RESPONSE;
+    Reply(tid, (char *)&rply, sizeof(rply));
+    channel = msg.data;
+    dlog("Read Server: Configured %d\n", channel);
+
+
+    dlog("Read Server: Initializing\n");
+    readservice_initialize(&service, channel);
+    dlog("Read Server: Initialized\n");
+
+    dlog("Read Server: Registering\n");
+    if (channel == COM1) {
+        RegisterAs("UART1ReadServer");
+        com1_read_server_tid = MyTid();
+    } else {
+        RegisterAs("UART2ReadServer");
+        com2_read_server_tid = MyTid();
+    }
+
+    dlog("Read Server: Creating Notifier\n");
+    int read_notifier_tid = Create(REALTIME, read_notifier);
+
+    dlog("Read Server: Configuring Notifier\n");
+    msg.type = READ_CONFIG_REQUEST;
+    msg.data = channel;
+    Send(read_notifier_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    dassert(rply.type == READ_CONFIG_RESPONSE, "Invalid Config Reply");
+
+    dlog("Read Server: Serving Requests\n");
     for (;;) {
         Receive(&tid, (char *)&msg, sizeof(msg));
 
@@ -62,7 +83,6 @@ void ReadServer() {
                 dlog("ReadServer: ReadEvent Request\n");
 
                 // Reply to Notifier right away.
-                ReadMessage rply;
                 rply.type = READ_EVENT_RESPONSE;
                 Reply(tid, (char *)&rply, sizeof(rply));
                 

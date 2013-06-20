@@ -10,36 +10,31 @@
 #include <uart.h>
 
 void read_notifier() {
-    dlog("Read Notifier: Initialized\n");
+    int server_tid, channel, event;
+    ReadMessage msg, rply;
 
-    dlog("Read Notifier: Receiving Instructions\n");
-    /*
-    int tid = 0;
-    char *reply;
-    Recieve(&tid, reply, replylen);
-    */
-    int channel = COM1;
-
-    int server_tid = -1;
-    do {
-        server_tid = WhoIs("UART1ReadServer");
-        dlog("UART1ReadServer %d\n", server_tid);
-    } while (server_tid < 0);
+    dlog("Read Notifier: Waiting for Configuration\n");
+    Receive(&server_tid, (char *)&msg, sizeof(msg));
+    dassert(msg.type == READ_CONFIG_REQUEST, "Invalid Config Message");
+    rply.type = READ_CONFIG_RESPONSE;
+    Reply(server_tid, (char *)&rply, sizeof(rply));
+    channel = msg.data;
+    event = channel == COM1 ? UART_1_RCV_EVENT : UART_2_RCV_EVENT;
+    dlog("Read Notifier: Configured %d\n", channel);
 
     dlog("Read Notifier: Setting up UART\n");
-    uart_setspeed(COM1, 2400);
-    uart_setstop(COM1, 2);
-    uart_setfifo(COM1, OFF);
+    if (channel == COM1) {
+        uart_setspeed(COM1, 2400);
+        uart_setstop(COM1, 2);
+    }
 
-    enable_event(UART_1_RCV_EVENT);
+    uart_setfifo(channel, OFF);
+    enable_event(event);
     dlog("Read Notifier: Set-up UART\n");
-
-    dlog("Read Notifier: Setting up Notifier State\n");
-    dlog("Read Notifier: Set up Notifier State\n");
 
     for (;;) {
         dlog("Read Notifier: Waiting for RCV Event\n");
-        int data = AwaitEvent(UART_1_RCV_EVENT);
+        int data = AwaitEvent(event);
         if (data < 0) {
             dlog("Recieved an error waiting for READ_EVENT\n");
         }
