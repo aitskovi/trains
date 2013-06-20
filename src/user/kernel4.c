@@ -81,14 +81,18 @@ void first() {
 
     // Write some shit.
     dlog("First: Creating WriteServer\n");
-    int write_server_tid = Create(HIGHEST, WriteServer);
+    int write_server_tid_1 = Create(HIGHEST, WriteServer);
+    int write_server_tid_2 = Create(HIGHEST, WriteServer);
     dlog("First: Configuring WriteServer\n");
-    configure_writer(write_server_tid, COM2);
+    configure_writer(write_server_tid_1, COM1);
+    configure_writer(write_server_tid_2, COM2);
 
     dlog("First: Creating ReadServer\n");
-    int read_server_tid = Create(HIGHEST, ReadServer);
+    int read_server_tid_1 = Create(HIGHEST, ReadServer);
+    int read_server_tid_2 = Create(HIGHEST, ReadServer);
     dlog("First: Configuring ReadServer\n");
-    configure_reader(read_server_tid, COM2);
+    configure_reader(read_server_tid_1, COM1);
+    configure_reader(read_server_tid_2, COM2);
 
     int writer_tid = Create(MEDIUM, writer);
 
