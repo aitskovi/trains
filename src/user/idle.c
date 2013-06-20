@@ -4,7 +4,7 @@
 #include <syscall.h>
 
 void idle() {
-    log("Idle task started with tid %u\n", MyTid());
+    dlog("Idle task started with tid %u\n", MyTid());
 
     for(;;) {
     }
