@@ -32,6 +32,10 @@ static int nameserver_tid;
  * -2 NameServer Task Tid is not NameServer.
  */
 int RegisterAs(char *name) {
+    if (nameserver_tid < 0) {
+        return -1;
+    }
+
     struct NameServerRequest req;
     req.operation = REGISTER_AS;
     req.data = name;
@@ -54,6 +58,10 @@ int RegisterAs(char *name) {
  *  -3 Invalid name
  */
 int WhoIs(char *name) {
+    if (nameserver_tid < 0) {
+        return -1;
+    }
+
     struct NameServerRequest req;
     req.operation = WHO_IS;
     req.data = name;
@@ -70,10 +78,11 @@ int WhoIs(char *name) {
 void NameServer() {
     struct NameService service;
     nameservice_initialize(&service);
-//    bwprintf(COM2, "NameServer: Starting Up\n");
+
+    nameserver_tid = MyTid();
+
     int src;
     struct NameServerRequest req;
-
     struct NameServerReply reply;
 
     for(;;) {
@@ -99,14 +108,4 @@ void NameServer() {
     }
 
     bwprintf(COM2, "NameServer: Exit\n");
-}
-
-void initialize_nameserver() {
-    // Initalize the NameServerTask
-//    bwprintf(COM2, "Creating NameServer\n", nameserver_tid);
-    Task *task = task_create(NameServer, -1, HIGH);
-    nameserver_tid = task->tid;
-    make_ready(task);
-//    bwprintf(COM2, "NameServer created in task <%d>\n", nameserver_tid);
-
 }

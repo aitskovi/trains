@@ -2,8 +2,8 @@
 # Makefile for busy-wait IO tests
 #
 
-VPATH += libc/ test/ user/ user/rps user/libc user/clock
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock
+VPATH += libc/ test/ user/ user/rps user/libc user/clock user/serial
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial
 
 ifeq ($(ARCH), x86)
 	include x86.mk
@@ -17,11 +17,13 @@ ARMOBJECTS = kernel.o\
 			 fine_timer.o\
 			 nameserver.o\
 			 log_arm.o\
-			 interrupt.o\
 			 idle.o\
 			 clock_server.o\
 			 clock_notifier.o\
-			 event.o\
+			 write_notifier.o\
+			 write_server.o\
+			 read_notifier.o\
+			 read_server.o\
 			 swi_arm.o
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
@@ -39,9 +41,17 @@ OBJECTS = bwio.o\
 		  heap_priority_queue.o\
 		  waiting.o\
 		  syscall.o\
-		  verify.o
+		  verify.o\
+		  event.o\
+		  interrupt.o\
+		  uart.o\
+		  write_service.o\
+		  read_service.o\
+		  serial.o\
+		  conv.o\
+		  nbio.o
 
-all: kerneltimings.elf kernel2.elf kernel3.elf
+all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf
 
 tests: unit_tests
 
@@ -77,6 +87,9 @@ kernel2.elf : kernel2.o rpsclient.o rpsserver.o $(ARMOBJECTS) $(OBJECTS)
 
 kernel3.elf : kernel3.o $(ARMOBJECTS) $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+kernel4.elf : kernel4.o $(ARMOBJECTS) $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
@@ -88,6 +101,6 @@ clean:
 	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
 
 install: all
-	-cp kernel2.elf kernel3.elf kerneltimings.elf /u/cs452/tftp/ARM/$(USER)/
+	-cp *.elf /u/cs452/tftp/ARM/$(USER)/
 
 -include $(DEPS)
