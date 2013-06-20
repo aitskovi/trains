@@ -29,7 +29,6 @@ int writeservice_flush(struct WriteService *service) {
     else if (circular_queue_empty(&service->queue)) return 0;
 
     service->writable = 0;
-    log("Writing to the uart\n");
     return uart_write(service->channel, (char)circular_queue_pop(&service->queue));
 }
 

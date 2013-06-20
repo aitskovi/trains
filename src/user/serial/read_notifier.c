@@ -14,11 +14,7 @@ void read_notifier() {
     ReadMessage msg, rply;
 
     dlog("Read Notifier: Waiting for Configuration\n");
-    Receive(&server_tid, (char *)&msg, sizeof(msg));
-    dassert(msg.type == READ_CONFIG_REQUEST, "Invalid Config Message");
-    rply.type = READ_CONFIG_RESPONSE;
-    Reply(server_tid, (char *)&rply, sizeof(rply));
-    channel = msg.data;
+    channel = get_reader_configuration(&server_tid);
     event = channel == COM1 ? UART_1_RCV_EVENT : UART_2_RCV_EVENT;
     dlog("Read Notifier: Configured %d\n", channel);
 

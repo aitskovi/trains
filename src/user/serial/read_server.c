@@ -44,13 +44,8 @@ void ReadServer() {
     struct ReadService service;
 
     dlog("Read Server: Waiting for Configuration\n");
-    Receive(&tid, (char *)&msg, sizeof(msg));
-    dassert(msg.type == READ_CONFIG_REQUEST, "Invalid Config Message");
-    rply.type = READ_CONFIG_RESPONSE;
-    Reply(tid, (char *)&rply, sizeof(rply));
-    channel = msg.data;
+    channel = get_reader_configuration(&tid);
     dlog("Read Server: Configured %d\n", channel);
-
 
     dlog("Read Server: Initializing\n");
     readservice_initialize(&service, channel);
@@ -69,10 +64,7 @@ void ReadServer() {
     int read_notifier_tid = Create(REALTIME, read_notifier);
 
     dlog("Read Server: Configuring Notifier\n");
-    msg.type = READ_CONFIG_REQUEST;
-    msg.data = channel;
-    Send(read_notifier_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
-    dassert(rply.type == READ_CONFIG_RESPONSE, "Invalid Config Reply");
+    configure_reader(read_notifier_tid, channel);
 
     dlog("Read Server: Serving Requests\n");
     for (;;) {

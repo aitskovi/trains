@@ -43,11 +43,7 @@ void WriteServer() {
     struct WriteService service;
 
     dlog("Write Server: Waiting for Configuration\n");
-    Receive(&tid, (char *)&msg, sizeof(msg));
-    dassert(msg.type == WRITE_CONFIG_REQUEST, "Invalid Config Message");
-    rply.type = WRITE_CONFIG_RESPONSE;
-    Reply(tid, (char *)&rply, sizeof(rply));
-    channel = msg.data;
+    channel = get_writer_configuration(&tid);
     dlog("Write Server: Configured %d\n", channel);
 
     dlog("Write Server: Initializing\n");
@@ -66,10 +62,7 @@ void WriteServer() {
 
     dlog("Write Server: Creating Notifier\n");
     int write_notifier_tid = Create(REALTIME, write_notifier);
-    msg.type = WRITE_CONFIG_REQUEST;
-    msg.data = channel;
-    Send(write_notifier_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
-    dassert(rply.type == WRITE_CONFIG_RESPONSE, "Invalid Config Reply");
+    configure_writer(write_notifier_tid, channel);
     dlog("Write Server: Created Notifier\n");
 
     dlog("Write Server: Serving Requests\n");

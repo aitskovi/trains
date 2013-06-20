@@ -15,11 +15,7 @@ void write_notifier() {
     WriteMessage msg, rply;
 
     dlog("Write Notifier: Waiting for Configuration\n");
-    Receive(&server_tid, (char *)&msg, sizeof(msg));
-    dassert(msg.type == WRITE_CONFIG_REQUEST, "Invalid Config Message");
-    rply.type = WRITE_CONFIG_RESPONSE;
-    Reply(server_tid, (char *)&rply, sizeof(rply));
-    channel = msg.data;
+    channel = get_writer_configuration(&server_tid);
     event = channel == COM1 ? UART_1_TX_EVENT : UART_2_TX_EVENT;
     dlog("Write Notifier: Configured %d\n", channel);
 

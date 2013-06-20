@@ -69,21 +69,12 @@ void first() {
     log("First: Creating WriteServer\n");
     int write_server_tid = Create(HIGHEST, WriteServer);
     log("First: Configuring WriteServer\n");
-    WriteMessage wmsg, wrply;
-    wmsg.type = WRITE_CONFIG_REQUEST;
-    wmsg.data = COM1;
-    Send(write_server_tid, (char *)&wmsg, sizeof(wmsg), (char *)&wrply, sizeof(wrply));
-    dassert(wrply.type == WRITE_CONFIG_RESPONSE, "Invalid Config Reply");
+    configure_writer(write_server_tid, COM1);
 
     log("First: Creating ReadServer\n");
     int read_server_tid = Create(HIGHEST, ReadServer);
     log("First: Configuring ReadServer\n");
-    ReadMessage rmsg, rrply;
-    rmsg.type = READ_CONFIG_REQUEST;
-    rmsg.data = COM1;
-    Send(read_server_tid, (char *)&rmsg, sizeof(rmsg), (char *)&rrply, sizeof(rrply));
-    dassert(rrply.type == READ_CONFIG_RESPONSE, "Invalid Config Reply");
-
+    configure_reader(read_server_tid, COM1);
 
     int writer_tid = Create(MEDIUM, writer);
 

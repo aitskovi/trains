@@ -26,7 +26,6 @@ int process_uart_interrupt(int channel, int *data) {
 
     int event;
 
-    dlog("UART Interrupt\n");
 
     // Transmit Interrupt
     if (interrupt & TIS_MASK) {
@@ -83,14 +82,11 @@ int process_interrupt(int *data) {
 
     switch(interrupt) {
         case TIMER_3_INTERRUPT:
-            //dlog("Recieved Timer Interrupt\n");
             clear_interrupt(interrupt);
             return TIMER_3_EVENT;
         case UART_2_INTERRUPT:
-            dlog("Recieved UART2 Interrupt\n");
             return process_uart_interrupt(COM2, data);
         case UART_1_INTERRUPT:
-            log("Recieved UART1 Interrupt\n");
             return process_uart_interrupt(COM1, data);
         default:
             log("Received Unrecognized Interrupt: %d\n", interrupt);

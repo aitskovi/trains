@@ -50,8 +50,6 @@ int kevent(int event, int data) {
         return -1;
     }
 
-    if (event != 0) log("Recieved Event: %d\n", event);
-
     if (!waiters[event]) {
         struct circular_queue *queue = &queues[event];
         int error = circular_queue_push(queue, (void *)data);
@@ -61,7 +59,6 @@ int kevent(int event, int data) {
         return NO_WAITERS;
     }
 
-    if (event != 0) dlog("AwaitEvent: Unblocking %d\n", event);
     Task *task = waiters[event];
     task_set_return_value(task, data);
     make_ready(task);
