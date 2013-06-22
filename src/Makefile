@@ -24,9 +24,12 @@ ARMOBJECTS = kernel.o\
 			 write_server.o\
 			 read_notifier.o\
 			 read_server.o\
-			 swi_arm.o
+			 swi_arm.o\
+			 train_server.o
+			 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
+	   		 
 OBJECTS = bwio.o\
 		  scheduling.o\
 		  circular_queue.o\
@@ -50,6 +53,8 @@ OBJECTS = bwio.o\
 		  serial.o\
 		  conv.o\
 		  nbio.o\
+		  shell.o\
+		  clock_widget.o\
 		  ring_buffer.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf

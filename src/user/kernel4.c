@@ -13,50 +13,8 @@
 #include <bwio.h>
 #include <ts7200.h>
 #include <uart.h>
-
-void train_set_speed(int train, int speed) {
-    /*
-    uart_setspeed(COM1, 2400);
-    uart_setstop(COM1, 2);
-    uart_setfifo(COM1, OFF);
-    uart_setfifo(COM2, OFF);
-    */
-
-    Putc(COM1, (char)speed);
-    Putc(COM1, (char)train);
-}
-
-void writer() {
-    //log("Writer: Initializing\n");
-
-    train_set_speed(47, 8);
-    /*
-    Putc(COM2, 'H');
-    Putc(COM2, 'e');
-    Putc(COM2, 'l');
-    Putc(COM2, 'l');
-    Putc(COM2, 'o');
-    Putc(COM2, '\n');
-    */
-
-    /*
-    Putc(COM1, 133);
-    int i;
-    for (i = 0; i < 10; ++i) {
-        char a = (char)Getc(COM1);
-        dlog("Received: %x\n", a);
-    }
-    */
-    for (;;) {
-        char c = (char)Getc(COM2);
-        nbputc(COM2, c);
-        if (c == 'q') break;
-    }
-
-    nbprintf(COM2, "Hello\n");
-
-    Exit();
-}
+#include <shell.h>
+#include <train_server.h>
 
 void first() {
     // Setup the timer.
@@ -88,10 +46,12 @@ void first() {
     configure_reader(read_server_tid_1, COM1);
     configure_reader(read_server_tid_2, COM2);
 
-    int writer_tid = Create(MEDIUM, writer);
+    Create(HIGH, train_server);
+
+    int shell_tid = Create(MEDIUM, shell);
 
     // Wait for all children to exit.
-    WaitTid(writer_tid);
+    WaitTid(shell_tid);
 
     dlog("First: Exiting\n");
 
