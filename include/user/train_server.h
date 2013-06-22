@@ -12,27 +12,16 @@
 
 typedef unsigned char speed_t;
 typedef unsigned char train_t;
-typedef unsigned char switch_t;
-
-enum direction {
-    STRAIGHT = 33,
-    CURVED = 34
-};
 
 typedef struct TrainServerMessage {
     enum {
         REVERSE,
         SET_SPEED,
-        SUCCESS
+        REVERSE_RESPONSE,
+        SET_SPEED_RESPONSE
     } type;
-    union {
-        train_t train_no;
-        switch_t switch_no;
-    };
-    union {
-        speed_t speed;
-        enum direction state;
-    };
+    train_t train_no;
+    speed_t speed;
 } TrainServerMessage;
 
 // TODO In the future we want a task per train so the delays don't interfere

@@ -26,7 +26,8 @@ ARMOBJECTS = kernel.o\
 			 read_server.o\
 			 swi_arm.o\
 			 train_server.o\
-			 sensor_server.o
+			 sensor_server.o\
+			 switch_server.o
 			 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o

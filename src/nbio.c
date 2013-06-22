@@ -109,6 +109,24 @@ void nbformat ( int channel, char *fmt, va_list va ) {
 	}
 }
 
+void nbui2a( unsigned int num, unsigned int base, char *bf ) {
+    int n = 0;
+    int dgt;
+    unsigned int d = 1;
+
+    while( (num / d) >= base ) d *= base;
+    while( d != 0 ) {
+        dgt = num / d;
+        num %= d;
+        d /= base;
+        if( n || dgt > 0 || d == 0 ) {
+            *bf++ = dgt + ( dgt < 10 ? '0' : 'a' - 10 );
+            ++n;
+        }
+    }
+    *bf = 0;
+}
+
 void nbprintf( int channel, char *fmt, ... ) {
         va_list va;
 

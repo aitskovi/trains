@@ -9,6 +9,7 @@
 #include <clock_server.h>
 #include <nbio.h>
 #include <dassert.h>
+#include <syscall.h>
 
 static char train_speeds[NUM_TRAINS];
 
@@ -23,7 +24,7 @@ int SetSpeed(train_t train, speed_t speed) {
     msg.train_no = train;
     msg.speed = speed;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    dassert(reply.type == SUCCESS, "Invalid response from train server");
+    dassert(reply.type == SET_SPEED_RESPONSE, "Invalid response from train server");
     return 0;
 }
 
@@ -35,7 +36,7 @@ int Reverse(train_t train) {
     msg.type = REVERSE;
     msg.train_no = train;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    dassert(reply.type == SUCCESS, "Invalid response from train server");
+    dassert(reply.type == REVERSE_RESPONSE, "Invalid response from train server");
     return 0;
 }
 
@@ -77,11 +78,11 @@ void train_server() {
         switch(msg.type) {
         case SET_SPEED:
             train_set_speed(msg.train_no, msg.speed);
-            reply.type = SUCCESS;
+            reply.type = SET_SPEED_RESPONSE;
             Reply(tid, (char *) &reply, sizeof(reply));
             break;
         case REVERSE:
-            reply.type = SUCCESS;
+            reply.type = REVERSE_RESPONSE;
             Reply(tid, (char *) &reply, sizeof(reply));
             train_reverse(msg.train_no);
             break;

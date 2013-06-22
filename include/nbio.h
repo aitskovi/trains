@@ -11,5 +11,6 @@ int nbputr(int channel, unsigned int reg);
 int nbputstr(int channel, char *str);
 void nbputw(int channel, int n, char fc, char *bf);
 void nbprintf( int channel, char *fmt, ... );
+void nbui2a( unsigned int num, unsigned int base, char *bf );
 
 #endif

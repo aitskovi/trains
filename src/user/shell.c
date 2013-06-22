@@ -13,6 +13,8 @@
 #include <syscall.h>
 #include <train_server.h>
 #include <clock_widget.h>
+#include <sensor_server.h>
+#include <switch_server.h>
 
 static char line_buffer[LINE_BUFFER_SIZE];
 static unsigned int line_buffer_pos;
@@ -140,6 +142,10 @@ void shell() {
     // Start the clock
 //    Create(LOW, clock_widget);
 
+
+    Create(HIGH, sensor_server);
+    Create(HIGH, switch_server);
+
     while (1) {
 
         int train, speed, number, direction;
@@ -155,9 +161,9 @@ void shell() {
                 SetSpeed(train, speed);
             } else if (parse_rv(line_buffer, &number)) {
                 Reverse(train);
-            } /*else if (parse_sw(line_buffer, &number, &direction)) {
-                switch_set(number, direction);
-            } */
+            } else if (parse_sw(line_buffer, &number, &direction)) {
+                SetSwitch(number, direction);
+            }
 
             reset_shell();
 
