@@ -1,20 +1,20 @@
 #ifndef _WRITE_SERVICE_H_
 #define _WRITE_SERVICE_H_
 
-#include <circular_queue.h>
+#include <ring_buffer.h>
 
 struct WriteService {
     int channel;
     int writable;
-    struct circular_queue queue;
+    struct ring_buffer buf;
 };
 
 void writeservice_initialize(struct WriteService *service, int channel);
 
 /**
- * Enqueue a character into the service.
+ * Enqueue a string into the service.
  */
-int writeservice_enqueue(struct WriteService *service, char c);
+int writeservice_enqueue(struct WriteService *service, char *str, unsigned int size);
 
 /**
  * Attempt to flush a character from the service.

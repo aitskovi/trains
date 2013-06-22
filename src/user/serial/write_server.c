@@ -12,7 +12,7 @@
 static tid_t com1_server_tid = -1;
 static tid_t com2_server_tid = -1;
 
-int Putc(int channel, char ch) {
+int Write(int channel, char *str, unsigned int size) {
     tid_t server_tid = -1;
     switch(channel) {
         case COM1:
@@ -23,17 +23,23 @@ int Putc(int channel, char ch) {
             break;
         default:
             dlog("Sending to invalid Channel!\n");
+            break;
     }
 
     if (server_tid < 0) {
         return -1;
     }
     WriteMessage msg, reply;
-    msg.type = PUTC_REQUEST;
-    msg.data = (int)ch;
+    msg.type = WRITE_REQUEST;
+    msg.data = str;
+    msg.length = size;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    dassert(reply.type == PUTC_RESPONSE, "Invalid response from write server");
+    dassert(reply.type == WRITE_RESPONSE, "Invalid response from write server");
     return 0;
+}
+
+int Putc(int channel, char ch) {
+    return Write(channel, &ch, 1);
 }
 
 void WriteServer() {
@@ -78,15 +84,15 @@ void WriteServer() {
                 writeservice_writable(&service);
                 break;
             }
-            case PUTC_REQUEST: {
-                rply.type = PUTC_RESPONSE;
+            case WRITE_REQUEST: {
+                writeservice_enqueue(&service, msg.data, msg.length);
+                rply.type = WRITE_RESPONSE;
                 Reply(tid, (char *)&rply, sizeof(rply));
-
-                writeservice_enqueue(&service, (char)msg.data);
                 break;
             }
             default:
                 dlog("Invalid WriteServer Request: %x\n", msg);
+                break;
         }
 
         writeservice_flush(&service);

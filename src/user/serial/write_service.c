@@ -7,16 +7,16 @@
 void writeservice_initialize(struct WriteService *service, int channel) {
     service->channel = channel;
     service->writable = 0;
-    circular_queue_initialize(&service->queue);
+    ring_buffer_initialize(&service->buf);
 }
 
 /**
- * Enqueue a character into the service.
+ * Enqueue a string into the service.
  */
-int writeservice_enqueue(struct WriteService *service, char c) {
+int writeservice_enqueue(struct WriteService *service, char *str, unsigned int size) {
     dassert(service != 0, "Invalid Service");
 
-    return circular_queue_push(&service->queue, (void *)(int)c);
+    return ring_buffer_write(&service->buf, str, size);
 }
 
 /**
@@ -26,10 +26,12 @@ int writeservice_flush(struct WriteService *service) {
     dassert(service != 0, "Invalid Service");
 
     if (!service->writable) return -2;
-    else if (circular_queue_empty(&service->queue)) return 0;
+    else if (ring_buffer_empty(&service->buf)) return 0;
 
     service->writable = 0;
-    return uart_write(service->channel, (char)circular_queue_pop(&service->queue));
+    char c;
+    ring_buffer_read(&service->buf, &c, 1);
+    return uart_write(service->channel, c);
 }
 
 /**

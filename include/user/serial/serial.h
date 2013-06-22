@@ -6,8 +6,8 @@ enum WriteMessageType {
     WRITE_EVENT_RESPONSE,
     WRITE_CONFIG_REQUEST,
     WRITE_CONFIG_RESPONSE,
-    PUTC_REQUEST,
-    PUTC_RESPONSE
+    WRITE_REQUEST,
+    WRITE_RESPONSE
 };
 
 enum ReadMessageType {
@@ -21,7 +21,8 @@ enum ReadMessageType {
 
 typedef struct WriteMessage {
     enum WriteMessageType type;
-    int data;
+    char * data;
+    unsigned int length;
 } WriteMessage;
 
 typedef struct ReadMessage {

@@ -3,6 +3,7 @@
 
 void WriteServer();
 
+int Write(int channel, char *str, unsigned int size);
 int Putc(int channel, char ch);
 
 #endif
