@@ -138,7 +138,7 @@ void shell() {
     reset_shell();
 
     // Start the clock
-    Create(LOW, clock_widget);
+//    Create(LOW, clock_widget);
 
     while (1) {
 

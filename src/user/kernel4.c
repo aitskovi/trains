@@ -15,6 +15,7 @@
 #include <uart.h>
 #include <shell.h>
 #include <train_server.h>
+#include <sensor_server.h>
 
 void first() {
     // Setup the timer.
@@ -47,6 +48,7 @@ void first() {
     configure_reader(read_server_tid_2, COM2);
 
     Create(HIGH, train_server);
+    Create(HIGH, sensor_server);
 
     int shell_tid = Create(MEDIUM, shell);
 
