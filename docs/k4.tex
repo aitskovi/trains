@@ -1,0 +1,266 @@
+\documentclass{article}
+
+\title{CS 452 Kernel Documentation}
+\author{
+  Avi Itskovich, 20332164
+  \and
+  Alex Ianus, 20342535
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+This documentation covers ours whole Kernel. Internally we support the following system calls:
+
+\begin{itemize}
+  \item %TODO Alex
+\end{itemize}
+
+We also have a NameServer which supports:
+
+\begin{itemize}
+  \item %TODO Alex
+\end{itemize}
+
+A Serial Server which supports:
+
+\begin{itemize}
+  \item %TODO Alex
+\end{itemize}
+
+And a ClockServer which supports:
+
+\begin{itemize}
+  \item %TODO Alex
+\end{itemize}
+
+\section{Operating Instructions}
+\begin{enumerate}
+  \item load -b 0x00218000 -h 10.15.167.4 \$executable
+  \item go
+\end{enumerate}
+
+\section{Submitted Files}
+Root directory: /u1/aianus/cs452/handin/kernel4/
+
+\subsection{Executable}
+\begin{verbatim}
+b14f26808ede69d80c9dcc2b4f8490bf  ./kernel4.elf
+\end{verbatim}
+
+\subsection{Code}
+
+\section{Kernel Description}
+
+\subsection{Tasks}
+
+Our kernel has the concept of Tasks -- independent executions of code along with associated state. We keep track of tasks in an array of task descriptors containing
+
+\begin{itemize}
+  \item The task id
+  \item The task id of the parent of the task
+  \item The stack pointer for the task
+  \item The task priority
+  \item The state of the task
+  \item The cpu\_time the task has consumed
+  \item A reference to the allocated space of the stack for this task.
+\end{itemize}
+
+TIDs are assigned in sequential order from 0 to MAX_TASKS.
+
+\subsection{System Calls}
+
+A system call can be divided into two parts. The user mode function that uses swi to enter the kernel, and kernel mode function that performs the required operations. In our system we use a Request structure to move information between these two areas. Although we originally expected to simply pass the arguments through the registers, we realized that some system calls in later assignments used more than 4 arguments. Using more than 4 arguments requires the placement of arguments on the stack. Instead of fighting with GCC, we decided to marshal the contents of the system call into the request structure before passing it through as our only argument. The request structure encapsulates both the system call number, as well as the arguments passed in. Inside the kernel, we handle the request by switching on the system call number, and doing the proper computation afterwards. Once the result is generated, we set the return value inside the task, which is then transmitted back in the next context switch to that task.
+
+Note that we've considered the performance implications of wrapping up the data in a Request structure. It currently vastly simplifies our code, and we have seen no performance issues so far.
+
+\subsection{Interrupts}
+
+Our interrupt system can be divided into two parts: handling interrupts as they occur and managing them (enable/disable) and bubbling up events to the system.
+
+\subsubsection{Interrupt Handling}
+
+Interrupt handling is all done through a simple set of primitives available in "interrupt.c". These primitives allow you to enable, disable, generate and clear a specific interrupt. Interrupts are defined in an enum and as we have more interesting interrupts we add them to the enum. User programs never deal with "interrupts", the simply enable events and the event system knows which interrupts to enable and does so appropriately.
+
+The interrupt system also has a process\_interrupt function which deals with interpreting one interrupt. Currently, the interrupt system has no special logic about which interrupt to handle first. Instead we just grab the first set interrupt that we find. This is bad, as it could lead to some interrupts starving others out. However, we have not seen any issues with this yet. process\_interrupt looks at the current turned on interrupts and once it has found one, converts it into an event, grabs the volatile data and clears the interrupt. The volatile data and event id are passed through to the event system.
+
+To begin all interrupts are turned off in the kernel, as notifiers start-up they will enable the interrupts they care about by enabling the appropriate events. This ensures we don't get flooded by interrupts we don't care about.
+
+In our kernel we chose to use the simple AwaitEvent interface, because we currently only need to return 32 bits of volatile data. In the future we may modify this if more data needs to be returned and we can't find a workaround to return it in 32bits. We don't use fifos for our UARTs so we still only get 32 bits of data per interrupt at most.
+
+\subsubsection{Event Management}
+
+User programs work at the event level. We expose an interface to enable events and wait for them to occur. We currently do not support disabling events. We've kept the event system quite simple. Only one task may wait on any event at one time. Trying to wait on an event that someone else is waiting on produces an error. Due to the single waiter nature of our system internally we use a single array of size NUM\_EVENTS to hold the waiters for each event. 
+
+For each event we also have a queue to store occurences of the event. This is useful to allow you to await for events out of order. For example we can AwaitEvent for the transmit and then for the CTS event afterwards. This creates a pseudo-barrier that we pass through only once both events have occured. This has helped simplify the WriteServer notifier for COM2.
+
+When the kernel starts up all events are turned off. When notifiers come online, they turn on the events they require and listen for them. Events are exposed to the user through a public enum that lists all events. To add an event you have to add to this enum. This is the simplest implementation that works, and since we have a finite set of peripherals it is good enough.
+
+\subsection{Context Switch}
+
+\subsection{Hardware Interrupt}
+
+Our Hardware Interrupt context switch is implemented through a wrapping mechanism. We introduce a new entry point, irq\_enter, which saves the scratch registers on the user's stack before jumping (bl) into our regular mechanism of entering the kernel (kernel\_enter). By using bl to jump into kernel\_enter, we modify the link register so when kernel\_exit completed if you entered kernel\_enter through the irq handler, you come back to it so we can unwrap the scratch registers.
+
+\subsubsection{irq\_enter:}
+\begin{enumerate}
+    \item Change to System Mode.
+    \item Save scratch registers onto user stack (r0, r1, r2, r3, ip).
+    \item Change to IRQ Mode.
+    \item Grab LR/SPSR.
+    \item Change to System Mode. 
+    \item Save LR/SPSR onto user stack.
+    \item Change to Supervisor Mode.
+    \item Insert special value (0) into r0 to represent irq interrupt.
+    \item Change our supervisor\_spsr to IRQ Mode.
+    \item Jump into Kernel Enter.
+\end{enumerate}
+
+\subsubsection{irq\_exit:}
+\begin{enumerate}
+    \item Switch to System Mode.
+    \item Unload LR/SPSR.
+    \item Switch to Interrupt Mode.
+    \item Install LR/SPSR.
+    \item Switch to System Mode.
+    \item Reload Scratch Registers (r0, r1, r2, r3, ip)
+    \item Switch to IRQ Mode
+    \item Jump back into program and install correct cpsr.
+\end{enumerate}
+
+Note that irq\_exit does not exist as a label, and is simply a convention to refer to the lines after "bl kernel\_enter".
+
+\subsection{Software Interrupt}
+
+We've kept our task descriptor as minimal as possible. The only information required for a context switch we maintain in the task descriptor is the stack pointer itself. Our kernel\_enter and kernel\_exit function as follows:
+
+\subsubsection{kernel\_exit:}
+\begin{enumerate}
+    \item Save Kernel State (including r0 since it contains our task descriptor memory location).
+    \item Load the SP for task from it's task descriptor.
+    \item Change to System Mode. 
+    \item Install Stack Pointer.
+    \item Unload User Registers + PC/SPSR from User Stack.
+    \item Change to Supervisor Mode.
+    \item Install SPSR
+    \item Jump to user PC and install correct cpsr.
+\end{enumerate}
+
+\subsubsection{kernel\_enter:}
+\begin{enumerate}
+   \item Save SPSR/Link Register into Common Registers.
+   \item Change to System State.
+   \item Save User State + SPSR/Link Register on Stack.
+   \item Grab User SP in Common Register.
+   \item Change to Supervisor State.
+   \item Backup Request in Scratch Register.
+   \item Load Kernel State.
+   \item Store User's SP into Task Descriptor (memory address is in r0).
+   \item Install the backed up Request in r0.
+   \item Jump into the Kernel.
+\end{enumerate}
+
+\subsection{Messaging}
+
+Messaging in our system is implemented in two parts. One part handles the actual movement of data between buffers and maintaining messaging ordering while the second part handles scheduling, and error verification. The code is in two seperate files:
+\begin{itemize}
+    \item messaging.{c/h} - Buffer management
+    \item ksyscall.{c/h} - Scheduling
+\end{itemize}
+The reasoning behind is to seperate areas of concern. The buffer management layer returns appropriate error codes so scheduling layer can respond and change task states appropriately.
+
+\subsubsection{Buffer Management}
+
+In our messaging system each task has associated with it:
+\begin{itemize}
+    \item queue of tids - A queue of tids that have a message for you.
+    \item char ** msg - A reference to the msg buffer that this task is sending.
+    \item int msglen - The length of the msg buffer you're referring to.
+    \item char ** rcv - A reference to the msg buffer you recieve data in.
+    \item int rcvlen - The length of the rcv buffer.
+    \item int *src - A reference to an integer which is filled with the src tid of the msg.
+\end{itemize}
+
+The cost of adding an extra task is then: 20 bytes + size of the queue. In the future we're going to replace the queue with a list of task pointers which should make our memory cost per task 28 bytes.
+
+Some interesting parts of the system are our re-use of the rcv, rcvlen items for both sending and recieving. In the case that Recieve(), blocks we put the data for recieve into rcv, rcvlen and src. This allows us to later use these buffers when someone else sends to us. Similarly, a call to Send fills rcv, rcvlen, and src with the buffers for reply.
+
+We know that only one of those can happen at a time, so there will be no overwriting conflicts.
+
+\subsubsection{Task Scheduling}
+
+To indicate blocked tasks we simply change their "task state" to an appropriate value. These values are determined based on the return codes from the buffer management system.
+
+\subsection{NameServer}
+
+Since we do not plan on supporting short-lived tasks, we decided to make the NameServer slower but simpler. Our NameServer simply stores an array of registrations. A registration is simply a tid -> name mapping. The WhoIs request will traverse this list, trying to find one where the name matches the one we requested. The tid of that registration will be returned if no matching registration is found, an error code is returned. RegisterAs, will similarly traverse the list until it either find a registration with a matching name which it will overwrite or an empty registration slot. If there are no empty slots an error will be returned.
+
+The NameServer is run at HIGHEST priority (the second hightest priority in our system), the same one as all other servers. 
+
+\subsection{Scheduling}
+
+For scheduling we use a set of linked lists for each priority. We find the first priority with a non-empty linked list and schedule the head of that list as the next task. This is an extremely simplistic but deterministic scheduling scheme.
+
+\subsubsection{Idle Task}
+
+The idle task is implemented as simple for(;;) loop. It has the lowest priority, so it only runs when there's nothing else to do.
+
+\subsection{Clock Server}
+
+\subsubsection{Server}
+The clock server, running at priority HIGHEST, is implemented as an infinite message handling loop. It is important that the clock server run at a high priority because we could have other important tasks blocked on a delay and we want them to be unblocked ASAP when their deadline is reached. Additionally, clock server is unlikely to cause any starvation issues since it is almost always blocked waiting for a message.
+
+On a tick message, the internal time of the clock server is incremented by one. Furthermore, any tasks on top of the priority queue whose deadline has passed are unblocked with a Reply.
+
+On a delay message, the sending task is placed in the priority queue with priority equal to the deadline which is equal to the current time + the specified delay.
+
+On a delay\_until message, the deadline is compared to the current time and if it has not yet passed the task is placed on the priority queue with priority equal to the deadline. If the deadline has already passed, the task is not placed on the queue but is immediately unblocked with a Reply.
+
+On a time message, a reply is immediately issued with the current time in ticks.
+
+The priority queue is implemented as a heap so that the most frequent operation, checking the deadline of the head of the queue, is done in very fast constant time. Furthermore, popping and pushing tasks from/onto the queue is also very fast, running in O(logn) time. In addition, the heap is implemented as an array, which should give good cache performance as all the elements are in contiguous memory.
+
+\subsubsection{Notifier}
+
+The clock notifier is implemented as simply as possible. It first looks up the ClockServer. Although it is spawned by the ClockServer, and could simply use it's ParentTid for this. We preferred to make our code more bulletproof and leave out this assumption. After it has found the ClockServer, we enable the TIMER\_3\_EVENT we listen to and setup the timer with the appropriate values. The notifier then listens to ticks and sends them to the clock server as they occur. The notifier is run at the highest priority (REALTIME) in our system because we want it to respond as quickly as possible.
+
+\subsection{WaitTid}
+
+We implemented WaitTid to make termination simpler in our user programs. Although we could have done something like a Send back to our parent task once we terminate, we decided against because it is more prone to programmer error. Instead we use the Exit call which all programs do anyways to notify tasks that are waiting on it to exit that it is complete.
+
+WaitTid is implemented through a simple linked list of task ptrs. We re-use the next ptr that we had originally used in the scheduler for the waiter list. The amount of extra space required to implement WaitTid is 4 bytes * MAX\_TASKS, since we only store the head of the waiter list. Waiting on a task is an O(1) operation (adding to the head of a linked list). Unblocking tasks is at most O(n), but we are already unblocking send blocked tasks which also costs O(n) so it is okay for us to take on the extra hit here.
+
+\subsection{Shutdown}
+
+Shutdown is implemented simply. Once shutdown is called, instead of scheduling the next task we simply exit the FOR(;;) loop and thereby terminate the system going back to Redboot.
+
+\subsection{SerialServer}
+
+For our SerialServer implmentation we chose a design with 4 servers and 4 notifiers. There's a notifier for each of reading and writing for each COM port respectively. This was chosen so we would have the most flexibility while writing the simplest code.
+
+\subsubsection{Write Notifier}
+
+% TODO Avi
+
+\subsubsection{Read Notifier}
+
+% TODO Avi
+
+\subsubsection{Write Server}
+
+% TODO Alex
+
+\subsubsection{Read Server}
+
+% TODO Alex
+
+\subsection{Output and Analysis}
+
+\subsection{Known Bugs and Limitations}
+\begin{itemize}
+\end{itemize}
+
+\end{document}
