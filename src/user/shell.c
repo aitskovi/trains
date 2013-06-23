@@ -168,6 +168,11 @@ void shell() {
             reset_shell();
 
             continue;
+        } else if (c == '\b') {
+            line_buffer_pos--;
+            line_buffer[line_buffer_pos] = 0;
+            position_cursor(CONSOLE_HEIGHT, line_buffer_pos + 2);
+            nbprintf(COM2, "\033[K"); // Delete to end of line
         }
 
         // Otherwise just store it in the buffer and print it
