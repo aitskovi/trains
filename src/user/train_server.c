@@ -7,9 +7,10 @@
 
 #include <train_server.h>
 #include <clock_server.h>
-#include <nbio.h>
+#include <write_server.h>
 #include <dassert.h>
 #include <syscall.h>
+#include <ts7200.h>
 
 static char train_speeds[NUM_TRAINS];
 
@@ -41,8 +42,8 @@ int Reverse(train_t train) {
 }
 
 static void train_set_speed_internal(int train, int speed) {
-    nbputc(COM1, (char)speed);
-    nbputc(COM1, (char)train);
+    char set_speed_command[2] = { speed, train };
+    Write(COM1, set_speed_command, sizeof(set_speed_command));
 }
 
 static void train_set_speed(int train, int speed) {

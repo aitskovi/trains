@@ -54,7 +54,7 @@ OBJECTS = bwio.o\
 		  read_service.o\
 		  serial.o\
 		  conv.o\
-		  nbio.o\
+		  sprintf.o\
 		  shell.o\
 		  clock_widget.o\
 		  ring_buffer.o

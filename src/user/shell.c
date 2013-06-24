@@ -6,7 +6,7 @@
  */
 
 #include <shell.h>
-#include <nbio.h>
+#include <sprintf.h>
 #include <memory.h>
 #include <write_server.h>
 #include <read_server.h>
@@ -15,13 +15,21 @@
 #include <clock_widget.h>
 #include <sensor_server.h>
 #include <switch_server.h>
+#include <ts7200.h>
+#include <string.h>
+
+const char CLEAR_SCREEN[] = "\033[2J";
+const char CLEAR_LINE[] = "\033[K";
+const char POS_CURSOR[] = "\033[%u;%uH";
 
 static char line_buffer[LINE_BUFFER_SIZE];
 static unsigned int line_buffer_pos;
 
+/*
 static void position_cursor (unsigned int row, unsigned int column) {
     nbprintf (COM2, "\033[%u;%uH", row, column);
 }
+*/
 
 int is_whitespace(char c) {
     return c == ' ' || c == '\t';
@@ -126,28 +134,34 @@ int parse_sw(char *str, int *number, int *direction) {
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
-    position_cursor(CONSOLE_HEIGHT, 1);
-    nbprintf(COM2, "\033[K");
-    nbprintf(COM2, "> ");
+
+    // Build command for positioning cursor, clearing the line, and printing a prompt
+    char command[100];
+    char *pos = &command[0];
+    pos += sprintf(pos, POS_CURSOR, CONSOLE_HEIGHT, 1);
+    pos += strcpy(pos, CLEAR_LINE);
+    pos += strcpy(pos, "> ");
+
+    Write(COM2, command, pos - command);
 }
 
 void shell() {
-
     // Clear the screen.
-    nbprintf(COM2, "\033[2J");
+    Write(COM2, CLEAR_SCREEN, strlen(CLEAR_SCREEN));
 
     // Give a blank prompt
     reset_shell();
 
     // Start the clock
-//    Create(LOW, clock_widget);
+    Create(LOW, clock_widget);
 
 
     Create(HIGH, sensor_server);
     Create(HIGH, switch_server);
 
     while (1) {
-
+        char command[50 + LINE_BUFFER_SIZE];
+        char *pos;
         int train, speed, number, direction;
 
         // Get a character
@@ -171,15 +185,21 @@ void shell() {
         } else if (c == '\b') {
             line_buffer_pos--;
             line_buffer[line_buffer_pos] = 0;
-            position_cursor(CONSOLE_HEIGHT, line_buffer_pos + 2);
-            nbprintf(COM2, "\033[K"); // Delete to end of line
+
+            pos = &command[0];
+            pos += strcpy(pos, "\b");
+            Write(COM2, command, pos - command);
+
+            continue;
         }
 
         // Otherwise just store it in the buffer and print it
         line_buffer[line_buffer_pos++] = c;
 
-        position_cursor(CONSOLE_HEIGHT, line_buffer_pos + 2);
-        nbputc(COM2, c);
+        pos = &command[0];
+        pos += sprintf(pos, POS_CURSOR, CONSOLE_HEIGHT, line_buffer_pos + 2);
+        *pos++ = c;
+        Write(COM2, command, pos - command);
     }
 
 }

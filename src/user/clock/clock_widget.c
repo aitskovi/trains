@@ -5,7 +5,8 @@
  *      Author: aianus
  */
 
-#include <nbio.h>
+#include <ts7200.h>
+#include <sprintf.h>
 #include <clock_server.h>
 
 void clock_widget() {
@@ -23,7 +24,9 @@ void clock_widget() {
         tenths = time / 10;
 
         // Save cursor, move to top left, clear line, print time, restore cursor
-        nbprintf(COM2, "\0337\033[H\033[K%u:%u\.%u\0338", minutes, seconds, tenths);
+        char buffer[100];
+        int size = sprintf(buffer, "\0337\033[H\033[K%u:%u\.%u\0338", minutes, seconds, tenths);
+        Write(COM2, buffer, size);
 
         Delay(6);
     }

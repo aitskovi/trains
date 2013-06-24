@@ -5,10 +5,11 @@
  *      Author: aianus
  */
 
-#include <nbio.h>
+#include <sprintf.h>
 #include <switch_server.h>
 #include <syscall.h>
 #include <dassert.h>
+#include <ts7200.h>
 
 #define AUXILLARY_SWITCH_BASE 0x99
 #define AUXILLARY_SWITCH_COUNT 4
@@ -25,34 +26,38 @@ static tid_t server_tid = -1;
 int switch_update(int number, enum direction position);
 
 void switches_init() {
-    nbprintf(COM2, "\0337");
-    nbprintf(COM2, "\033[%u;%uH", SWITCH_TABLE_HEIGHT, 1);
-    nbprintf(COM2, "Sensors: ");
+    char command[1024];
+    char *pos = &command[0];
 
-    nbprintf(COM2, "\033[%u;%uH", SWITCH_TABLE_HEIGHT + 1, 1);
+    pos += sprintf(pos, "\0337\033[%u;%uH", SWITCH_TABLE_HEIGHT, 1);
+    pos += sprintf(pos, "Switches: ");
+
+    pos += sprintf(pos, "\033[%u;%uH", SWITCH_TABLE_HEIGHT + 1, 1);
     int i;
     // Draw Regular Switches.
     for (i = 0; i < NUM_SWITCHES; ++i) {
         char num[4];
-        nbui2a(i + 1, 10,  num);
-        nbputw(COM2, 4, ' ', num);
+        ui2a(i + 1, 10,  num);
+        pos += sputw(pos, 4, ' ', num);
     }
 
     // Draw Auxillary Switches.
     for (i = 0; i < AUXILLARY_SWITCH_COUNT; ++i) {
         char num[4];
-        nbui2a(AUXILLARY_SWITCH_BASE + i, 10,  num);
-        nbputw(COM2, 4, ' ', num);
+        ui2a(AUXILLARY_SWITCH_BASE + i, 10,  num);
+        pos += sputw(pos, 4, ' ', num);
     }
 
-    nbprintf(COM2, "\033[%u;%uH", SWITCH_TABLE_HEIGHT + 2, 1);
+    pos += sprintf(pos, "\033[%u;%uH", SWITCH_TABLE_HEIGHT + 2, 1);
 
     // Draw States.
     for (i = 0; i < NUM_SWITCHES + AUXILLARY_SWITCH_COUNT; ++i) {
-        nbputw(COM2, 4, ' ', "?");
+        pos += sputw(pos, 4, ' ', "?");
     }
 
-    nbprintf(COM2, "\0338");
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
 }
 
 bool is_auxillary_switch(int number) {
@@ -75,15 +80,20 @@ int switch_update(int number, enum direction position) {
     }
 
     index = index * 4;
-    nbprintf(COM2, "\033[%u;%uH", SWITCH_TABLE_HEIGHT + 2, index + 1);
-    nbputw(COM2, 4, ' ', position == CURVED ? "C" : "S");
+
+    char command[128];
+    char *pos = &command[0];
+    pos += sprintf(pos, "\0337\033[%u;%uH", SWITCH_TABLE_HEIGHT + 2, index + 1);
+    pos += sputw(pos, 4, ' ', position == CURVED ? "C" : "S");
+    pos += sprintf(pos, "\0338");
+    Write(COM2, command, pos - command);
+
     return 0;
 }
 
 void switch_set(int turnout, enum direction state) {
-    nbputc(COM1, state);
-    nbputc(COM1, (char)turnout);
-    nbputc(COM1, (char)32);
+    char command[3] = {state, turnout, 32};
+    Write(COM1, command, 3);
     switch_update(turnout, state);
 }
 

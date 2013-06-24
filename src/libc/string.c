@@ -21,9 +21,9 @@ int streq(char *a, char *b) {
     return *a == *b;
 }
 
-char *strcpy(char *dst, char *src) {
-    dassert(strlen(dst) == strlen(src), "Copying Missized Strings");
+int strcpy(char *dst, char *src) {
     int len = strlen(src);
-    dst[len] = 0;                 // Null terminate.
-    return memcpy(dst, src, len); // Copy the rest.
+    dst[len] = 0;          // Null terminate.
+    memcpy(dst, src, len); // Copy the rest.
+    return len;
 }

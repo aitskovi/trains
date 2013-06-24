@@ -6,9 +6,10 @@
  */
 
 #include <sensor_server.h>
-#include <nbio.h>
+#include <sprintf.h>
 #include <read_server.h>
 #include <write_server.h>
+#include <ts7200.h>
 
 typedef int bool;
 
@@ -25,16 +26,22 @@ static int triggered_number[NUM_READINGS];
 void process_sensors();
 
 void sensor_list_print() {
-    nbprintf(COM2, "\0337\033[%u;%uH\033[K", SENSOR_LIST_HEIGHT, 1);
-    nbprintf(COM2, "Recently Triggered:");
+
+    char command[512];
+    char *pos = &command[0];
+
+    pos += sprintf(pos, "\0337\033[%u;%uH\033[K", SENSOR_LIST_HEIGHT, 1);
+    pos += sprintf(pos, "Recently Triggered:");
 
     int i;
     for (i = 0; i < NUM_READINGS; ++i) {
         if (triggered_number[i] == 0) break;
-        nbprintf(COM2, " %c%d ", triggered_sensor[i], triggered_number[i]);
+        pos += sprintf(pos, " %c%d ", triggered_sensor[i], triggered_number[i]);
     }
 
-    nbprintf(COM2, "\0338");
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
 }
 
 char int_to_sensor(int i) {
@@ -94,11 +101,11 @@ void process_sensors() {
 }
 
 void dump_sensors() {
-    nbputc(COM1, (char) 133);
+    Putc(COM1, (char) 133);
 }
 
 void enable_sensor_reset() {
-    nbputc(COM1, (char) 192);
+    Putc(COM1, (char) 192);
 }
 
 void sensors_init() {
@@ -123,7 +130,7 @@ void sensor_server() {
             waiting = true;
         }
 
-        int c = nbgetc(COM1);
+        int c = Getc(COM1);
         if (c == -1) return;
 
         // Read some interesting data.

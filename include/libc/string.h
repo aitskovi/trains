@@ -12,8 +12,8 @@ unsigned int strlen(char *a);
 int streq(char *a, char *b);
 
 /**
- * Copy a string to another string.
+ * Copy a string to another string. Returns the length of the copied string.
  */
-char *strcpy(char *str, char *dst);
+int strcpy(char *str, char *dst);
 
 #endif
