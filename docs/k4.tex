@@ -13,29 +13,44 @@
 
 \section{Overview}
 
-This documentation covers ours whole Kernel. Internally we support the following system calls:
+This documentation covers our whole Kernel. Internally we support the following system calls:
 
-\begin{itemize}
-  \item %TODO Alex
-\end{itemize}
+\begin{verbatim}
+int MyTid();
+int MyParentTid();
+int WaitTid(int tid);
+int Create(int priority, void(*code)());
+void Pass();
+void Exit();
+int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen);
+int Receive(tid_t *tid, char *msg, int msglen);
+int Reply(tid_t tid, char *reply, int replylen);
+int AwaitEvent(int event);
+void Shutdown();
+\end{verbatim}
 
 We also have a NameServer which supports:
 
-\begin{itemize}
-  \item %TODO Alex
-\end{itemize}
+\begin{verbatim}
+int RegisterAs(char *name);
+int WhoIs(char *name);
+\end{verbatim}
 
 A Serial Server which supports:
 
-\begin{itemize}
-  \item %TODO Alex
-\end{itemize}
+\begin{verbatim}
+int Getc(int channel);
+int Putc(int channel, char ch);
+int Write(int channel, char *str, unsigned int size);
+\end{verbatim}
 
 And a ClockServer which supports:
 
-\begin{itemize}
-  \item %TODO Alex
-\end{itemize}
+\begin{verbatim}
+int Time();
+int DelayUntil(int time);
+int Delay(int ticks);
+\end{verbatim}
 
 \section{Operating Instructions}
 \begin{enumerate}
@@ -243,24 +258,23 @@ For our SerialServer implmentation we chose a design with 4 servers and 4 notifi
 
 \subsubsection{Write Notifier}
 
-% TODO Avi
+The write notifier contains an implicit state machine whose transitions are driven by waiting for calls to AwaitEvent to return. When the UART buffer is empty and CTS is asserted the write server is notified with a Send. We then wait for two CTS interrupts and one buffer empty interrupt before notifying the Write server again and so on.
 
 \subsubsection{Read Notifier}
 
-% TODO Avi
+The read notifier waits on a UART RX interrupt and notifies the read server with a Send.
 
 \subsubsection{Write Server}
 
-% TODO Alex
+The write server accepts Write requests from clients which place blocks of data into a ring buffer. When the write server receives a notification from the write notifier, it places one byte from the head of the write buffer into the UART buffer.
 
 \subsubsection{Read Server}
 
-% TODO Alex
-
-\subsection{Output and Analysis}
+The read server accepts getc requests from clients which are placed on a queue and serviced when a notification is received from the read notifier.
 
 \subsection{Known Bugs and Limitations}
 \begin{itemize}
+\item Commands to the train will be queued while a train is being reversed since the train server is blocked on a delay.
 \end{itemize}
 
 \end{document}
