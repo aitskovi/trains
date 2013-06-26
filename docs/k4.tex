@@ -54,6 +54,7 @@ int Delay(int ticks);
 
 \section{Operating Instructions}
 \begin{enumerate}
+  \item Reset the box and wait for the redboot prompt
   \item load -b 0x00218000 -h 10.15.167.4 \$executable
   \item go
 \end{enumerate}
@@ -63,10 +64,120 @@ Root directory: /u1/aianus/cs452/handin/kernel4/
 
 \subsection{Executable}
 \begin{verbatim}
-b14f26808ede69d80c9dcc2b4f8490bf  ./kernel4.elf
+e72ee3f6e997434411f764c079fa4b39  ./kernel4.elf
 \end{verbatim}
 
 \subsection{Code}
+\begin{verbatim}
+7a43181f7908eef779e270832fcd9148  ./include/bits.h
+d39148360f7d205cb98a36d0a0c61aad  ./include/bwio.h
+3d6ccd5a607876e9e9b05ce372da9df5  ./include/circular_queue.h
+5bd4a0357d0702750838dc1417cd4f14  ./include/event.h
+95ff6f43aac027e9832905d4afdaa8c5  ./include/interrupt.h
+b044b4c9d77f1d0dd9b7a2961e45a67a  ./include/kmemory.h
+9b78bb4a50534ccd3108a1909d0f93cf  ./include/ksyscalls.h
+d1418a29bf14f9cffdc17b4b486256f3  ./include/libc/conv.h
+7a3e309d49993b24f39a167f0f408af2  ./include/libc/dassert.h
+e31e1aa5f0cf7747c5ca02d9219265d0  ./include/libc/fine_timer.h
+8aa1b9a0f41dfeed6de08a271dba5a96  ./include/libc/heap_priority_queue.h
+c94aef973f79346c0f65cb42d3a4f92e  ./include/libc/log.h
+5c61838a4125651ebe41601ccd881455  ./include/libc/random.h
+ea6da646f6f0125c2c3d7c58f8ec5add  ./include/libc/syscall.h
+1cec7f62ff33c948cc0b50bb4b0049df  ./include/libc/ring_buffer.h
+db3c7fe96aa4179327a32be85e865985  ./include/libc/sprintf.h
+1dee5d1af1534d6eb63e1c60a39482b1  ./include/libc/string.h
+4f590e6dac2e78c18f7082bb2f3b6b92  ./include/memory.h
+f5d65e70556962f5effba160e9bbd0a0  ./include/messaging.h
+4aa97504109846a1c246258fc8c1caab  ./include/nameserver.h
+a4b612d477dfd0e5af41e091ebe485c7  ./include/nameservice.h
+081b58b1ad6e401d9648cb88ffb30301  ./include/request.h
+18060a9170044e77e2c91364f48054f8  ./include/scheduling.h
+ccac3c439d86709412554719f50434cc  ./include/switch.h
+d8f3e7538ecf950eb2f5aa6d93d44b39  ./include/task.h
+9f6106bd19009aec00d7f458e964d719  ./include/ts7200.h
+3e9800bc664c0412dc73529ab1d1cc42  ./include/uart.h
+92023eb7f5b51008caee8b80306fde73  ./include/user/clock/clock.h
+67d3408c795e016994abc7daccaf2dfb  ./include/user/clock/clock_notifier.h
+e9f7e445c32353f3b72917ecf553de05  ./include/user/clock/clock_server.h
+e75d3afab221f201593235fa63ae912e  ./include/user/clock/clock_widget.h
+c43444432320abfb09777821a38ae8a7  ./include/user/idle.h
+a53c63ad1757b25362486bce6ef7c90d  ./include/user/rps/rps.h
+570c77afbd19a6a0be4419d136ee9a1f  ./include/user/rps/rpsclient.h
+331b47449d891d458b0647da2c2924de  ./include/user/rps/rpsserver.h
+6320a395d0add67f42fb141fb8301591  ./include/user/serial/read_notifier.h
+5d6641ec5528f36d3689cbc1292809ff  ./include/user/serial/read_server.h
+ae5cd2f41b432f52c89f47f0b4b22d81  ./include/user/serial/read_service.h
+77eca891dc3dcfa6186b512e049df988  ./include/user/serial/serial.h
+1481dd9fe1dcd2ad9f5328171ebec4b9  ./include/user/serial/write_notifier.h
+4b8c17d07abc40b0e36874eb758663e7  ./include/user/serial/write_server.h
+ae3e7b7dab05459b5f574ac627d6353f  ./include/user/serial/write_service.h
+862df1e336ef89d83bceadc522085dd1  ./include/user/user.h
+4ae1b9debda9c0b78b2fd95c7b44325a  ./include/user/sensor_server.h
+680cf0addbaef74e6e06bed8b31896bc  ./include/user/shell.h
+216bc2e0e2ee705abb8e0123b66535e1  ./include/user/switch_server.h
+0bf8fe276c597698e0edb48aaf438e97  ./include/user/train_server.h
+a368dadd966d1cf7ee9248d748c0b225  ./include/verify.h
+94833a9ccce763038303123e95428de8  ./include/waiting.h
+c946f75ca4551a445ac3eda46091b7be  ./src/bits.c
+7df60a6a44bebe110c9b245dec42eedc  ./src/bwio.c
+6d5afd3fb8acbda06a47d1d0472d4c33  ./src/circular_queue.c
+5337762b0342e2aa9406385f23991cfe  ./src/event.c
+d8bac997050e9a8c34a00e9010bc7a0e  ./src/interrupt.c
+2312116b612da5ab7e1bb9fa7aaa0d17  ./src/kernel.c
+0b13bcc76733e2c2d97c2c66be1de5b7  ./src/ksyscalls.c
+cf3630c1a255e94e6c4a2979273d25dd  ./src/libc/conv.c
+df0e33ec5df1306650e909e7463c3834  ./src/libc/fine_timer.c
+6f89e16a8c7746ec3c059cedf58171ee  ./src/libc/heap_priority_queue.c
+5fc41e8a4b051578f782dc89eefa8d54  ./src/libc/log_arm.c
+686d7bdcad6b2a66f66e983565ffc8df  ./src/libc/log_x86.c
+18c9fceb4c8379e97a1536c5f76b59df  ./src/libc/memory.c
+428d29b72bb432d11e63812e3f19dedd  ./src/libc/random.c
+e10d105c3f5b44d0d94e23c278304952  ./src/libc/swi_arm.c
+b7bebaa79148664424ff9f0f55c2415c  ./src/libc/swi_x86.c
+981cbfc55f6df6115a8f25ba818a8cae  ./src/libc/syscall.c
+a5c16093637f6f52699641447bdb536f  ./src/libc/ring_buffer.c
+64a7c8eb92ea1295062e2b4b41d32a8f  ./src/libc/sprintf.c
+8d8908217f7c9a2caf38bd04e5d57f23  ./src/libc/string.c
+77697972cdac93a02951f8476ce29379  ./src/messaging.c
+f9da5f76fba2cd959bd972ef3b9e4ee2  ./src/nameserver.c
+af3d35b80511f9dd9565d41583f00315  ./src/nameservice.c
+cbc4b3cdae62ea6a211c5a0f834e646c  ./src/scheduling.c
+3d07be1b7e34d5dddb0f2981f80eeed9  ./src/switch.c
+562d412164cab149d15162a02c34df44  ./src/task.c
+b0c8b9d56c401dc19fa710cf4b0b3a53  ./src/test/circular_queue_tests.c
+b0438d3b9cdb2308287e8161593c23ee  ./src/test/ksyscalls_tests.c
+0b5b1b5e8febfbd437bb0b775640cb0a  ./src/test/memory_tests.c
+e8617b00b01d3540ae62a140e4b2c15c  ./src/test/messaging_tests.c
+7fba2ea44d6922b270aff6e5423683e4  ./src/test/priority_queue_tests.c
+be5d61656c6f152bd9ecd52c3dec4614  ./src/test/scheduling_tests.c
+856c85ef645a98019936d67ae1c903be  ./src/test/unit.c
+c0554c00f8b3d0589f461dd9323524f7  ./src/uart.c
+ea278c94bfbbf69c9b7c5eb865532005  ./src/user/clock/clock_notifier.c
+af7da3ae4f23a82b92c93dbc205d3508  ./src/user/clock/clock_server.c
+9f3d921aceb8061e2cb2f1b7e3e844f2  ./src/user/clock/clock_widget.c
+d05ccb77f412ed3b343094900c142f04  ./src/user/idle.c
+1e3f84b77a97255d6251ddf262835725  ./src/user/kernel1.c
+b23bda2d5f268ed1a85959e266882360  ./src/user/kernel2.c
+d8e09c1a0766a1ee4d3f8c6b9c8dc7f8  ./src/user/kernel3.c
+8bc5cc13a0bf980682f4458a78918cda  ./src/user/kernel4.c
+46a424731361d6176718c8b7c737bc55  ./src/user/rps/rpsclient.c
+8b5ae02bd24de4355a0f7c5fb17e87dc  ./src/user/rps/rpsserver.c
+88dbc637cd12d246fe3a4b4999151e37  ./src/user/serial/read_notifier.c
+6d697b3b34c8b6e8da866b7888e69ecf  ./src/user/serial/read_server.c
+590dcf58357003fa9586c36068c2812f  ./src/user/serial/read_service.c
+6e1fb5b6a6a8c1020d482dd018194577  ./src/user/serial/serial.c
+1948208bab2ae8bc6023f8f5eaa6c97c  ./src/user/serial/write_notifier.c
+eb2bf4d21085abca9c52a6d8a9b1d993  ./src/user/serial/write_server.c
+bc1415f69e69bd8eb08decf0a168aa5f  ./src/user/serial/write_service.c
+fa6b70558103fa109c508faa51d5071e  ./src/user/timings.c
+95197606aa508ee5043c16021c0f6234  ./src/user/user.c
+17bda4a7c516ac07e8582a300f53217b  ./src/user/sensor_server.c
+e57afd1f424adb69134152d07e1316ea  ./src/user/shell.c
+a91b9190d245357479670cbc14782acc  ./src/user/switch_server.c
+9fd5a72be4ab32cc9f80a67fe5952066  ./src/user/train_server.c
+75dd26305bdbdd505590ec82cb80c6d7  ./src/verify.c
+f90b3c33dead7ca55d9192d8112cdc4f  ./src/waiting.c
+\end{verbatim}
 
 \section{Kernel Description}
 
@@ -294,6 +405,7 @@ The shell task is responsible for interpreting and echoing input from the termin
 \subsection{Known Bugs and Limitations}
 \begin{itemize}
 \item Commands to the train will be queued while a train is being reversed since the train server is blocked on a delay.
+\item The recently triggered sensors may be incorrect if the box is not reset before executing our code.
 \end{itemize}
 
 \end{document}
