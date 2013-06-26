@@ -84,7 +84,7 @@ Our kernel has the concept of Tasks -- independent executions of code along with
   \item A reference to the allocated space of the stack for this task.
 \end{itemize}
 
-TIDs are assigned in sequential order from 0 to MAX_TASKS.
+TIDs are assigned in sequential order from 0 to MAX\_TASKS.
 
 \subsection{System Calls}
 
@@ -271,6 +271,25 @@ The write server accepts Write requests from clients which place blocks of data 
 \subsubsection{Read Server}
 
 The read server accepts getc requests from clients which are placed on a queue and serviced when a notification is received from the read notifier.
+
+\section{Kernel 4 Task structure}
+
+We split this assignment into Shell, Sensors, Clock, Switch, and Train tasks. For some, like the clock widget, sensors, and train tasks it was necessary to have separate tasks because they would frequently be blocked on a delay or a sensor poll and we didn't want to block the rest of the system. For the switch task it was simpler to port code over from assignment zero by making it a separate task.
+
+\subsection{Sensor Task}
+The sensor task polls the train controller continuously for sensor triggers and updates the screen. It operates with HIGH priority.
+
+\subsection{Train Task}
+The train task is responsible for controlling train speeds. It is a separate task so that reversing a train, which involves a delay, does not block the rest of the system. It operates with HIGH priority.
+
+\subsection{Switch Task}
+The switch task is responsible for maintaining the state of the switches and displaying it on the screen as well as issuing commands for changing switch state. It operates with HIGH priority.
+
+\subsection{Clock Widget Task}
+The clock widget task is responsible for displaying the time on the screen. It operates with LOW priority.
+
+\subsection{Shell Task}
+The shell task is responsible for interpreting and echoing input from the terminal. It operates with MEDIUM priority.
 
 \subsection{Known Bugs and Limitations}
 \begin{itemize}
