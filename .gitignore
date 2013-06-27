@@ -32,6 +32,10 @@
 *.log
 *.gz
 
+# Generated track code
+track_data.h
+track_data.c
+
 # Test Binaries
 *_tests
 unit

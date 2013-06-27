@@ -2,8 +2,10 @@
 # Makefile for busy-wait IO tests
 #
 
-VPATH += libc/ test/ user/ user/rps user/libc user/clock user/serial
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial
+PARSE_TRACK = parse_track
+
+VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track
 
 ifeq ($(ARCH), x86)
 	include x86.mk
@@ -57,7 +59,8 @@ OBJECTS = bwio.o\
 		  sprintf.o\
 		  shell.o\
 		  clock_widget.o\
-		  ring_buffer.o
+		  ring_buffer.o\
+		  track_data.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf
 
@@ -86,6 +89,9 @@ bwio.s : bwio.c
 
 %.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $< 
+	
+track_data.c track_data.h : tracka trackb
+	$(PARSE_TRACK) $^
 
 kernel.elf : $(ARMOBJECTS) $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
@@ -106,7 +112,7 @@ unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o me
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:
-	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s`
+	-rm -f *.depends *.elf *.o kernel.map *_tests `find ./*.s ! -name context_switch.s` track_data.c track_data.h
 
 install: all
 	-cp *.elf /u/cs452/tftp/ARM/$(USER)/
