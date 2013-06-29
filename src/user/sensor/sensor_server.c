@@ -17,6 +17,7 @@
 #include <nameserver.h>
 #include <syscall.h>
 #include <sensor_notifier.h>
+#include <sensor_service.h>
 
 typedef int bool;
 
@@ -45,23 +46,6 @@ void sensor_list_print() {
     pos += sprintf(pos, "\0338");
 
     Write(COM2, command, pos - command);
-}
-
-char int_to_sensor(int i) {
-    switch(i) {
-        case 0:
-            return 'A';
-        case 1:
-            return 'B';
-        case 2:
-            return 'C';
-        case 3:
-            return 'D';
-        case 4:
-            return 'E';
-        default:
-            return 'U';
-    }
 }
 
 void sensor_list_add(char sensor, int number) {

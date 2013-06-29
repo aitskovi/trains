@@ -11,6 +11,11 @@
 #define SENSOR_LIST_HEIGHT 3
 #define SENSOR_DATA_SIZE 10
 #define NUM_READINGS 5
+#define NUM_SENSORS 5
+
+#include <task.h>
+
+#define MAX_SUBSCRIBERS (MAX_TASKS - 1 / 32) + 1
 
 enum SENSOR_SERVER_MESSAGE_TYPE {
     SENSOR_EVENT_REQUEST,
@@ -22,6 +27,7 @@ enum SENSOR_SERVER_MESSAGE_TYPE {
 typedef struct SensorServerMessage {
     unsigned int type;
     char data[SENSOR_DATA_SIZE];
+    int subscribers[MAX_SUBSCRIBERS];
 } SensorServerMessage;
 
 void sensor_server();
