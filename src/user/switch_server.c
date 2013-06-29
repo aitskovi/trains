@@ -10,6 +10,7 @@
 #include <syscall.h>
 #include <dassert.h>
 #include <ts7200.h>
+#include <write_server.h>
 
 #define AUXILLARY_SWITCH_BASE 0x99
 #define AUXILLARY_SWITCH_COUNT 4

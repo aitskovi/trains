@@ -6,6 +6,7 @@
  */
 
 #include <heap_priority_queue.h>
+#include <log.h>
 
 void dump_elements (HeapPriorityQueue *queue) {
     int i;

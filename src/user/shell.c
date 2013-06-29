@@ -138,8 +138,8 @@ void reset_shell() {
     // Build command for positioning cursor, clearing the line, and printing a prompt
     char command[100];
     char *pos = &command[0];
-    pos += sprintf(pos, POS_CURSOR, CONSOLE_HEIGHT, 1);
-    pos += strcpy(pos, CLEAR_LINE);
+    pos += sprintf(pos, (char *)POS_CURSOR, CONSOLE_HEIGHT, 1);
+    pos += strcpy(pos, (char *)CLEAR_LINE);
     pos += strcpy(pos, "> ");
 
     Write(COM2, command, pos - command);
@@ -147,7 +147,7 @@ void reset_shell() {
 
 void shell() {
     // Clear the screen.
-    Write(COM2, CLEAR_SCREEN, strlen(CLEAR_SCREEN));
+    Write(COM2, (char *)CLEAR_SCREEN, strlen((char *)CLEAR_SCREEN));
 
     // Give a blank prompt
     reset_shell();
@@ -197,7 +197,7 @@ void shell() {
         line_buffer[line_buffer_pos++] = c;
 
         pos = &command[0];
-        pos += sprintf(pos, POS_CURSOR, CONSOLE_HEIGHT, line_buffer_pos + 2);
+        pos += sprintf(pos, (char *)POS_CURSOR, CONSOLE_HEIGHT, line_buffer_pos + 2);
         *pos++ = c;
         Write(COM2, command, pos - command);
     }

@@ -50,7 +50,7 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
     // Generate the trap frame.
     t->sp[RVALUE] = 0;
     t->sp[SPSR] = USER_MODE_SPSR;
-    t->sp[PC] = code;
+    t->sp[PC] = (int)code;
     t->sp[R4] = 0;
     t->sp[R5] = 0;
     t->sp[R6] = 0;
@@ -59,7 +59,7 @@ Task * task_create(void (*code)(), tid_t parent_tid, enum task_priority priority
     t->sp[R9] = 0;
     t->sp[SL] = (unsigned int) (t->stack + STACK_SIZE);
     t->sp[FP] = 0;
-    t->sp[LR] = Exit;
+    t->sp[LR] = (int)Exit;
 
     return t;
 }
@@ -82,7 +82,7 @@ void task_save_sp(Task *t, int *sp) {
 }
 
 void *task_get_pc(Task *t) {
-    return t->sp[PC];
+    return (void *)t->sp[PC];
 }
 
 Task *task_get(tid_t tid) {

@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include <dassert.h>
+#include <memory.h>
 
 /**
  * Return the length of a null terminated string.

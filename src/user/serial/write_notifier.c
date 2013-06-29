@@ -12,7 +12,6 @@
 
 void write_notifier() {
     int server_tid, channel, event;
-    WriteMessage msg, rply;
 
     dlog("Write Notifier: Waiting for Configuration\n");
     channel = get_writer_configuration(&server_tid);

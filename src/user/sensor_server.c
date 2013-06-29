@@ -10,6 +10,7 @@
 #include <read_server.h>
 #include <write_server.h>
 #include <ts7200.h>
+#include <memory.h>
 
 typedef int bool;
 

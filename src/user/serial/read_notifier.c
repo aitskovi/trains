@@ -11,7 +11,6 @@
 
 void read_notifier() {
     int server_tid, channel, event;
-    ReadMessage msg, rply;
 
     dlog("Read Notifier: Waiting for Configuration\n");
     channel = get_reader_configuration(&server_tid);

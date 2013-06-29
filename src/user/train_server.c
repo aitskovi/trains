@@ -9,6 +9,7 @@
 #include <clock_server.h>
 #include <write_server.h>
 #include <dassert.h>
+#include <memory.h>
 #include <syscall.h>
 #include <ts7200.h>
 
@@ -86,6 +87,9 @@ void train_server() {
             reply.type = REVERSE_RESPONSE;
             Reply(tid, (char *) &reply, sizeof(reply));
             train_reverse(msg.train_no);
+            break;
+        default:
+            dassert(false, "Invalid Train Server Commmand");
             break;
         }
     }

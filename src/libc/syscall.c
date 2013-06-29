@@ -24,7 +24,7 @@ int Execute(int priority, void(*code)(), int arg) {
     req.request = CREATE;
     req.args[0] = (void *)priority;
     req.args[1] = code;
-    req.args[2] = arg;
+    req.args[2] = (void *)arg;
     return syscall(&req);
 }
 

@@ -5,7 +5,7 @@
 
 #define vassert(exp) if (!(exp)) {\
     log("%s failed at file: %s, line: %d\n", #exp, __FILE__, __LINE__); \
-    return -1;\ 
+    return -1;\
 }
 
 #define vsuite_add_test(suite, test) __vsuite_add_test((suite), #test, test)

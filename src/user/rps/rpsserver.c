@@ -11,6 +11,7 @@
 #include <task.h>
 #include <memory.h>
 #include <bwio.h>
+#include <nameserver.h>
 
 typedef struct RPSMatch {
     tid_t task1;
@@ -49,9 +50,6 @@ void reset_match_spot(RPSMatch *match) {
 static const char *MOVE_STRINGS[] = {"None", "Rock", "Paper", "Scissors"};
 
 void rps_server () {
-
-    tid_t me = MyTid();
-//    bwprintf(COM2, "RPS Server staring with tid %d\n", me);
 
     RegisterAs("RPSServer");
 

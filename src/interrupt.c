@@ -24,8 +24,7 @@ int process_uart_interrupt(int channel, int *data) {
     int base = (channel == COM1) ? UART1_BASE : UART2_BASE;
     int interrupt = *(int *)(base + UART_INTR_OFFSET);
 
-    int event;
-
+    int event = -1;
 
     // Transmit Interrupt
     if (interrupt & TIS_MASK) {

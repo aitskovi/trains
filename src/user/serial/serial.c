@@ -7,7 +7,7 @@
 void configure_writer(int tid, int channel) {
     WriteMessage wmsg, wrply;
     wmsg.type = WRITE_CONFIG_REQUEST;
-    wmsg.data = channel;
+    wmsg.data = (void *)channel;
     Send(tid, (char *)&wmsg, sizeof(wmsg), (char *)&wrply, sizeof(wrply));
     dassert(wrply.type == WRITE_CONFIG_RESPONSE, "Invalid Config Reply");
 }
@@ -35,6 +35,6 @@ int get_writer_configuration(int *tid) {
     dassert(msg.type == WRITE_CONFIG_REQUEST, "Invalid Config Message");
     rply.type = WRITE_CONFIG_RESPONSE;
     Reply(*tid, (char *)&rply, sizeof(rply));
-    return msg.data;
+    return (int)msg.data;
 }
 
