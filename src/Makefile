@@ -63,7 +63,7 @@ OBJECTS = bwio.o\
 		  ring_buffer.o\
 		  track_data.o
 
-all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf
+all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
 
 tests: unit_tests
 
@@ -105,6 +105,10 @@ kernel3.elf : kernel3.o $(ARMOBJECTS) $(OBJECTS)
 
 kernel4.elf : kernel4.o $(ARMOBJECTS) $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+project1.elf : project1.o $(ARMOBJECTS) $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
 	
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
