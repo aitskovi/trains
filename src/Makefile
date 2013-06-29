@@ -29,7 +29,8 @@ ARMOBJECTS = kernel.o\
 			 swi_arm.o\
 			 train_server.o\
 			 sensor_server.o\
-			 switch_server.o
+			 switch_server.o\
+			 sensor_notifier.o
 			 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o

@@ -6,25 +6,27 @@
  */
 
 #include <sensor_server.h>
+
+#include <dassert.h>
 #include <sprintf.h>
 #include <read_server.h>
 #include <write_server.h>
 #include <ts7200.h>
 #include <memory.h>
+#include <scheduling.h>
+#include <nameserver.h>
+#include <syscall.h>
+#include <sensor_notifier.h>
 
 typedef int bool;
 
 #define true 1
 #define false 0
 
-static bool waiting;
-static char data[SENSOR_DATA_SIZE];
-static unsigned int data_index;
-
 static char triggered_sensor[NUM_READINGS];
 static int triggered_number[NUM_READINGS];
 
-void process_sensors();
+void process_sensors(char *data);
 
 void sensor_list_print() {
 
@@ -75,7 +77,7 @@ void sensor_list_add(char sensor, int number) {
     triggered_number[0] = number;
 }
 
-void process_sensors() {
+void process_sensors(char *data) {
     bool changed = false;
     int i, j;
     for (i = 0; i < 5; ++i) {
@@ -101,21 +103,9 @@ void process_sensors() {
     if (changed) sensor_list_print();
 }
 
-void dump_sensors() {
-    Putc(COM1, (char) 133);
-}
 
-void enable_sensor_reset() {
-    Putc(COM1, (char) 192);
-}
 
 void sensors_init() {
-    data_index = 0;
-    waiting = false;
-
-    enable_sensor_reset();
-
-    memset(data, 0, sizeof(data));
     memset(triggered_sensor, 0, sizeof(triggered_sensor));
     memset(triggered_number, 0, sizeof(triggered_number));
 
@@ -123,25 +113,30 @@ void sensors_init() {
 }
 
 void sensor_server() {
+    RegisterAs("SensorServer");
+
+    // Create the thing sending us sensor messages.
+    Create(HIGH, sensor_notifier);
+
+    // Initialize our sensor thing.
     sensors_init();
 
-    while (1) {
-        if (waiting == false) {
-            dump_sensors();
-            waiting = true;
-        }
+    int tid;
+    SensorServerMessage msg, rply;
+    for(;;) {
+        Receive(&tid, (char *) &msg, sizeof(msg));
 
-        int c = Getc(COM1);
-        if (c == -1) return;
+        switch(msg.type) {
+            case SENSOR_EVENT_REQUEST:
+                rply.type = SENSOR_EVENT_RESPONSE;
+                Reply(tid, (char *) &rply, sizeof(rply));
 
-        // Read some interesting data.
-        data[data_index] = (char)c;
-        data_index++;
-
-        if (data_index == SENSOR_DATA_SIZE) {
-            process_sensors();
-            waiting = false;
-            data_index = 0;
+                process_sensors(msg.data);
+                break;
+            default:
+                dassert(false, "Invalid SensorServer Request");
         }
     }
+
+    Exit();
 }

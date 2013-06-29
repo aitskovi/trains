@@ -155,7 +155,6 @@ void shell() {
     // Start the clock
     Create(LOW, clock_widget);
 
-
     Create(HIGH, sensor_server);
     Create(HIGH, switch_server);
 
