@@ -30,6 +30,7 @@ int MyParentTid();
 int WaitTid(int tid);
 
 int Create(int priority, void(*code)());
+int Execute(int priority, void(*code)(int), int arg);
 void Pass();
 void Exit();
 

@@ -9,7 +9,7 @@ int kreply(struct Task *active, int tid, char *reply, int replylen);
 int kexit(struct Task *active);
 int kmytid(struct Task *active);
 int kmy_parent_tid(struct Task *active);
-int kcreate(struct Task *active, int priority, void(*code)());
+int kcreate(struct Task *active, int priority, void(*code)(int), int arg);
 int kwait_tid(struct Task *active, int tid);
 
 #endif

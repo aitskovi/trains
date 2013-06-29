@@ -67,7 +67,7 @@ int handle(Task *task, Request *req) {
         kmytid(task);
         break;
     case CREATE:
-        kcreate(task, (int)req->args[0] /* priority */, req->args[1] /* code */);
+        kcreate(task, (int)req->args[0] /* priority */, req->args[1] /* code */, (int)req->args[2] /* args */);
         break;
     case MY_PARENT_TID:
         kmy_parent_tid(task);

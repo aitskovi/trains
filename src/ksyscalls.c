@@ -113,7 +113,7 @@ int kmy_parent_tid(Task *task) {
     return 0;
 }
 
-int kcreate(struct Task *task, int priority, void(*code)()) {
+int kcreate(struct Task *task, int priority, void(*code)(int), int arg) {
     if (priority < 0 || priority > NUM_PRIORITIES) {
         task_set_return_value(task, -1);
         make_ready(task);
@@ -124,6 +124,7 @@ int kcreate(struct Task *task, int priority, void(*code)()) {
     if (!child) {
         task_set_return_value(task, -2);
     } else {
+        task_set_return_value(child, arg);
         make_ready(child);
         task_set_return_value(task, child->tid);
     }

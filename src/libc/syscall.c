@@ -16,10 +16,15 @@ int MyParentTid() {
 }
 
 int Create(int priority, void(*code)()) {
+    return Execute(priority, code, 0);
+}
+
+int Execute(int priority, void(*code)(), int arg) {
     Request req;
     req.request = CREATE;
     req.args[0] = (void *)priority;
     req.args[1] = code;
+    req.args[2] = arg;
     return syscall(&req);
 }
 
