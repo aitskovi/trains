@@ -1,4 +1,6 @@
-CC      = /usr/bin/gcc
+export XCC=/usr/bin/gcc
+
+CC      = ../colorgcc
 AS		= /usr/bin/as
 LD      = /usr/bin/gcc
 CFLAGS  = -g -c -fPIC -fno-builtin -Wall -I. -I../include

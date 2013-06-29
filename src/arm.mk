@@ -1,4 +1,6 @@
-CC		= /u/wbcowan/gnuarm-4.0.2/arm-elf/bin/gcc
+export XCC=/u/wbcowan/gnuarm-4.0.2/arm-elf/bin/gcc
+
+CC		= ../colorgcc
 AS		= /u/wbcowan/gnuarm-4.0.2/arm-elf/bin/as
 LD		= /u/wbcowan/gnuarm-4.0.2/arm-elf/bin/ld
 CFLAGS	= -c -fPIC -fno-builtin -Wall -mcpu=arm920t -msoft-float
