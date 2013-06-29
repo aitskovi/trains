@@ -4,8 +4,8 @@
 
 PARSE_TRACK = parse_track
 
-VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track
+VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor
 
 ifeq ($(ARCH), x86)
 	include x86.mk
