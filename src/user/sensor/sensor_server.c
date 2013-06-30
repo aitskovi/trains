@@ -18,6 +18,7 @@
 #include <syscall.h>
 #include <sensor_notifier.h>
 #include <sensor_service.h>
+#include <sensor_courier.h>
 #include <task.h>
 
 typedef int bool;
@@ -92,6 +93,9 @@ void sensor_server() {
 
     // Create the thing sending us sensor messages.
     Create(HIGH, sensor_notifier);
+
+    // Create the thing distributing our sensor data.
+    Create(HIGH, sensor_courier);
 
     // Initialize our sensor thing.
     sensors_init();
