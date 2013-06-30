@@ -59,3 +59,7 @@ int track_next_sensors(int node, struct track_node** sensors) {
 int sensor_to_idx(char sensor, int num) {
    return (int)(sensor - 'A') * 16 + (num - 1);
 }
+
+track_node *track_get_sensor(char sensor, int num) {
+    return &(track[sensor_to_idx(sensor, num)]);
+}

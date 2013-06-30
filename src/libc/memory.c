@@ -1,8 +1,6 @@
 #include <memory.h>
 #include <log.h>
 
-#define HEAP_SIZE 1024 * 1024
-
 static char heap[HEAP_SIZE];
 static char *free;
 

@@ -13,7 +13,6 @@
 #include <syscall.h>
 #include <train_server.h>
 #include <clock_widget.h>
-#include <sensor_server.h>
 #include <switch_server.h>
 #include <ts7200.h>
 #include <string.h>
@@ -190,7 +189,6 @@ void shell() {
     Create(LOW, clock_widget);
     Create(LOW, sensor_widget);
 
-    Create(HIGH, sensor_server);
     Create(HIGH, switch_server);
 
     while (1) {

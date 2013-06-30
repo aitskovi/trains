@@ -15,6 +15,8 @@
 #include <uart.h>
 #include <shell.h>
 #include <train_server.h>
+#include <location_server.h>
+#include <sensor_server.h>
 
 void first() {
     // Setup the timer.
@@ -47,9 +49,12 @@ void first() {
     configure_reader(read_server_tid_2, COM2);
 
     Create(HIGH, train_server);
+    Create(HIGH, sensor_server);
+    Create(HIGH, LocationServer);
 
     int shell_tid = Create(MEDIUM, shell);
 
+    //Create(HIGH, LocationServer);
     // Wait for all children to exit.
     WaitTid(shell_tid);
 

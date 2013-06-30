@@ -4,8 +4,8 @@
 
 PARSE_TRACK = ../bin/parse_track
 
-VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor
+VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/ user/location/
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor -I ../include/user/location
 
 ifeq ($(ARCH), x86)
 	include x86.mk
@@ -32,7 +32,9 @@ ARMOBJECTS = kernel.o\
 			 switch_server.o\
 			 sensor_notifier.o\
 			 sensor_courier.o\
-			 sensor_widget.o
+			 sensor_widget.o\
+			 location_server.o\
+			 location_service.o
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o

@@ -13,6 +13,13 @@ int track_initialize(char track);
  */
 int track_next_sensors(int node, struct track_node** sensors);
 
+/**
+ * Do a dfs until we hit all sensors after us.
+ */
+int track_sensor_search(struct track_node *node, struct track_node **sensors);
+
 int sensor_to_idx(char sensor, int num);
+
+track_node *track_get_sensor(char sensor, int num);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
 
-#define HEAP_SIZE 1024 * 1024
+#define HEAP_SIZE 10 * 1024 * 1024
 
 /**
  * Memory Utilities.
