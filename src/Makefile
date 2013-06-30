@@ -64,7 +64,8 @@ OBJECTS = bwio.o\
 		  clock_widget.o\
 		  ring_buffer.o\
 		  sensor_service.o\
-		  track_data.o
+		  track_data.o\
+		  track.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
 

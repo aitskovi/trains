@@ -11,6 +11,7 @@
 #define SENSOR_DATA_SIZE 10
 #define NUM_READINGS 5
 #define NUM_SENSORS 5
+#define SENSORS_PER_TYPE 16
 
 #include <task.h>
 

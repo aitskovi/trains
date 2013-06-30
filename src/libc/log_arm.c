@@ -1,6 +1,8 @@
 #include <log.h>
 #include <bwio.h>
 #include <write_server.h>
+#include <sprintf.h>
+#include <string.h>
 
 #define MAX_PRINTABLE 200
 

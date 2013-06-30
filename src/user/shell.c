@@ -18,6 +18,7 @@
 #include <ts7200.h>
 #include <string.h>
 #include <sensor_widget.h>
+#include <track.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -42,6 +43,10 @@ int is_numeric(char c) {
 
 int is_direction(char c) {
     return c == 'S' || c == 'C';
+}
+
+int is_track(char c) {
+    return c == 'A' || c == 'B';
 }
 
 int parse_uint(char **src) {
@@ -69,6 +74,20 @@ int parse_direction(char **src) {
 
     if (!is_direction(*str)) return -1;
     int result = *str == 'S' ? STRAIGHT : CURVED;
+    ++str;
+
+    *src = str;
+
+    return result;
+}
+
+int parse_track(char **src) {
+    char* str = *src;
+
+    while(is_whitespace(*str)) ++str;
+
+    if (!is_track(*str)) return -1;
+    int result = *str == 'A' ? TRACK_A : TRACK_B;
     ++str;
 
     *src = str;
@@ -132,6 +151,20 @@ int parse_sw(char *str, int *number, int *direction) {
     return 1;
 }
 
+int parse_in(char *str, int *track) {
+    while(is_whitespace(*str)) ++str;
+
+    if (*str != 'i') return 0;
+    str++;
+    if (*str != 'n') return 0;
+    str++;
+
+    *track = parse_track(&str);
+    if (*track == -1) return 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -163,7 +196,7 @@ void shell() {
     while (1) {
         char command[50 + LINE_BUFFER_SIZE];
         char *pos;
-        int train, speed, number, direction;
+        int train, speed, number, direction, track;
 
         // Get a character
         char c = Getc(COM2);
@@ -178,6 +211,8 @@ void shell() {
                 Reverse(train);
             } else if (parse_sw(line_buffer, &number, &direction)) {
                 SetSwitch(number, direction);
+            } else if (parse_in(line_buffer, &track)) {
+                track_initialize(track);
             }
 
             reset_shell();
@@ -202,6 +237,5 @@ void shell() {
         *pos++ = c;
         Write(COM2, command, pos - command);
     }
-
 }
 
