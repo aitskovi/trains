@@ -1,6 +1,7 @@
 #include <sensor_widget.h>
 
 #include <dassert.h>
+#include <encoding.h>
 #include <log.h>
 #include <memory.h>
 #include <nameserver.h>
@@ -67,23 +68,23 @@ void sensor_widget() {
 
     // Deal with our subscription.
     int tid;
-    SensorServerMessage msg, rply;
+    struct Message msg, rply;
     sensor_list_print(triggered_sensor, triggered_number);
-        for(;;) {
-            Receive(&tid, (char *) &msg, sizeof(msg));
-            switch(msg.type) {
-                case SENSOR_COURIER_REQUEST: {
-                    rply.type = SENSOR_COURIER_RESPONSE;
-                    Reply(tid, (char *) &rply, sizeof(rply));
 
-                    int error = sensor_list_add(triggered_sensor, triggered_number, msg.sensor, msg.number);
-                    if (!error) sensor_list_print(triggered_sensor, triggered_number);
-                }
-                    break;
-                default:
-                    dassert(0, "Invalid Sensor Widget Request");
-                    break;
-            }
+    for(;;) {
+        // Recieve a Sensor Message.
+        Receive(&tid, (char *) &msg, sizeof(msg));
+        dassert(msg.type == SENSOR_SERVER_MESSAGE, "Invalid Message");
+        dassert(msg.ss_msg.type == SENSOR_COURIER_REQUEST, "Invalid Sensor Widget Request");
+
+        // Ack Sensor Message.
+        rply.type = SENSOR_SERVER_MESSAGE;
+        rply.ss_msg.type = SENSOR_COURIER_RESPONSE;
+        Reply(tid, (char *) &rply, sizeof(rply));
+
+        // Update Sensor List.
+        int error = sensor_list_add(triggered_sensor, triggered_number, msg.ss_msg.sensor, msg.ss_msg.number);
+        if (!error) sensor_list_print(triggered_sensor, triggered_number);
     }
 
     Exit();
