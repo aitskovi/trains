@@ -22,7 +22,7 @@ void sensor_notifier() {
     int sensor_server_tid = -2;
     do {
         sensor_server_tid = WhoIs("SensorServer");
-        dlog("Sensor Server Tid %d\n", clock_server_tid);
+        dlog("Sensor Server Tid %d\n", sensor_server_tid);
     } while (sensor_server_tid < 0);
 
     // Set up sensors.

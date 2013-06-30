@@ -2,6 +2,7 @@
 
 #include <sensor_server.h>
 #include <circular_queue.h>
+#include <ts7200.h>
 
 #define INVALID_SENSOR -3
 
@@ -54,7 +55,7 @@ int sensorservice_process_data(struct SensorService *service, char *data) {
 int sensorservice_push(struct SensorService *service, char sensor, int number) {
     int sensor_num = sensor_to_int(sensor);
     if (sensor_num == -1) return INVALID_SENSOR;
-    
+
     return circular_queue_push(&(service->sensor_data[sensor_num]), (void *)number);
 }
 
@@ -68,7 +69,7 @@ int sensorservice_pop(struct SensorService *service, char *sensor, int *number, 
 
             int j;
             for (j = 0; j < MAX_SUBSCRIBERS; ++j) {
-                subscribers[i] = service->subscribers[i];
+                subscribers[j] = service->subscribers[j];
             }
 
             return 0;

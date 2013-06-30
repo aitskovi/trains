@@ -21,55 +21,6 @@
 #include <sensor_courier.h>
 #include <task.h>
 
-typedef int bool;
-
-#define true 1
-#define false 0
-
-static char triggered_sensor[NUM_READINGS];
-static int triggered_number[NUM_READINGS];
-
-void process_sensors(char *data);
-
-void sensor_list_print() {
-
-    char command[512];
-    char *pos = &command[0];
-
-    pos += sprintf(pos, "\0337\033[%u;%uH\033[K", SENSOR_LIST_HEIGHT, 1);
-    pos += sprintf(pos, "Recently Triggered:");
-
-    int i;
-    for (i = 0; i < NUM_READINGS; ++i) {
-        if (triggered_number[i] == 0) break;
-        pos += sprintf(pos, " %c%d ", triggered_sensor[i], triggered_number[i]);
-    }
-
-    pos += sprintf(pos, "\0338");
-
-    Write(COM2, command, pos - command);
-}
-
-void sensor_list_add(char sensor, int number) {
-    // Dedupe, we get a lot of fast triggers for same sensor.
-    if (triggered_sensor[0] == sensor && triggered_number[0] == number) return;
-
-    int i;
-    for (i = NUM_READINGS - 1; i > 0; --i) {
-        triggered_sensor[i] = triggered_sensor[i - 1];
-        triggered_number[i] = triggered_number[i - 1];
-    }
-    triggered_sensor[0] = sensor;
-    triggered_number[0] = number;
-}
-
-void sensors_init() {
-    memset(triggered_sensor, 0, sizeof(triggered_sensor));
-    memset(triggered_number, 0, sizeof(triggered_number));
-
-    sensor_list_print();
-}
-
 /**
  * Send a notification message through the courier.
  */
@@ -79,6 +30,7 @@ int publish(struct SensorService *service, int tid) {
 
     int result = sensorservice_pop(service, &(rply.sensor), &(rply.number), rply.subscribers);
     if (result == -1) return -1;
+
     Reply(tid, (char *) &rply, sizeof(rply));
 
     return 0;
@@ -96,9 +48,6 @@ void sensor_server() {
 
     // Create the thing distributing our sensor data.
     Create(HIGH, sensor_courier);
-
-    // Initialize our sensor thing.
-    sensors_init();
 
     int tid;
     SensorServerMessage msg, rply;
@@ -137,4 +86,12 @@ void sensor_server() {
     }
 
     Exit();
+}
+
+
+void sensor_server_subscribe(int server) {
+    SensorServerMessage msg, rply;
+    msg.type = SENSOR_SUBSCRIBE_REQUEST;
+    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    dassert(rply.type == SENSOR_SUBSCRIBE_RESPONSE, "Invalid Response from SensorServer");
 }

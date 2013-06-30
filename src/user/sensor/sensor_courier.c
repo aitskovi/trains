@@ -25,7 +25,6 @@ void sensor_courier() {
         Send(sensor_server_tid, (char *)&msg, sizeof(msg), (char *)&producer_rply, sizeof(producer_rply));
         dassert(producer_rply.type == SENSOR_COURIER_RESPONSE, "Invalid Response from SensorServer");
 
-        Write(COM2, "Sending Message to All\n", strlen("Sending Message to All\n"));
         // Format the message to consumers.
         msg.sensor = producer_rply.sensor;
         msg.number = producer_rply.number;
@@ -33,15 +32,15 @@ void sensor_courier() {
         // Send messageto all consumers.
         int i;
         for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
-            int subscriber = producer_rply.subscribers[0];
+            int subscriber = producer_rply.subscribers[i];
             while(subscriber) {
-                int bit = ffs(subscriber);
+                int bit = ffs(subscriber) - 1;
                 int tid = 32 * i + bit;
 
                 Send(tid, (char *)&msg, sizeof(msg), (char *)&consumer_rply, sizeof(consumer_rply));
                 dassert(consumer_rply.type == SENSOR_COURIER_RESPONSE, "Invalid Response from SensorServer");
 
-                subscriber &= ~(1 << tid); // Negate the bit we used.
+                subscriber &= ~(1 << bit); // Negate the bit we used.
             }
         }
     }

@@ -31,7 +31,8 @@ ARMOBJECTS = kernel.o\
 			 sensor_server.o\
 			 switch_server.o\
 			 sensor_notifier.o\
-			 sensor_courier.o
+			 sensor_courier.o\
+			 sensor_widget.o
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
@@ -63,6 +64,7 @@ OBJECTS = bwio.o\
 		  clock_widget.o\
 		  ring_buffer.o\
 		  sensor_service.o
+		  #track_data.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
 

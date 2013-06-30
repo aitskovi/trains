@@ -17,6 +17,7 @@
 #include <switch_server.h>
 #include <ts7200.h>
 #include <string.h>
+#include <sensor_widget.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -154,6 +155,7 @@ void shell() {
 
     // Start the clock
     Create(LOW, clock_widget);
+    Create(LOW, sensor_widget);
 
     Create(HIGH, sensor_server);
     Create(HIGH, switch_server);
