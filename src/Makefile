@@ -2,7 +2,7 @@
 # Makefile for busy-wait IO tests
 #
 
-PARSE_TRACK = parse_track
+PARSE_TRACK = ../bin/parse_track
 
 VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/
 INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor
@@ -63,8 +63,8 @@ OBJECTS = bwio.o\
 		  shell.o\
 		  clock_widget.o\
 		  ring_buffer.o\
-		  sensor_service.o
-		  #track_data.o
+		  sensor_service.o\
+		  track_data.o
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
 
