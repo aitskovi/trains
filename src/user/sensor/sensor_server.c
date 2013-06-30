@@ -81,7 +81,7 @@ void sensor_server() {
                 sensorservice_subscribe(&service, tid);
                 break;
             default:
-                dassert(false, "Invalid SensorServer Request");
+                ulog("Invalid SensorServer Request");
         }
     }
 

@@ -7,6 +7,11 @@
 void log(char *format, ...);
 
 /**
+ * Log some data onto the screen in user mode.
+ */
+void ulog(char *format, ...);
+
+/**
  * Log some debug data onto the screen. This only
  * gets printed if DEBUG is defined.
  */
