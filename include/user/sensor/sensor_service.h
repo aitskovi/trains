@@ -14,6 +14,13 @@ struct SensorService {
 char int_to_sensor(int i);
 int sensor_to_int(char c);
 
+void sensorservice_initialize(struct SensorService *service);
+
+/**
+ * Handle batch data input from sensors.
+ */
+int sensorservice_process_data(struct SensorService *service, char *data);
+
 /**
  * Add a sensor hit to the service.
  */

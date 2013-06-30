@@ -20,14 +20,27 @@
 enum SENSOR_SERVER_MESSAGE_TYPE {
     SENSOR_EVENT_REQUEST,
     SENSOR_EVENT_RESPONSE,
-    SENSOR_DATA_SUBSCRIBE_REQUEST,
-    SENSOR_DATA_SUBSCRIBE_RESPONSE,
+    SENSOR_COURIER_REQUEST,
+    SENSOR_COURIER_RESPONSE,
+    SENSOR_SUBSCRIBE_REQUEST,
+    SENSOR_SUBSCRIBE_RESPONSE,
 };
 
 typedef struct SensorServerMessage {
     unsigned int type;
+
+    /*
+     * All sensor Data.
+     */
     char data[SENSOR_DATA_SIZE];
+
+    /**
+     * Single Sensor Data.
+     */
+    char sensor;
+    int number;
     int subscribers[MAX_SUBSCRIBERS];
+
 } SensorServerMessage;
 
 void sensor_server();

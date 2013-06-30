@@ -18,6 +18,7 @@
 #include <syscall.h>
 #include <sensor_notifier.h>
 #include <sensor_service.h>
+#include <task.h>
 
 typedef int bool;
 
@@ -61,34 +62,6 @@ void sensor_list_add(char sensor, int number) {
     triggered_number[0] = number;
 }
 
-void process_sensors(char *data) {
-    bool changed = false;
-    int i, j;
-    for (i = 0; i < 5; ++i) {
-        for (j = 0; j < 2; ++j) {
-            int sensor = i * 2 + j;
-            int bit = 128;
-            int d = data[sensor];
-
-            int k = 0;
-            for (; k < 8; ++k) {
-                if (d >= bit) {
-                    char sensor = int_to_sensor(i);
-                    int number = 8 * j + k + 1;
-                    sensor_list_add(sensor, number);
-                    d -= bit;
-                    changed = true;
-                }
-                bit /= 2;
-            }
-        }
-    }
-
-    if (changed) sensor_list_print();
-}
-
-
-
 void sensors_init() {
     memset(triggered_sensor, 0, sizeof(triggered_sensor));
     memset(triggered_number, 0, sizeof(triggered_number));
@@ -96,7 +69,25 @@ void sensors_init() {
     sensor_list_print();
 }
 
+/**
+ * Send a notification message through the courier.
+ */
+int publish(struct SensorService *service, int tid) {
+    SensorServerMessage rply;
+    rply.type = SENSOR_COURIER_RESPONSE;
+
+    int result = sensorservice_pop(service, &(rply.sensor), &(rply.number), rply.subscribers);
+    if (result == -1) return -1;
+    Reply(tid, (char *) &rply, sizeof(rply));
+
+    return 0;
+}
+
 void sensor_server() {
+    tid_t courier = -1;
+    struct SensorService service;    
+    sensorservice_initialize(&service);
+
     RegisterAs("SensorServer");
 
     // Create the thing sending us sensor messages.
@@ -115,7 +106,26 @@ void sensor_server() {
                 rply.type = SENSOR_EVENT_RESPONSE;
                 Reply(tid, (char *) &rply, sizeof(rply));
 
-                process_sensors(msg.data);
+                sensorservice_process_data(&service, msg.data);
+
+                // Wake-up a a waiting courier if we have one.
+                if (courier >= 0) {
+                    if (publish(&service, courier) != -1) {
+                        courier = 0;
+                    }
+                }
+                break;
+            case SENSOR_COURIER_REQUEST: {
+                int result = publish(&service, tid);
+                if (result == -1) {
+                    courier = tid;
+                }
+                break;
+            }
+            case SENSOR_SUBSCRIBE_REQUEST:
+                rply.type = SENSOR_SUBSCRIBE_RESPONSE;
+                Reply(tid, (char *) &rply, sizeof(rply));
+                sensorservice_subscribe(&service, tid);
                 break;
             default:
                 dassert(false, "Invalid SensorServer Request");
