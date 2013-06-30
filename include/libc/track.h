@@ -11,7 +11,7 @@ int track_initialize(char track);
 /**
  * Generate the next sensor on the track we can hit.
  */
-int track_next_sensors(int node, struct track_node* sensors);
+int track_next_sensors(int node, struct track_node** sensors);
 
 int sensor_to_idx(char sensor, int num);
 
