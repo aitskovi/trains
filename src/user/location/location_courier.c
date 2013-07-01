@@ -18,7 +18,6 @@ void location_courier() {
         location_server_tid = WhoIs("LocationServer");
         dlog("Location Server Tid %d\n", location_server_tid);
     } while (location_server_tid < 0);
-    ulog("\nSending to LocationServer %d\n", location_server_tid);
 
     struct Message producer_msg, producer_rply;
     struct Message consumer_msg, consumer_rply;

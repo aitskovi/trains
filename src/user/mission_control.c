@@ -10,6 +10,8 @@
 #include <dassert.h>
 #include <syscall.h>
 #include <train_task.h>
+#include <nameserver.h>
+#include <track.h>
 
 #define MAX_TRAINS 5
 
@@ -59,8 +61,8 @@ void mission_control() {
     ShellMessage *sh_msg = &msg.sh_msg;
     ShellMessage *sh_reply = &reply.sh_msg;
 
-    TrainMessage *tr_msg = &msg.sh_msg;
-    TrainMessage *tr_reply = &reply.sh_msg;
+    TrainMessage *tr_msg = &msg.tr_msg;
+    TrainMessage *tr_reply = &reply.tr_msg;
 
     TrainMessage *queued_instruction;
 
@@ -152,6 +154,8 @@ void mission_control() {
         /*
          * TODO Location update
          */
+        default:
+            cuassert(0, "Mission control recieved unknown message");
         }
     }
 
