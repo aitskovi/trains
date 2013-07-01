@@ -27,26 +27,23 @@ int track_initialize(char track_name) {
  * Do a dfs until we hit all sensors after us.
  */
 int track_sensor_search(struct track_node *node, struct track_node **sensors) {
+    struct track_node **iterator = sensors;
     int i;
-    int sensors_found = 0;
-    for (i = 0; i < 2; ++i) {
-        struct track_edge *edge = &node->edge[i];
-        if (edge == 0) continue;
-
+    for (i = 0; i < NUM_NODE_EDGES[node->type]; ++i) {
+        struct track_edge *edge = &(node->edge[i]);
         struct track_node *child = edge->dest;
+        if(!child) continue;
 
         if (child->type == NODE_SENSOR) {
-            *sensors = child;
-            sensors++;
-            sensors_found++;
+            *iterator = child;
+            iterator++;
         } else {
-            int found = track_sensor_search(node, sensors);
-            sensors += found;
-            sensors_found += found;
+            int found = track_sensor_search(child, iterator);
+            iterator += found;
         }
     }
 
-    return sensors_found;
+    return iterator - sensors;
 }
 
 /**
@@ -64,7 +61,7 @@ int sensor_to_idx(char sensor, int num) {
 
 int idx_to_sensor(int idx, char *sensor, int *num) {
     *sensor = 'A' + (idx / SENSORS_PER_TYPE);
-    *num = idx % 16;
+    *num = idx % 16 + 1;
     return 0;
 }
 
@@ -72,6 +69,7 @@ int sensor_eq(track_node *sensor, char name, int num) {
     char name_b = 0;
     int num_b = 0;
     idx_to_sensor(sensor->num, &name_b, &num_b);
+    ulog("Checking Equality for %c%d, %c%d\n", name, num, name_b, num_b);
     return name == name_b && num == num_b;
 }
 

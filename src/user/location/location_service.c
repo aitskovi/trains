@@ -31,7 +31,7 @@ int locationservice_associate(struct LocationService *service,
     }
     
     // Find next sensor.
-    track_sensor_search(sensor, train->sensors);
+    int num_sensors = track_sensor_search(sensor, train->sensors);
 
     // Add an event of this train to our event_queue.
     circular_queue_push(&(service->events), (void *)train->number);
@@ -40,14 +40,12 @@ int locationservice_associate(struct LocationService *service,
 }
 
 int locationservice_sensor_event(struct LocationService *service, char name, int number) {
-    ulog("\nLooking for train for %c%d\n", name, number);
-    
     // Look for a train waiting for that sensor.
     int i;
     for (i = 0; i < service->num_trains; ++i) {
         struct TrainLocation *train = &(service->trains[i]);
-        int j;
 
+        int j;
         for (j = 0; j < MAX_PENDING_SENSORS; ++j) {
             struct track_node *sensor = train->sensors[j];
             if (!sensor) continue;
