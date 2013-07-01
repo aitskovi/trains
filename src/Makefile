@@ -13,6 +13,8 @@ else
 	include arm.mk
 endif
 
+CFLAGS += -DCRITICAL
+
 ARMOBJECTS = kernel.o\
 			 context_switch.o\
 			 user.o\

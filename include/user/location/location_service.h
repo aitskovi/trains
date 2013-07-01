@@ -6,7 +6,6 @@
 
 #define MAX_PENDING_SENSORS 4
 #define MAX_TRAINS 8
-#define MAX_SUBSCRIBERS (MAX_TASKS - 1 / 32) + 1
 
 struct TrainLocation {
     int number;
@@ -38,12 +37,12 @@ int locationservice_add_train(struct LocationService *service, int train);
 /**
  * Get an event from the service.
  */
-int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, int *distance);
+int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, int *distance, int *subscribers);
 
 /**
  * Subscribe to LocationService events.
  */
-int sensorservice_subscribe(struct LocationService *service, int tid);
+int locationservice_subscribe(struct LocationService *service, int tid);
 
 /**
  * Unsubscribe to LocationService events.

@@ -33,7 +33,7 @@ int location_publish(struct LocationService *service, int tid) {
     rply.type = LOCATION_SERVER_MESSAGE;
     rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
 
-    int result = locationservice_pop(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.distance));
+    int result = locationservice_pop(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.distance), rply.ls_msg.subscribers);
     if (result == -1) return -1;
 
     Reply(tid, (char *) &rply, sizeof(rply));
@@ -51,7 +51,7 @@ void LocationServer() {
     RegisterAs("LocationServer");
 
     // Create Courier
-    Create(HIGH, LocationCourier);
+    Create(HIGH, location_courier);
 
     // Find the sensor server and subscribe to it.
     int sensor_server_tid = -2;
@@ -61,7 +61,6 @@ void LocationServer() {
     } while (sensor_server_tid < 0);
     sensor_server_subscribe(sensor_server_tid);
 
-    train_display_init();
     // Start Serving Requests.
     int tid;
     struct Message msg, rply;
@@ -81,12 +80,12 @@ void LocationServer() {
 
                         if (courier >= 0) {
                             if (location_publish(&service, courier) != -1) {
-                                courier = 0;
+                                courier = -1;
                             }
                         }
                         break;
                     default:
-                        ulog("Warning: Invalid Message Received\n");
+                        ulog("\nWarning: Invalid Message Received\n");
                         break;
                 }
             }
@@ -107,6 +106,12 @@ void LocationServer() {
                         Reply(tid, (char *) &rply, sizeof(rply));
 
                         locationservice_add_train(&service, ls_msg->train);
+
+                        if (courier >= 0) {
+                            if (location_publish(&service, courier) != -1) {
+                                courier = -1;
+                            }
+                        }
                         break;
                     case LOCATION_COURIER_REQUEST: {
                         int result = location_publish(&service, tid);
@@ -115,13 +120,25 @@ void LocationServer() {
                         }
                     }
                         break;
+                    default:
+                        ulog("\nWARNING: Invalid Message Recieved\n");
+                        break;
                 }
             }
                 break;
             default:
-                ulog("WARNING: Invalid Message Received\n");
+                ulog("\nWARNING: Invalid Message Received\n");
         }
     }
 
     Exit();
+}
+
+void location_server_subscribe(int server) {
+    struct Message msg, rply;
+    msg.type = LOCATION_SERVER_MESSAGE;
+    msg.ls_msg.type = LOCATION_SUBSCRIBE_REQUEST;
+    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    cuassert(rply.type == LOCATION_SERVER_MESSAGE, "Invalid Response from LocationServer");
+    cuassert(rply.ls_msg.type == LOCATION_SUBSCRIBE_RESPONSE, "Invalid Response from Location Server");
 }

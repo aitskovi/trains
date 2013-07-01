@@ -19,6 +19,7 @@ void locationservice_initialize(struct LocationService *service) {
  * Associate a specific train with a sensor.
  */
 int locationservice_associate(struct LocationService *service,
+                              int index,
                               struct TrainLocation *train, 
                               track_node *sensor) {
     train->landmark = sensor;
@@ -32,7 +33,7 @@ int locationservice_associate(struct LocationService *service,
     track_sensor_search(sensor, train->sensors);
 
     // Add an event of this train to our event_queue.
-    circular_queue_push(&(service->events), (void *)train->number);
+    circular_queue_push(&(service->events), (void *)index);
 
     return 0;
 }
@@ -49,8 +50,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
             if (!sensor) continue;
 
             if (sensor_eq(sensor, name, number)) {
-                locationservice_associate(service, train, sensor);
-                train_display_update(i, train);
+                locationservice_associate(service, i, train, sensor);
                 return 0;
             }
         }
@@ -62,8 +62,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
         struct TrainLocation *train = &(service->trains[service->num_trains - 1]);
         if (train->landmark == 0) {
             track_node *sensor = track_get_sensor(name, number);
-            locationservice_associate(service, train, sensor);
-            train_display_update(service->num_trains - 1, train);
+            locationservice_associate(service, service->num_trains - 1, train, sensor);
         }
         
         return 0;
@@ -84,18 +83,18 @@ int locationservice_add_train(struct LocationService *service, int train) {
         tlocation->sensors[i] = 0;
     }
 
-    // Add the train to printout.
-    train_display_update(service->num_trains, tlocation);
+    // Add the train to event.
+    circular_queue_push(&(service->events), (void *)service->num_trains);
 
     ++service->num_trains;
-
 
     return 0;
 }
 
 int locationservice_pop(struct LocationService *service, int *train,
                                                          struct track_node** landmark,
-                                                         int *distance) {
+                                                         int *distance,
+                                                         int *subscribers) {
     if (circular_queue_empty(&(service->events))) return -1;
 
     int event = (int)circular_queue_pop(&service->events);
@@ -104,6 +103,11 @@ int locationservice_pop(struct LocationService *service, int *train,
     *train = tlocation->number;
     *landmark = tlocation->landmark;
     *distance = tlocation->distance;
+
+    int i;
+    for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
+        subscribers[i] = service->subscribers[i];
+    }
 
     return 0;
 }

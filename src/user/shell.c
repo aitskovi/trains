@@ -19,6 +19,7 @@
 #include <sensor_widget.h>
 #include <track.h>
 #include <location_server.h>
+#include <train_widget.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -203,6 +204,7 @@ void shell() {
     // Start the clock
     Create(LOW, clock_widget);
     Create(LOW, sensor_widget);
+    Create(LOW, train_widget);
 
     Create(HIGH, switch_server);
 

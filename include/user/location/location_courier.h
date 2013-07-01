@@ -1,6 +1,6 @@
 #ifndef _LOCATION_COURIER_H_
 #define _LOCATION_COURIER_H_
 
-void LocationCourier();
+void location_courier();
 
 #endif

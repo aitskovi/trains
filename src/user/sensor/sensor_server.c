@@ -64,7 +64,7 @@ void sensor_server() {
                 // Wake-up a a waiting courier if we have one.
                 if (courier >= 0) {
                     if (publish(&service, courier) != -1) {
-                        courier = 0;
+                        courier = -1;
                     }
                 }
                 break;
