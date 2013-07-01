@@ -24,6 +24,7 @@ int Getc(int channel) {
             break;
         default:
             dlog("Sending to invalid Channel!\n");
+            break;
     }
 
     if (server_tid < 0) {

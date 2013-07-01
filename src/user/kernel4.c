@@ -14,7 +14,7 @@
 #include <ts7200.h>
 #include <uart.h>
 #include <shell.h>
-#include <train_server.h>
+#include <mission_control.h>
 
 void first() {
     // Setup the timer.
@@ -46,7 +46,7 @@ void first() {
     configure_reader(read_server_tid_1, COM1);
     configure_reader(read_server_tid_2, COM2);
 
-    Create(HIGH, train_server);
+    Create(HIGHER, mission_control);
 
     int shell_tid = Create(MEDIUM, shell);
 

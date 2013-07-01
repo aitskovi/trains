@@ -11,7 +11,7 @@
 #include <write_server.h>
 #include <read_server.h>
 #include <syscall.h>
-#include <train_server.h>
+#include <mission_control.h>
 #include <clock_widget.h>
 #include <switch_server.h>
 #include <ts7200.h>
@@ -20,6 +20,9 @@
 #include <track.h>
 #include <location_server.h>
 #include <train_widget.h>
+#include <encoding.h>
+#include <nameserver.h>
+#include <dassert.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -195,6 +198,12 @@ void reset_shell() {
 }
 
 void shell() {
+
+    tid_t mission_control_tid;
+    do {
+        mission_control_tid = WhoIs("MissionControl");
+    } while (mission_control_tid  < 0);
+
     // Clear the screen.
     Write(COM2, (char *)CLEAR_SCREEN, strlen((char *)CLEAR_SCREEN));
 
@@ -208,6 +217,10 @@ void shell() {
 
     Create(HIGH, switch_server);
 
+
+    Message msg, reply;
+    msg.type = SHELL_MESSAGE;
+    ShellMessage *sh_msg = &msg.sh_msg;
     while (1) {
         char command[50 + LINE_BUFFER_SIZE];
         char *pos;
@@ -221,15 +234,36 @@ void shell() {
             if (parse_q(line_buffer)) {
                 Exit();
             } else if (parse_tr(line_buffer, &train, &speed)) {
-                SetSpeed(train, speed);
+                sh_msg->type = SET_TRAIN_SPEED;
+                sh_msg->speed = speed;
+                sh_msg->train_no = train;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                // TODO assert message response
             } else if (parse_rv(line_buffer, &number)) {
-                Reverse(train);
+                sh_msg->type = REVERSE_TRAIN;
+                sh_msg->train_no = number;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                // TODO assert message response
             } else if (parse_sw(line_buffer, &number, &direction)) {
-                SetSwitch(number, direction);
+                sh_msg->type = SET_SWITCH_POSITION;
+                sh_msg->switch_no = number;
+                sh_msg->switch_pos = direction;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                // TODO assert message response
             } else if (parse_in(line_buffer, &track)) {
-                track_initialize(track);
+                sh_msg->type = INIT_TRACK;
+                sh_msg->track = track;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
             } else if (parse_ad(line_buffer, &number)) {
-                AddTrain(number);
+                ulog("\nShell initializing track");
+
+                sh_msg->type = ADD_TRAIN;
+                sh_msg->train_no = number;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
             }
 
             reset_shell();

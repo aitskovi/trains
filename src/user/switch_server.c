@@ -24,7 +24,7 @@ typedef int bool;
 
 static tid_t server_tid = -1;
 
-int switch_update(int number, enum direction position);
+int switch_update(int number, unsigned char position);
 
 void switches_init() {
     char command[1024];
@@ -70,7 +70,7 @@ bool is_normal_switch(int number) {
     return number >= 1 && number <= NUM_SWITCHES;
 }
 
-int switch_update(int number, enum direction position) {
+int switch_update(int number, unsigned char position) {
     int index;
     if (is_normal_switch(number)) {
         index = number - 1;
@@ -92,13 +92,13 @@ int switch_update(int number, enum direction position) {
     return 0;
 }
 
-void switch_set(int turnout, enum direction state) {
+void switch_set(int turnout, unsigned char state) {
     char command[3] = {state, turnout, 32};
     Write(COM1, command, 3);
     switch_update(turnout, state);
 }
 
-int SetSwitch(switch_t switch_no, enum direction direction) {
+int SetSwitch(switch_t switch_no, unsigned char direction) {
     if (server_tid < 0) {
         return -1;
     }

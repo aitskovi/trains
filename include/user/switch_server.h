@@ -9,10 +9,9 @@
 #define SWITCH_SERVER_H_
 
 typedef unsigned char switch_t;
-enum direction {
-    STRAIGHT = 33,
-    CURVED = 34
-};
+
+#define STRAIGHT 33
+#define CURVED 34
 
 typedef struct SwitchServerMessage {
     enum {
@@ -20,11 +19,11 @@ typedef struct SwitchServerMessage {
         SET_SWITCH_RESPONSE
     } type;
     switch_t switch_no;
-    enum direction direction;
+    unsigned char direction;
 } SwitchServerMessage;
 
 
-int SetSwitch(switch_t switch_no, enum direction direction);
+int SetSwitch(switch_t switch_no, unsigned char direction);
 void switch_server();
 
 #endif /* SWITCH_SERVER_H_ */

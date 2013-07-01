@@ -29,7 +29,6 @@ ARMOBJECTS = kernel.o\
 			 read_notifier.o\
 			 read_server.o\
 			 swi_arm.o\
-			 train_server.o\
 			 sensor_server.o\
 			 switch_server.o\
 			 sensor_notifier.o\
@@ -37,7 +36,9 @@ ARMOBJECTS = kernel.o\
 			 sensor_widget.o\
 			 location_server.o\
 			 location_service.o\
-			 location_courier.o
+			 location_courier.o\
+			 mission_control.o\
+			 train_task.o
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
