@@ -21,5 +21,7 @@ int track_sensor_search(struct track_node *node, struct track_node **sensors);
 int sensor_to_idx(char sensor, int num);
 
 track_node *track_get_sensor(char sensor, int num);
+int sensor_eq(track_node *sensor, char name, int num);
+
 
 #endif

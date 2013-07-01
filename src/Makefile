@@ -34,7 +34,8 @@ ARMOBJECTS = kernel.o\
 			 sensor_courier.o\
 			 sensor_widget.o\
 			 location_server.o\
-			 location_service.o
+			 location_service.o\
+			 location_courier.o
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o

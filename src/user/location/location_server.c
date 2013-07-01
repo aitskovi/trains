@@ -8,6 +8,7 @@
 #include <syscall.h>
 #include <sensor_server.h>
 #include <task.h>
+#include <location_courier.h>
 
 static tid_t server_tid = -1;
 
@@ -24,6 +25,22 @@ int AddTrain(int number) {
     return 0;
 }
 
+/**
+ * Publish a location through the courier.
+ */
+int location_publish(struct LocationService *service, int tid) {
+    struct Message rply;
+    rply.type = LOCATION_SERVER_MESSAGE;
+    rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
+
+    int result = locationservice_pop(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.distance));
+    if (result == -1) return -1;
+
+    Reply(tid, (char *) &rply, sizeof(rply));
+
+    return 0;
+}
+
 void LocationServer() {
     server_tid = MyTid();
     tid_t courier = -1;
@@ -33,8 +50,8 @@ void LocationServer() {
 
     RegisterAs("LocationServer");
 
-    // TODO: Add Courier
-    // Create(HIGH, location_courier);
+    // Create Courier
+    Create(HIGH, LocationCourier);
 
     // Find the sensor server and subscribe to it.
     int sensor_server_tid = -2;
@@ -61,6 +78,12 @@ void LocationServer() {
                         Reply(tid, (char *) &rply, sizeof(rply));
 
                         locationservice_sensor_event(&service, ss_msg->sensor, ss_msg->number);
+
+                        if (courier >= 0) {
+                            if (location_publish(&service, courier) != -1) {
+                                courier = 0;
+                            }
+                        }
                         break;
                     default:
                         ulog("Warning: Invalid Message Received\n");
@@ -74,8 +97,10 @@ void LocationServer() {
                 LocationServerMessage *ls_msg = &(msg.ls_msg);
                 switch(ls_msg->type) {
                     case LOCATION_SUBSCRIBE_REQUEST:
-                        // TODO: Add Subscribe API
-                        // locationservice_subscribe(...);
+                        rply.ls_msg.type = LOCATION_SUBSCRIBE_RESPONSE;
+                        Reply(tid, (char *) &rply, sizeof(rply));
+
+                        locationservice_subscribe(&service, tid);
                         break;
                     case LOCATION_TRAIN_REQUEST:
                         rply.ls_msg.type = LOCATION_TRAIN_RESPONSE;
@@ -83,9 +108,12 @@ void LocationServer() {
 
                         locationservice_add_train(&service, ls_msg->train);
                         break;
-                    case LOCATION_COURIER_REQUEST:
-                        // TODO: Add Courier API
-                        //locationservice_pop(...);
+                    case LOCATION_COURIER_REQUEST: {
+                        int result = location_publish(&service, tid);
+                        if (result == -1) {
+                            courier = tid;
+                        }
+                    }
                         break;
                 }
             }

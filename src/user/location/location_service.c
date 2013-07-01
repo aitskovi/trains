@@ -4,8 +4,6 @@
 #include <track.h>
 #include <track_node.h>
 
-void print_train(struct TrainLocation *train);
-
 void locationservice_initialize(struct LocationService *service) {
     service->num_trains = 0;
 
@@ -31,7 +29,7 @@ int locationservice_associate(struct LocationService *service,
     }
     
     // Find next sensor.
-    int num_sensors = track_sensor_search(sensor, train->sensors);
+    track_sensor_search(sensor, train->sensors);
 
     // Add an event of this train to our event_queue.
     circular_queue_push(&(service->events), (void *)train->number);
@@ -95,11 +93,36 @@ int locationservice_add_train(struct LocationService *service, int train) {
     return 0;
 }
 
-void print_train(struct TrainLocation *train) {
-    if (train->landmark) {
-        ulog("Train %d, %d cm past %c%d\n", train->number, train->distance, train->landmark->name, 
-                train->landmark->num);
-    } else {
-        ulog("Train %d, unassigned\n", train->number);
-    }
+int locationservice_pop(struct LocationService *service, int *train,
+                                                         struct track_node** landmark,
+                                                         int *distance) {
+    if (circular_queue_empty(&(service->events))) return -1;
+
+    int event = (int)circular_queue_pop(&service->events);
+
+    struct TrainLocation *tlocation = &(service->trains[event]);
+    *train = tlocation->number;
+    *landmark = tlocation->landmark;
+    *distance = tlocation->distance;
+
+    return 0;
+}
+
+
+int locationservice_subscribe(struct LocationService *service, int tid) {
+    int section = tid / 32;
+    int bit = 1 << (tid % 32);
+
+    service->subscribers[section] |= bit;
+
+    return 0;
+}
+
+int locationservice_unsubscribe(struct LocationService *service, int tid) {
+    int section = tid / 32;
+    int bit  = 1 << (tid % 32);
+
+    service->subscribers[section] &= ~bit;
+
+    return 0;
 }

@@ -24,8 +24,31 @@ struct LocationService {
 };
 
 void locationservice_initialize(struct LocationService *service);
+
+/**
+ * Notify the locationservice of a sensor hit.
+ */
 int locationservice_sensor_event(struct LocationService *service, char name, int number);
+
+/**
+ * Add a train for LocationService to track.
+ */
 int locationservice_add_train(struct LocationService *service, int train);
+
+/**
+ * Get an event from the service.
+ */
+int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, int *distance);
+
+/**
+ * Subscribe to LocationService events.
+ */
+int sensorservice_subscribe(struct LocationService *service, int tid);
+
+/**
+ * Unsubscribe to LocationService events.
+ */
+int locationservice_unsubscribe(struct LocationService *service, int tid);
 
 
 #endif

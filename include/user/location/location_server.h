@@ -1,6 +1,8 @@
 #ifndef _LOCATION_SERVER_H_
 #define _LOCATION_SERVER_H_
 
+#include <task.h>
+
 enum LOCATION_SERVER_MESSAGE_TYPE {
     LOCATION_COURIER_REQUEST,       // Courier information.
     LOCATION_COURIER_RESPONSE,
@@ -14,9 +16,12 @@ struct track_node;
 
 typedef struct LocationServerMessage {
     int type;
+
     int train;
     struct track_node *landmark;
     int distance;
+
+    int subscribers[MAX_SUBSCRIBERS];
 } LocationServerMessage;
 
 void LocationServer();
