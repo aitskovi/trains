@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sensor_widget.h>
 #include <track.h>
+#include <location_server.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -164,6 +165,20 @@ int parse_in(char *str, int *track) {
     return 1;
 }
 
+int parse_ad(char *str, int *train) {
+    while(is_whitespace(*str)) ++str;
+
+    if (*str != 'a') return 0;
+    str++;
+    if (*str != 'd') return 0;
+    str++;
+
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -211,6 +226,8 @@ void shell() {
                 SetSwitch(number, direction);
             } else if (parse_in(line_buffer, &track)) {
                 track_initialize(track);
+            } else if (parse_ad(line_buffer, &number)) {
+                AddTrain(number);
             }
 
             reset_shell();
@@ -236,4 +253,3 @@ void shell() {
         Write(COM2, command, pos - command);
     }
 }
-

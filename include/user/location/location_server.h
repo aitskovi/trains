@@ -21,4 +21,6 @@ typedef struct LocationServerMessage {
 
 void LocationServer();
 
+int AddTrain(int number);
+
 #endif

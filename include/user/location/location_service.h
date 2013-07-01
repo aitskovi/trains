@@ -4,7 +4,7 @@
 #include <circular_queue.h>
 #include <task.h>
 
-#define MAX_PENDING_SENSORS 2
+#define MAX_PENDING_SENSORS 4
 #define MAX_TRAINS 8
 #define MAX_SUBSCRIBERS (MAX_TASKS - 1 / 32) + 1
 

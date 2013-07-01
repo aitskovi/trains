@@ -3,6 +3,8 @@
 #include <track_data.h>
 #include <log.h>
 
+#define SENSORS_PER_TYPE 16
+
 static track_node track[TRACK_MAX];
 
 int track_initialize(char track_name) {
@@ -57,7 +59,20 @@ int track_next_sensors(int node, struct track_node** sensors) {
 }
 
 int sensor_to_idx(char sensor, int num) {
-   return (int)(sensor - 'A') * 16 + (num - 1);
+    return (int)(sensor - 'A') * 16 + (num - 1);
+}
+
+int idx_to_sensor(int idx, char *sensor, int *num) {
+    *sensor = 'A' + (idx / SENSORS_PER_TYPE);
+    *num = idx % 16;
+    return 0;
+}
+
+int sensor_eq(track_node *sensor, char name, int num) {
+    char name_b = 0;
+    int num_b = 0;
+    idx_to_sensor(sensor->num, &name_b, &num_b);
+    return name == name_b && num == num_b;
 }
 
 track_node *track_get_sensor(char sensor, int num) {

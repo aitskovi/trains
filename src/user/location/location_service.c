@@ -4,11 +4,16 @@
 #include <track.h>
 #include <track_node.h>
 
+void print_train(struct TrainLocation *train);
+
 void locationservice_initialize(struct LocationService *service) {
-    memset(service->trains, 0, sizeof(struct TrainLocation) * MAX_TRAINS);
     service->num_trains = 0;
 
-    memset(service->subscribers, 0, sizeof(int) * 4);
+    int i;
+    for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
+        service->subscribers[i] = 0;
+    }
+
     circular_queue_initialize(&(service->events));
 }
 
@@ -20,10 +25,11 @@ int locationservice_associate(struct LocationService *service,
                               track_node *sensor) {
     train->landmark = sensor;
 
-    // Reset the sensor.
-    train->sensors[0] = 0;
-    train->sensors[1] = 0;
-
+    int i;
+    for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
+        train->sensors[i] = 0;
+    }
+    
     // Find next sensor.
     track_sensor_search(sensor, train->sensors);
 
@@ -34,16 +40,20 @@ int locationservice_associate(struct LocationService *service,
 }
 
 int locationservice_sensor_event(struct LocationService *service, char name, int number) {
+    ulog("\nLooking for train for %c%d\n", name, number);
+    
     // Look for a train waiting for that sensor.
     int i;
     for (i = 0; i < service->num_trains; ++i) {
         struct TrainLocation *train = &(service->trains[i]);
         int j;
+
         for (j = 0; j < MAX_PENDING_SENSORS; ++j) {
             struct track_node *sensor = train->sensors[j];
             if (!sensor) continue;
 
-            if (*(sensor->name) == name && sensor->num == number) {
+            if (sensor_eq(sensor, name, number)) {
+                ulog("\nUpdated Train %d with %c%d\n", train->number, name, number);
                 locationservice_associate(service, train, sensor);
                 return 0;
             }
@@ -68,9 +78,28 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
 int locationservice_add_train(struct LocationService *service, int train) {
     if (service->num_trains == MAX_TRAINS) return -1;
 
+    ulog("\nAdding Train %d\n", train);
+
     struct TrainLocation *tlocation = &(service->trains[service->num_trains]);
     tlocation->number = train;
+    tlocation->landmark = 0;
+    tlocation->distance = 0;
+    int i;
+    for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
+        tlocation->sensors[i] = 0;
+    }
     ++service->num_trains;
 
+    print_train(tlocation);
+
     return 0;
+}
+
+void print_train(struct TrainLocation *train) {
+    if (train->landmark) {
+        ulog("Train %d, %d cm past %c%d\n", train->number, train->distance, train->landmark->name, 
+                train->landmark->num);
+    } else {
+        ulog("Train %d, unassigned\n", train->number);
+    }
 }

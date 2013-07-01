@@ -1,5 +1,6 @@
 #include <location_server.h>
 
+#include <dassert.h>
 #include <encoding.h>
 #include <log.h>
 #include <location_service.h>
@@ -8,7 +9,23 @@
 #include <sensor_server.h>
 #include <task.h>
 
+static tid_t server_tid = -1;
+
+int AddTrain(int number) {
+    if (server_tid < 0) {
+        return -1;
+    }
+    struct Message msg, reply;
+    msg.type = LOCATION_SERVER_MESSAGE;
+    msg.ls_msg.type = LOCATION_TRAIN_REQUEST;
+    msg.ls_msg.train = number;
+    Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    dassert(reply.type == LOCATION_TRAIN_RESPONSE, "Invalid response from switch server");
+    return 0;
+}
+
 void LocationServer() {
+    server_tid = MyTid();
     tid_t courier = -1;
 
     struct LocationService service;
@@ -35,6 +52,7 @@ void LocationServer() {
 
         switch(msg.type) {
             case SENSOR_SERVER_MESSAGE: {
+                rply.type = SENSOR_SERVER_MESSAGE;
                 SensorServerMessage *ss_msg = &(msg.ss_msg);
                 switch(ss_msg->type) {
                     case SENSOR_COURIER_REQUEST:
