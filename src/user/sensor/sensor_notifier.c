@@ -32,12 +32,16 @@ void sensor_notifier() {
     SensorServerMessage msg;
     SensorServerMessage rply;
     msg.type = SENSOR_EVENT_REQUEST;
+
+    char old_data[SENSOR_DATA_SIZE] = {0,0,0,0,0,0,0,0,0,0};
     for(;;) {
         dump_sensors();
         
         int i = 0;
         for (; i < SENSOR_DATA_SIZE; ++i) {
-            msg.data[i] = (char)Getc(COM1);
+            char new_data = (char)Getc(COM1);
+            msg.data[i] = new_data & ~old_data[i];
+            old_data[i] = new_data;
         }
 
         Send(sensor_server_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
