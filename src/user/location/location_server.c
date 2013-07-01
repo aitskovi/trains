@@ -44,6 +44,7 @@ void LocationServer() {
     } while (sensor_server_tid < 0);
     sensor_server_subscribe(sensor_server_tid);
 
+    train_display_init();
     // Start Serving Requests.
     int tid;
     struct Message msg, rply;

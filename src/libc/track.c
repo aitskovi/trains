@@ -69,7 +69,6 @@ int sensor_eq(track_node *sensor, char name, int num) {
     char name_b = 0;
     int num_b = 0;
     idx_to_sensor(sensor->num, &name_b, &num_b);
-    ulog("Checking Equality for %c%d, %c%d\n", name, num, name_b, num_b);
     return name == name_b && num == num_b;
 }
 

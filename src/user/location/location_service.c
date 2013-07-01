@@ -51,8 +51,8 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
             if (!sensor) continue;
 
             if (sensor_eq(sensor, name, number)) {
-                ulog("\nUpdated Train %d with %c%d\n", train->number, name, number);
                 locationservice_associate(service, train, sensor);
+                train_display_update(i, train);
                 return 0;
             }
         }
@@ -65,8 +65,9 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
         if (train->landmark == 0) {
             track_node *sensor = track_get_sensor(name, number);
             locationservice_associate(service, train, sensor);
+            train_display_update(service->num_trains - 1, train);
         }
-
+        
         return 0;
     }
 
@@ -76,8 +77,6 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
 int locationservice_add_train(struct LocationService *service, int train) {
     if (service->num_trains == MAX_TRAINS) return -1;
 
-    ulog("\nAdding Train %d\n", train);
-
     struct TrainLocation *tlocation = &(service->trains[service->num_trains]);
     tlocation->number = train;
     tlocation->landmark = 0;
@@ -86,9 +85,12 @@ int locationservice_add_train(struct LocationService *service, int train) {
     for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
         tlocation->sensors[i] = 0;
     }
+
+    // Add the train to printout.
+    train_display_update(service->num_trains, tlocation);
+
     ++service->num_trains;
 
-    print_train(tlocation);
 
     return 0;
 }
