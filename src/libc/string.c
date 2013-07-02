@@ -18,7 +18,13 @@ unsigned int strlen(char *a) {
  * Verify if two strings are equal.
  */
 int streq(char *a, char *b) {
-    while(*a != 0 && *b != 0 && *++a == *++b) {}
+    while (*a && *b) {
+        if (*a != *b) {
+            return 0;
+        }
+        a++;
+        b++;
+    }
     return *a == *b;
 }
 

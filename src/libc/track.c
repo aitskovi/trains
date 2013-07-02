@@ -2,6 +2,9 @@
 
 #include <track_data.h>
 #include <log.h>
+#include <memory.h>
+#include <string.h>
+#include <switch_server.h>
 
 #define SENSORS_PER_TYPE 16
 
@@ -74,4 +77,103 @@ int sensor_eq(track_node *sensor, char name, int num) {
 
 track_node *track_get_sensor(char sensor, int num) {
     return &(track[sensor_to_idx(sensor, num)]);
+}
+
+track_node *track_get_by_name(char * name) {
+    unsigned int i;
+    for (i = 0; i < TRACK_MAX; ++i) {
+        if (streq(track[i].name, name)) {
+            return &track[i];
+        }
+    }
+
+    return 0;
+}
+
+static track_node * get_closest_unvisited_node() {
+    unsigned int result = 0;
+    unsigned int result_distance = 0xFFFFFFFF;
+
+    unsigned int i;
+    for (i = 0; i < TRACK_MAX; ++i) {
+        if (!track[i].visited && track[i].distance < result_distance) {
+            result = i;
+            result_distance = track[i].distance;
+        }
+    }
+
+    if (track[result].visited || result_distance == 0xFFFFFFFF) {
+        return 0;
+    }
+
+    return &track[result];
+}
+
+// O(v^2) Dijkstra's
+int configure_track_for_path(track_node *src, track_node *dest) {
+    track_node **previous[TRACK_MAX];
+    memset(previous, 0, sizeof(previous));
+
+    track_node *current;
+
+    // Configure distance to be +inf
+    unsigned int i;
+    for (i = 0; i < TRACK_MAX; ++i) {
+        track[i].distance = 0xFFFFFFFF;
+        track[i].visited = 0;
+    }
+
+    src->distance = 0;
+
+    while ((current = get_closest_unvisited_node())) {
+        // ulog("\nDijkstra's on node %s", current->name);
+        current->visited = 1;
+        unsigned int j;
+        // For each neighbour
+        for (j = 0; j < NUM_NODE_EDGES[current->type]; ++j) {
+            track_node *neighbour = current->edge[j].dest;
+            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
+                unsigned int dist = current->distance + current->edge[j].dist;
+                if (dist < neighbour->distance) {
+                    neighbour->distance = dist;
+                    previous[neighbour - track] = current;
+                }
+            }
+        }
+        /*
+        if (current == dest) {
+            ulog("\nDijsktras found dest");
+            break;
+        }
+        */
+    }
+
+    ulog("\nDijsktras finished");
+
+    if (dest->distance == 0xFFFFFFFF) {
+        return 1;
+    }
+
+    // Path may not exist since we are not supporting reverse atm
+    current = dest;
+    while (src != previous[current - track]) {
+        track_node *prev = previous[current - track];
+        if (!prev) {
+            ulog("\nInvalid prev pointer");
+            break;
+        }
+        if (prev->type == NODE_BRANCH) {
+            if (prev->edge[DIR_STRAIGHT].dest == current) {
+                SetSwitch(prev->num, STRAIGHT);
+            } else if (prev->edge[DIR_CURVED].dest == current) {
+                SetSwitch(prev->num, CURVED);
+            } else {
+                ulog("\nDijsktra path was invalid");
+            }
+        }
+        current = prev;
+    }
+
+    return 0;
+
 }

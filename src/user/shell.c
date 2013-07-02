@@ -38,7 +38,7 @@ static void position_cursor (unsigned int row, unsigned int column) {
 */
 
 int is_whitespace(char c) {
-    return c == ' ' || c == '\t';
+    return c == ' ' || c == '\t' || c == 0 || c == '\n';
 }
 
 int is_numeric(char c) {
@@ -183,6 +183,24 @@ int parse_ad(char *str, int *train) {
     return 1;
 }
 
+int parse_p(char *str, char *landmark1, char *landmark2) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str != 'p') return 0;
+    str++;
+
+    while(is_whitespace(*str)) str++;
+    while(!is_whitespace(*str)) *landmark1++ = *str++;
+    *landmark1 = 0;
+
+    while(is_whitespace(*str)) str++;
+    while(!is_whitespace(*str)) *landmark2++ = *str++;
+    *landmark2 = 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -225,6 +243,8 @@ void shell() {
         char command[50 + LINE_BUFFER_SIZE];
         char *pos;
         int train, speed, number, direction, track;
+        char landmark_buffer1[5];
+        char landmark_buffer2[5];
 
         // Get a character
         char c = Getc(COM2);
@@ -251,19 +271,22 @@ void shell() {
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 // TODO assert message response
             } else if (parse_in(line_buffer, &track)) {
+                ulog("\nShell initializing track");
+
                 sh_msg->type = INIT_TRACK;
                 sh_msg->track = track;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
             } else if (parse_ad(line_buffer, &number)) {
-                ulog("\nShell initializing track");
-
                 sh_msg->type = ADD_TRAIN;
                 sh_msg->train_no = number;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+            } else if (parse_p(line_buffer, landmark_buffer1, landmark_buffer2)) {
+                ulog("Calculating path between %s and %s", landmark_buffer1, landmark_buffer2);
+                configure_track_for_path(track_get_by_name(landmark_buffer1), track_get_by_name(landmark_buffer2));
             }
 
             reset_shell();

@@ -32,6 +32,23 @@ struct track_node {
   int num;              /* sensor or switch number */
   track_node *reverse;  /* same location, but opposite direction */
   track_edge edge[2];
+  unsigned int distance;
+  int visited;
 };
+
+/*
+typedef enum {
+    ACTION_REVERSE,
+    ACTION_SET_TURNOUT,
+    ACTION_STOP
+} action_type;
+
+struct action_item {
+    track_node *location;
+    unsigned int distance;
+    action_type type;
+    unsigned char direction;
+};
+*/
 
 #endif

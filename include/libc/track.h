@@ -23,5 +23,7 @@ int sensor_to_idx(char sensor, int num);
 track_node *track_get_sensor(char sensor, int num);
 int sensor_eq(track_node *sensor, char name, int num);
 
+track_node *track_get_by_name(char * name);
+int configure_track_for_path(track_node *src, track_node *dest);
 
 #endif
