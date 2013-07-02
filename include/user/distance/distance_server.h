@@ -22,5 +22,6 @@ typedef struct DistanceServerMessage {
 } DistanceServerMessage;
 
 void distance_server();
+void distance_server_subscribe(int server);
 
 #endif

@@ -36,7 +36,7 @@ void distance_courier() {
         // Send message to all consumers.
         int i;
         for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
-            int subscriber = producer_rply.ls_msg.subscribers[i];
+            int subscriber = producer_rply.ds_msg.subscribers[i];
             while(subscriber) {
                 int bit = ffs(subscriber) - 1;
                 int tid = 32 * i + bit;

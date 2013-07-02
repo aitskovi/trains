@@ -30,6 +30,11 @@ void locationservice_initialize(struct LocationService *service);
 int locationservice_sensor_event(struct LocationService *service, char name, int number);
 
 /**
+ * Notify the locationservice of 1cm movement.
+ */
+int locationservice_distance_event(struct LocationService *service, int train);
+
+/**
  * Add a train for LocationService to track.
  */
 int locationservice_add_train(struct LocationService *service, int train);

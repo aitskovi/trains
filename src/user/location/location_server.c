@@ -9,6 +9,7 @@
 #include <sensor_server.h>
 #include <task.h>
 #include <location_courier.h>
+#include <distance_server.h>
 
 static tid_t server_tid = -1;
 
@@ -52,6 +53,8 @@ void LocationServer() {
 
     // Create Courier
     Create(HIGH, location_courier);
+    tid_t distance_server_tid = Create(HIGH, distance_server);
+    distance_server_subscribe(distance_server_tid);
 
     // Find the sensor server and subscribe to it.
     int sensor_server_tid = -2;
@@ -123,6 +126,27 @@ void LocationServer() {
                     default:
                         ulog("\nWARNING: Invalid Message Recieved\n");
                         break;
+                }
+            }
+                break;
+            case DISTANCE_SERVER_MESSAGE: {
+                rply.type = DISTANCE_SERVER_MESSAGE;
+
+                DistanceServerMessage *ds_msg = &msg.ds_msg;
+                switch(ds_msg->type) {
+                    case DISTANCE_COURIER_REQUEST:
+                        rply.ds_msg.type = DISTANCE_COURIER_RESPONSE;
+                        Reply(tid, (char *) &rply, sizeof(rply));
+
+                        locationservice_distance_event(&service, ds_msg->train);
+                        if (courier >= 0) {
+                            if (location_publish(&service, courier) != -1) {
+                                courier = -1;
+                            }
+                        }
+                        break;
+                    default:
+                        cuassert(0, "Invalid Distance Message for Location Server\n");
                 }
             }
                 break;

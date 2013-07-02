@@ -5,7 +5,11 @@
 #include <circular_queue.h>
 #include <task.h>
 
+#define MAX_TRAIN_IDS 80
+
 struct DistanceService {
+    int time;
+    int train_to_speed[MAX_TRAIN_IDS];
     HeapPriorityQueue timeouts;
 
     struct circular_queue events;

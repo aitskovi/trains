@@ -20,9 +20,8 @@ void distance_notifier() {
         msg.ds_msg.type = DISTANCE_TIMEOUT_REQUEST;
         msg.ds_msg.time = time;
         Send(distance_server_tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
-
         cuassert(rply.type == DISTANCE_SERVER_MESSAGE, "Invalid Message Type");
-        cuassert(rply.type == DISTANCE_TIMEOUT_RESPONSE, "Invalid DistanceServer Reply");
+        cuassert(rply.ds_msg.type == DISTANCE_TIMEOUT_RESPONSE, "Invalid DistanceServer Reply");
 
         time = rply.ds_msg.time;
         DelayUntil(time);

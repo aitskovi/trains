@@ -9,6 +9,7 @@
 #define TRAIN_TASK_H_
 
 typedef unsigned char speed_t;
+typedef int train_t;
 
 typedef struct TrainMessage {
     enum {
@@ -17,6 +18,7 @@ typedef struct TrainMessage {
         COMMAND_AWAITING
     } type;
     speed_t speed;
+    train_t train;
 } TrainMessage;
 
 void train_task(int train_no);
