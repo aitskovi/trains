@@ -6,6 +6,7 @@
 #include <train_task.h>
 #include <shell.h>
 #include <distance_server.h>
+#include <switch_server.h>
 
 enum MESSAGE_TYPE {
     SENSOR_SERVER_MESSAGE,
@@ -13,6 +14,7 @@ enum MESSAGE_TYPE {
     TRAIN_MESSAGE,
     SHELL_MESSAGE,
     DISTANCE_SERVER_MESSAGE,
+    SWITCH_SERVER_MESSAGE,
 };
 
 typedef struct Message {
@@ -23,6 +25,7 @@ typedef struct Message {
         TrainMessage tr_msg;
         ShellMessage sh_msg;
         DistanceServerMessage ds_msg;
+        SwitchServerMessage sw_msg;
     };
 } Message;
 

@@ -22,8 +22,11 @@ typedef struct SwitchServerMessage {
     unsigned char direction;
 } SwitchServerMessage;
 
-
 int SetSwitch(switch_t switch_no, unsigned char direction);
+
+char switch_get_position(int num);
+
 void switch_server();
+
 
 #endif /* SWITCH_SERVER_H_ */

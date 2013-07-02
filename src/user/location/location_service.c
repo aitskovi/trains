@@ -21,17 +21,17 @@ void locationservice_initialize(struct LocationService *service) {
 int locationservice_associate(struct LocationService *service,
                               int index,
                               struct TrainLocation *train, 
-                              track_node *sensor) {
-    train->landmark = sensor;
-    train->distance = 0;
-
-    int i;
-    for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
-        train->sensors[i] = 0;
+                              track_node *node) {
+    train->landmark = node;
+    if (train->landmark->type == NODE_SENSOR) {
+        train->distance = 0;
+    } else if (train->edge) {
+        train->distance -= train->edge->dist;
     }
-    
+
     // Find next sensor.
-    track_sensor_search(sensor, train->sensors);
+    train->edge = track_next_edge(train->landmark);
+    train->next_sensor = track_next_sensor(train->landmark);
 
     // Add an event of this train to our event_queue.
     circular_queue_push(&(service->events), (void *)index);
@@ -44,16 +44,12 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
     int i;
     for (i = 0; i < service->num_trains; ++i) {
         struct TrainLocation *train = &(service->trains[i]);
+        struct track_node *sensor = train->next_sensor;
+        if (!sensor) continue;
 
-        int j;
-        for (j = 0; j < MAX_PENDING_SENSORS; ++j) {
-            struct track_node *sensor = train->sensors[j];
-            if (!sensor) continue;
-
-            if (sensor_eq(sensor, name, number)) {
-                locationservice_associate(service, i, train, sensor);
-                return 0;
-            }
+        if (sensor_eq(sensor, name, number)) {
+            locationservice_associate(service, i, train, sensor);
+            return 0;
         }
     }
 
@@ -76,8 +72,15 @@ int locationservice_distance_event(struct LocationService *service, int train) {
     int i;
     for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
         struct TrainLocation *tlocation = &(service->trains[i]);
+        if (!tlocation->landmark) return 0;
+
         if (tlocation->number == train) {
-            tlocation->distance++;
+            tlocation->distance += 10;
+            
+            if (tlocation->distance >= tlocation->edge->dist && tlocation->edge->dest->type != NODE_SENSOR) {
+                return locationservice_associate(service, service->num_trains - 1, tlocation, tlocation->edge->dest);
+            }
+
             // Add an event of this train to our event_queue.
             circular_queue_push(&(service->events), (void *)i);
             break;
@@ -94,10 +97,8 @@ int locationservice_add_train(struct LocationService *service, int train) {
     tlocation->number = train;
     tlocation->landmark = 0;
     tlocation->distance = 0;
-    int i;
-    for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
-        tlocation->sensors[i] = 0;
-    }
+    tlocation->edge = 0;
+    tlocation->next_sensor = 0;
 
     // Add the train to event.
     circular_queue_push(&(service->events), (void *)service->num_trains);

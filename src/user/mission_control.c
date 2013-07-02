@@ -57,8 +57,7 @@ void mission_control() {
 
     tid_t tid;
     Message msg, reply;
-
-    ShellMessage *sh_msg = &msg.sh_msg;
+ShellMessage *sh_msg = &msg.sh_msg;
     ShellMessage *sh_reply = &reply.sh_msg;
 
     TrainMessage *tr_msg = &msg.tr_msg;
@@ -84,6 +83,16 @@ void mission_control() {
                 case INIT_TRACK:
                     ulog("\nMission control initializing track");
                     track_initialize(sh_msg->track);
+
+                    int i;
+                    for (i = 1; i < 19; ++i) {
+                        SetSwitch(i, STRAIGHT);
+                    }
+                    SetSwitch(153, STRAIGHT);
+                    SetSwitch(154, STRAIGHT);
+                    SetSwitch(155, STRAIGHT);
+                    SetSwitch(156, STRAIGHT);
+
                     break;
                 case ADD_TRAIN:
                     AddTrain(sh_msg->train_no);

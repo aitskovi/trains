@@ -4,6 +4,7 @@
 #include <log.h>
 #include <memory.h>
 #include <string.h>
+#include <switch.h>
 #include <switch_server.h>
 
 #define SENSORS_PER_TYPE 16
@@ -24,6 +25,34 @@ int track_initialize(char track_name) {
     }
 
     return 0;
+}
+
+struct track_edge *track_next_edge(struct track_node *node) {
+    int edge_direction = DIR_AHEAD;
+
+    if (node->type == NODE_BRANCH) {
+        edge_direction = switch_get_position(node->num) == STRAIGHT ? DIR_STRAIGHT : DIR_CURVED;
+    }
+
+    return &node->edge[edge_direction];
+}
+
+struct track_node *track_next_landmark(struct track_node *node) {
+    int edge_direction = DIR_AHEAD;
+
+    if (node->type == NODE_BRANCH) {
+        edge_direction = switch_get_position(node->num) == STRAIGHT ? DIR_STRAIGHT : DIR_CURVED;
+    }
+
+    return node->edge[edge_direction].dest;
+}
+
+struct track_node *track_next_sensor(struct track_node *node) {
+    struct track_node *dest = track_next_landmark(node);
+    while(dest && dest->type != NODE_SENSOR) {
+        dest = track_next_landmark(dest);
+    };
+    return dest;
 }
 
 /**

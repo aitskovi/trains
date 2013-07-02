@@ -11,7 +11,8 @@ struct TrainLocation {
     int number;
     struct track_node *landmark;
     int distance;
-    struct track_node *sensors[MAX_PENDING_SENSORS];
+    struct track_edge *edge;
+    struct track_node *next_sensor;
 };
 
 struct LocationService {

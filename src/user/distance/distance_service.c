@@ -3,7 +3,7 @@
 #include <clock_server.h>
 
 int speed_to_timeout(int train, int speed) {
-    return 10;
+    return 2;
 }
 
 void distanceservice_initialize(struct DistanceService *service, PriorityQueueElement *buffer, int size) {
