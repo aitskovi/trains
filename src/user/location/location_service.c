@@ -77,7 +77,9 @@ int locationservice_distance_event(struct LocationService *service, int train) {
         if (tlocation->number == train) {
             tlocation->distance += 10;
             
-            if (tlocation->distance >= tlocation->edge->dist && tlocation->edge->dest->type != NODE_SENSOR) {
+            if (tlocation->edge->dest &&
+                tlocation->distance >= tlocation->edge->dist &&
+                tlocation->edge->dest->type != NODE_SENSOR) {
                 return locationservice_associate(service, service->num_trains - 1, tlocation, tlocation->edge->dest);
             }
 
