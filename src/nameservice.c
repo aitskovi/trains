@@ -2,6 +2,9 @@
 
 #include <string.h>
 #include <memory.h>
+#include <nameserver.h>
+#include <syscall.h>
+#include <dassert.h>
 
 int nameservice_register(struct NameService *service, char *name, int tid) {
     // Verify Name Length
@@ -25,6 +28,16 @@ int nameservice_register(struct NameService *service, char *name, int tid) {
         // Overwrote an existing registration.
         if (streq(reg->name, name)) {
             reg->tid = tid;
+
+            // Unblock all waiters.
+            struct NameServerReply reply;
+            reply.result = reg->tid;
+            int j;
+            for (j = 0; j < reg->num_waiters; ++j) {
+                int waiter = reg->waiters[j];
+                Reply(waiter, (char *)&reply, sizeof(reply));
+            }
+
             return 0;
         }
     }
@@ -42,6 +55,20 @@ int nameservice_lookup(struct NameService *service, char *name) {
        if (streq(reg->name, name)) return reg->tid;
    }
    return -1;
+}
+
+int nameservice_wait(struct NameService *service, char *name, int tid) {
+    int i; 
+    for (i = 0; i < MAX_REGISTRATIONS; ++i) {
+        struct Registration *reg = &service->registrations[i];
+        if (reg->tid == -1) return -1;
+        if (streq(reg->name, name)) {
+            reg->waiters[reg->num_waiters] = tid;
+            reg->num_waiters++;
+            cuassert(reg->num_waiters < MAX_WAITERS, "WARNING: Too Many Registration Waiters");
+        }
+    }
+    return 0;
 }
 
 void nameservice_initialize(struct NameService *service) {

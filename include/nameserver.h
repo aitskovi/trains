@@ -1,6 +1,21 @@
 #ifndef _NAMESERVER_H_
 #define _NAMESERVER_H_
 
+enum nameserver_operation {
+    REGISTER_AS,
+    WHO_IS,
+    NUM_NAMESERVER_OPERATIONS,
+};
+
+struct NameServerRequest {
+    enum nameserver_operation operation;
+    char *data;
+};
+
+struct NameServerReply {
+    int result;
+};
+
 /**
  * Register the task under the specified name.
  *

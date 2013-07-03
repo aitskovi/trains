@@ -7,21 +7,6 @@
 #include <scheduling.h>
 #include <log.h>
 
-enum nameserver_operation {
-    REGISTER_AS,
-    WHO_IS,
-    NUM_NAMESERVER_OPERATIONS,
-};
-
-struct NameServerRequest {
-    enum nameserver_operation operation;
-    char *data;
-};
-
-struct NameServerReply {
-    int result;
-};
-
 static int nameserver_tid;
 
 /**
@@ -93,19 +78,29 @@ void NameServer() {
                 dlog("NameServer: Received RegisterAs\n");
                 dlog("NameServer: Registering %d as %s\n", src, req.data);
                 reply.result = nameservice_register(&service, req.data, src);
+                Reply(src, (char *)&reply, sizeof(reply));
                 break;
             case WHO_IS:
                 dlog("NameServer: Received WhoIs\n");
                 dlog("NameServer: Looking Up %s\n", req.data);
-                reply.result = nameservice_lookup(&service, req.data);
+                int tid = nameservice_lookup(&service, req.data);
+
+                if (tid > 0) {
+                    // We found a reply.
+                    reply.result = tid;
+                    Reply(src, (char *)&reply, sizeof(reply));
+                } else {
+                    // Otherwise block.
+                    if (tid == -1) nameservice_register(&service, req.data, WAITING_TID);
+                    nameservice_wait(&service, req.data, src);
+                }
                 break;
             default:
-                log("NameServer: Received Invalid Request\n");
+                ulog("NameServer: Received Invalid Request\n");
                 break;
         }
 
-        Reply(src, (char *)&reply, sizeof(reply));
     }
 
-    bwprintf(COM2, "NameServer: Exit\n");
+    Exit();
 }
