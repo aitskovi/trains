@@ -34,7 +34,7 @@ int location_publish(struct LocationService *service, int tid) {
     rply.type = LOCATION_SERVER_MESSAGE;
     rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
 
-    int result = locationservice_pop(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.distance), rply.ls_msg.subscribers);
+    int result = locationservice_pop(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.edge), &(rply.ls_msg.distance), rply.ls_msg.subscribers);
     if (result == -1) return -1;
 
     Reply(tid, (char *) &rply, sizeof(rply));

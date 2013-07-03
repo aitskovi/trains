@@ -19,6 +19,7 @@ typedef struct LocationServerMessage {
 
     int train;
     struct track_node *landmark;
+    struct track_edge *edge;
     int distance;
 
     int subscribers[MAX_SUBSCRIBERS];

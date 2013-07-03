@@ -48,7 +48,7 @@ int locationservice_reverse_event(struct LocationService *service, int train);
 /**
  * Get an event from the service.
  */
-int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, int *distance, int *subscribers);
+int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, struct track_edge** edge, int *distance, int *subscribers);
 
 /**
  * Subscribe to LocationService events.

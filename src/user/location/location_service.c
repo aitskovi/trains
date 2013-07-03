@@ -136,6 +136,7 @@ int locationservice_add_train(struct LocationService *service, int train) {
 
 int locationservice_pop(struct LocationService *service, int *train,
                                                          struct track_node** landmark,
+                                                         struct track_edge** edge,
                                                          int *distance,
                                                          int *subscribers) {
     if (circular_queue_empty(&(service->events))) return -1;
@@ -145,6 +146,7 @@ int locationservice_pop(struct LocationService *service, int *train,
     struct TrainLocation *tlocation = &(service->trains[event]);
     *train = tlocation->number;
     *landmark = tlocation->landmark;
+    *edge = tlocation->edge;
     *distance = tlocation->distance;
 
     int i;
