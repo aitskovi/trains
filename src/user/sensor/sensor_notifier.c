@@ -8,6 +8,7 @@
 #include <ts7200.h>
 #include <log.h>
 #include <nameserver.h>
+#include <clock_server.h>
 
 void dump_sensors() {
     Putc(COM1, (char) 133);
@@ -27,6 +28,10 @@ void sensor_notifier() {
 
     // Set up sensors.
     enable_sensor_reset();
+
+    // Delay a bit to read old data and then clear it.
+    Delay(10);
+    ReadClear(COM1);
 
     // Poll sensor data and forward it.
     SensorServerMessage msg;

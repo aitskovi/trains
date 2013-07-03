@@ -30,4 +30,10 @@ int readservice_getc(struct ReadService *service, int tid);
  */
 int readservice_flush(struct ReadService *service);
 
+/**
+ * Clear data in the service.
+ */
+void readservice_clear(struct ReadService *service);
+
+
 #endif

@@ -16,7 +16,9 @@ enum ReadMessageType {
     READ_CONFIG_REQUEST,
     READ_CONFIG_RESPONSE,
     GETC_REQUEST,
-    GETC_RESPONSE
+    GETC_RESPONSE,
+    CLEAR_REQUEST,
+    CLEAR_RESPONSE,
 };
 
 typedef struct WriteMessage {

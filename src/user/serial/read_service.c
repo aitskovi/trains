@@ -46,3 +46,7 @@ int readservice_flush(struct ReadService *service) {
     return 0;
 }
 
+void readservice_clear(struct ReadService *service) {
+    circular_queue_initialize(&service->chars);
+}
+
