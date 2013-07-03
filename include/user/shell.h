@@ -17,12 +17,12 @@
 typedef struct ShellMessage {
 
     enum {
-        INIT_TRACK,
-        ADD_TRAIN,
-        REVERSE_TRAIN,
-        SET_TRAIN_SPEED,
-        SET_TRAIN_POSITION,
-        SET_SWITCH_POSITION,
+        SHELL_INIT_TRACK,
+        SHELL_ADD_TRAIN,
+        SHELL_REVERSE_TRAIN,
+        SHELL_SET_TRAIN_SPEED,
+        SHELL_GO,
+        SHELL_SET_SWITCH_POSITION,
         SHELL_SUCCESS_REPLY
     } type;
 
@@ -38,7 +38,7 @@ typedef struct ShellMessage {
         unsigned char speed;
     };
 
-    struct track_node *position;
+    track_node *position;
     int distance;
 
 } ShellMessage;

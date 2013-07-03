@@ -91,7 +91,9 @@ void train_task(int train_no) {
     tr_msg->type = COMMAND_AWAITING;
 
     while (1) {
+        //ulog("\nTrain awaiting command");
         Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+        //ulog("\nTrain got command");
         cuassert(TRAIN_MESSAGE == reply.type, "Train task received invalid msg");
 
         switch (command->type) {
@@ -104,6 +106,7 @@ void train_task(int train_no) {
             break;
         default:
             cuassert(0, "Invalid Train Task Command");
+            break;
         }
     }
 }

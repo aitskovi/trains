@@ -201,6 +201,23 @@ int parse_p(char *str, char *landmark1, char *landmark2) {
     return 1;
 }
 
+int parse_go(char *str, int *train, char *landmark) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 'g') return 0;
+    if (*str++ != 'o') return 0;
+
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    while(is_whitespace(*str)) str++;
+    while(!is_whitespace(*str)) *landmark++ = *str++;
+    *landmark = 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -254,18 +271,18 @@ void shell() {
             if (parse_q(line_buffer)) {
                 Exit();
             } else if (parse_tr(line_buffer, &train, &speed)) {
-                sh_msg->type = SET_TRAIN_SPEED;
+                sh_msg->type = SHELL_SET_TRAIN_SPEED;
                 sh_msg->speed = speed;
                 sh_msg->train_no = train;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 // TODO assert message response
             } else if (parse_rv(line_buffer, &number)) {
-                sh_msg->type = REVERSE_TRAIN;
+                sh_msg->type = SHELL_REVERSE_TRAIN;
                 sh_msg->train_no = number;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 // TODO assert message response
             } else if (parse_sw(line_buffer, &number, &direction)) {
-                sh_msg->type = SET_SWITCH_POSITION;
+                sh_msg->type = SHELL_SET_SWITCH_POSITION;
                 sh_msg->switch_no = number;
                 sh_msg->switch_pos = direction;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
@@ -273,13 +290,13 @@ void shell() {
             } else if (parse_in(line_buffer, &track)) {
                 ulog("\nShell initializing track");
 
-                sh_msg->type = INIT_TRACK;
+                sh_msg->type = SHELL_INIT_TRACK;
                 sh_msg->track = track;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
             } else if (parse_ad(line_buffer, &number)) {
-                sh_msg->type = ADD_TRAIN;
+                sh_msg->type = SHELL_ADD_TRAIN;
                 sh_msg->train_no = number;
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
@@ -287,6 +304,18 @@ void shell() {
             } else if (parse_p(line_buffer, landmark_buffer1, landmark_buffer2)) {
                 ulog("Calculating path between %s and %s", landmark_buffer1, landmark_buffer2);
                 configure_track_for_path(track_get_by_name(landmark_buffer1), track_get_by_name(landmark_buffer2));
+            } else if (parse_go(line_buffer, &train, landmark_buffer1)) {
+                ulog("\nShell making train %u go to %s", train, landmark_buffer1);
+                sh_msg->type = SHELL_GO;
+                sh_msg->train_no = train;
+                sh_msg->position = track_get_by_name(landmark_buffer1);
+                if (!sh_msg->position) {
+                    ulog("\nCan't find landmark %s", landmark_buffer1);
+                } else {
+                    Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                    cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                    cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+                }
             }
 
             reset_shell();
