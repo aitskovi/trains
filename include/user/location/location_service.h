@@ -41,6 +41,11 @@ int locationservice_distance_event(struct LocationService *service, int train);
 int locationservice_add_train(struct LocationService *service, int train);
 
 /**
+ * Notify our service of the reverse event.
+ */
+int locationservice_reverse_event(struct LocationService *service, int train);
+
+/**
  * Get an event from the service.
  */
 int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, int *distance, int *subscribers);

@@ -70,7 +70,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
 
 int locationservice_distance_event(struct LocationService *service, int train) {
     int i;
-    for (i = 0; i < MAX_PENDING_SENSORS; ++i) {
+    for (i = 0; i < service->num_trains; ++i) {
         struct TrainLocation *tlocation = &(service->trains[i]);
         if (!tlocation->landmark) return 0;
 
@@ -80,6 +80,30 @@ int locationservice_distance_event(struct LocationService *service, int train) {
             if (tlocation->distance >= tlocation->edge->dist && tlocation->edge->dest->type != NODE_SENSOR) {
                 return locationservice_associate(service, service->num_trains - 1, tlocation, tlocation->edge->dest);
             }
+
+            // Add an event of this train to our event_queue.
+            circular_queue_push(&(service->events), (void *)i);
+            break;
+        }
+    }
+
+    return 0;
+}
+
+int locationservice_reverse_event(struct LocationService *service, int train) {
+    int i;
+    for (i = 0; i < service->num_trains; ++i) {
+        struct TrainLocation *tlocation = &(service->trains[i]);
+        if (!tlocation->landmark) return 0;
+
+        if (tlocation->number == train) {
+            // Throw us on the opposite edge.
+            tlocation->edge = tlocation->edge->reverse;
+            tlocation->distance = tlocation->edge->dist - tlocation->distance;
+
+            // Associate us with the correct landmark and sensor.
+            tlocation->landmark = tlocation->edge->src;
+            tlocation->next_sensor = track_next_sensor(tlocation->landmark);
 
             // Add an event of this train to our event_queue.
             circular_queue_push(&(service->events), (void *)i);

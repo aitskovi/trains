@@ -150,6 +150,27 @@ void LocationServer() {
                 }
             }
                 break;
+            case TRAIN_MESSAGE: {
+                TrainMessage *tr_msg = &msg.tr_msg;
+                switch(tr_msg->type) {
+                    case COMMAND_REVERSE:
+                        // Unblock train task.
+                        rply.type = TRAIN_MESSAGE;
+                        Reply(tid, (char *)&rply, sizeof(rply));
+
+                        // Update our train.
+                        locationservice_reverse_event(&service, tr_msg->train);
+                        if (courier >= 0) {
+                            if (location_publish(&service, courier) != -1) {
+                                courier = -1;
+                            }
+                        }
+                        break;
+                    default:
+                        cuassert(0, "Invalid Train Message\n");
+                }
+                break;
+            }
             default:
                 ulog("\nWARNING: Invalid Message Received\n");
         }

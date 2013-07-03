@@ -48,7 +48,7 @@ static void train_set_speed(int train, speed_t speed, tid_t distance_server_tid)
     notify_speed_change(train, speed, distance_server_tid);
 }
 
-static void train_reverse(int train, speed_t new_speed, tid_t distance_server_tid) {
+static void train_reverse(int train, speed_t new_speed, tid_t distance_server_tid, tid_t location_server_tid) {
     // Stop the Train.
     train_set_speed_internal(train, 0);
     notify_speed_change(train, 0, distance_server_tid);
@@ -59,6 +59,7 @@ static void train_reverse(int train, speed_t new_speed, tid_t distance_server_ti
 
     // Reverse the Train.
     train_set_speed_internal(train, 15);
+    notify_reverse(train, location_server_tid);
 
     // Reset the train to it's original speed.
     train_set_speed_internal(train, new_speed);
@@ -74,6 +75,11 @@ void train_task(int train_no) {
     tid_t distance_server_tid = -2;
     do {
         distance_server_tid = WhoIs("DistanceServer");
+    } while (distance_server_tid < 0);
+
+    tid_t location_server_tid = -2;
+    do {
+        location_server_tid = WhoIs("LocationServer");
     } while (distance_server_tid < 0);
   
     speed_t our_speed = 0;
@@ -94,7 +100,7 @@ void train_task(int train_no) {
             train_set_speed(train_no, command->speed, distance_server_tid);
             break;
         case (COMMAND_REVERSE):
-            train_reverse(train_no, our_speed, distance_server_tid);
+            train_reverse(train_no, our_speed, distance_server_tid, location_server_tid);
             break;
         default:
             cuassert(0, "Invalid Train Task Command");
