@@ -18,6 +18,7 @@
 #include <location_server.h>
 #include <sensor_server.h>
 #include <distance_server.h>
+#include <calibration.h>
 
 void first() {
     // Setup the timer.

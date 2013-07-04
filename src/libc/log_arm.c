@@ -3,6 +3,7 @@
 #include <write_server.h>
 #include <sprintf.h>
 #include <string.h>
+#include <shell.h>
 
 #define MAX_PRINTABLE 200
 
@@ -18,14 +19,11 @@ void ulog(char *fmt, ...) {
     va_list va;
 
     va_start(va,fmt);
-    char buf[200];
-    int size = sformat(buf, fmt, va);
-
-    if (size < 0) {
-        Write(COM2, "FATAL: Ulog Failed\n", strlen("FATAL: Ulog Failed"));
-    }
-
-    Write(COM2, buf, size);
+    char command[250];
+    char *pos = &command[0];
+    pos += sprintf(pos, "\0337\033[%u;%uH\n", CONSOLE_HEIGHT + 11, 1);
+    pos += sformat(pos, fmt, va);
+    pos += sprintf(pos, "\0338");
+    Write(COM2, command, pos - command);
     va_end(va);
-
 }

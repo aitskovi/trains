@@ -27,6 +27,8 @@
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
 const char POS_CURSOR[] = "\033[%u;%uH";
+const char SCROLLABLE_AREA[] = "\033[%u;%ur";
+const char RESET[] = "\033c";
 
 static char line_buffer[LINE_BUFFER_SIZE];
 static unsigned int line_buffer_pos;
@@ -232,6 +234,14 @@ void reset_shell() {
     Write(COM2, command, pos - command);
 }
 
+void generate_debug_area() {
+    char command[200];
+    char *pos = &command[0];
+
+    pos += sprintf(pos, (char *)SCROLLABLE_AREA, CONSOLE_HEIGHT + 1, CONSOLE_HEIGHT + 11);
+    Write(COM2, command, pos - command);
+}
+
 void shell() {
 
     tid_t mission_control_tid;
@@ -247,11 +257,15 @@ void shell() {
 
     // Start the clock
     Create(LOW, clock_widget);
+    // Start the sensor widget.
     Create(LOW, sensor_widget);
+    // Start the train widget.
     Create(LOW, train_widget);
 
     Create(HIGH, switch_server);
 
+    // Create the debug print area.
+    generate_debug_area();
 
     Message msg, reply;
     msg.type = SHELL_MESSAGE;
@@ -269,6 +283,8 @@ void shell() {
         // Try to interpret the command if enter has been pressed
         if (c == '\n' || c == '\r') {
             if (parse_q(line_buffer)) {
+                Write(COM2, (char *)RESET, strlen((char *)RESET));
+                Delay(10);
                 Exit();
             } else if (parse_tr(line_buffer, &train, &speed)) {
                 sh_msg->type = SHELL_SET_TRAIN_SPEED;
@@ -318,6 +334,8 @@ void shell() {
                 }
             }
 
+            line_buffer[line_buffer_pos + 1] = 0;
+            ulog(line_buffer);
             reset_shell();
 
             continue;
