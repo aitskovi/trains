@@ -23,6 +23,7 @@
 #include <encoding.h>
 #include <nameserver.h>
 #include <dassert.h>
+#include <clock_server.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";

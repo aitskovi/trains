@@ -7,21 +7,20 @@
 #define MAX_PENDING_SENSORS 4
 #define MAX_TRAINS 8
 
-struct TrainLocation {
+typedef struct TrainLocation {
     int number;
-    struct track_node *landmark;
-    int distance;
     struct track_edge *edge;
+    int distance;
     struct track_node *next_sensor;
-};
+} TrainLocation;
 
-struct LocationService {
+typedef struct LocationService {
     struct TrainLocation trains[MAX_TRAINS];
     int num_trains;
 
     struct circular_queue events;
     int subscribers[MAX_SUBSCRIBERS];
-};
+} LocationService;
 
 void locationservice_initialize(struct LocationService *service);
 

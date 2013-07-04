@@ -50,9 +50,10 @@ void first() {
     configure_reader(read_server_tid_1, COM1);
     configure_reader(read_server_tid_2, COM2);
 
+    Create(HIGHER, mission_control);
     Create(HIGH, sensor_server);
     Create(HIGH, LocationServer);
-    Create(HIGHER, mission_control);
+    Create(MEDIUM, calibration_server);
 
     int shell_tid = Create(MEDIUM, shell);
 
