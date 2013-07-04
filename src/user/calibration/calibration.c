@@ -7,8 +7,15 @@
 #include <encoding.h>
 #include <syscall.h>
 #include <dassert.h>
+#include <clock_server.h>
 
 #define MAX_TRAINS 8
+
+int velocity(int train, int speed, track_edge *edge) {
+    // TODO: Use the velocity tables.
+    if (speed == 0) return 0;
+    else return 5300;
+}
 
 struct location_event {
     track_edge *edge;

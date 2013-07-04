@@ -70,9 +70,11 @@ void distance_server() {
                         distanceservice_subscribe(&service, tid);
                         break;
                     case DISTANCE_TIMEOUT_REQUEST:
-                        distanceservice_notify(&service, msg.ds_msg.time);
-                        int timeout = distanceservice_timeout(&service);
-                        notifier = distance_notifier_timeout(timeout, tid);
+                        rply.type = DISTANCE_SERVER_MESSAGE;
+                        rply.ds_msg.type = DISTANCE_SUBSCRIBE_RESPONSE;
+                        Reply(tid, (char *)&rply, sizeof(rply));
+
+                        distanceservice_notify(&service);
                         break;
                     default:
                         ulog("Invalid Distance Server Message\n");
@@ -90,8 +92,6 @@ void distance_server() {
 
                         // Update our timeouts.
                         distanceservice_update_train(&service, tr_msg->train, tr_msg->speed);
-                        int timeout = distanceservice_timeout(&service);
-                        notifier = distance_notifier_timeout(timeout, notifier);
                         break;
                     default:
                         cuassert(0, "Invalid Train Message\n");

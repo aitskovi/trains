@@ -6,11 +6,14 @@
 #include <task.h>
 
 #define MAX_TRAIN_IDS 80
+#define MAX_TRAINS 8
+
+struct TrainSpeed {
+    int speed; // um/tic
+    int acceleration;
+}
 
 struct DistanceService {
-    int time;
-    int train_to_speed[MAX_TRAIN_IDS];
-    HeapPriorityQueue timeouts;
 
     struct circular_queue events;
     int subscribers[MAX_SUBSCRIBERS];

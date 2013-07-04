@@ -9,7 +9,7 @@
 #include <sensor_server.h>
 #include <task.h>
 #include <location_courier.h>
-#include <distance_server.h>
+#include <distance_notifier.h>
 
 static tid_t server_tid = -1;
 
@@ -34,7 +34,7 @@ int location_publish(struct LocationService *service, int tid) {
     rply.type = LOCATION_SERVER_MESSAGE;
     rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
 
-    int result = locationservice_pop(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.edge), &(rply.ls_msg.distance), rply.ls_msg.subscribers);
+    int result = locationservice_pop_event(service, &(rply.ls_msg.train), &(rply.ls_msg.landmark), &(rply.ls_msg.edge), &(rply.ls_msg.distance), rply.ls_msg.subscribers);
     if (result == -1) return -1;
 
     Reply(tid, (char *) &rply, sizeof(rply));
@@ -53,15 +53,12 @@ void LocationServer() {
 
     // Create Courier
     Create(HIGH, location_courier);
-    tid_t distance_server_tid = Create(HIGH, distance_server);
-    distance_server_subscribe(distance_server_tid);
+
+    // Create a Distance Notifier.
+    Create(HIGH, distance_notifier);
 
     // Find the sensor server and subscribe to it.
-    int sensor_server_tid = -2;
-    do {
-        sensor_server_tid = WhoIs("SensorServer");
-        dlog("Sensor Server Tid %d\n", sensor_server_tid);
-    } while (sensor_server_tid < 0);
+    tid_t sensor_server_tid = WhoIs("SensorServer");
     sensor_server_subscribe(sensor_server_tid);
 
     // Start Serving Requests.
@@ -109,12 +106,6 @@ void LocationServer() {
                         Reply(tid, (char *) &rply, sizeof(rply));
 
                         locationservice_add_train(&service, ls_msg->train);
-
-                        if (courier >= 0) {
-                            if (location_publish(&service, courier) != -1) {
-                                courier = -1;
-                            }
-                        }
                         break;
                     case LOCATION_COURIER_REQUEST: {
                         int result = location_publish(&service, tid);
@@ -131,19 +122,13 @@ void LocationServer() {
                 break;
             case DISTANCE_SERVER_MESSAGE: {
                 rply.type = DISTANCE_SERVER_MESSAGE;
-
                 DistanceServerMessage *ds_msg = &msg.ds_msg;
                 switch(ds_msg->type) {
-                    case DISTANCE_COURIER_REQUEST:
-                        rply.ds_msg.type = DISTANCE_COURIER_RESPONSE;
+                    case DISTANCE_TIMEOUT_REQUEST:
+                        rply.ds_msg.type = DISTANCE_TIMEOUT_RESPONSE;
                         Reply(tid, (char *) &rply, sizeof(rply));
 
-                        locationservice_distance_event(&service, ds_msg->train);
-                        if (courier >= 0) {
-                            if (location_publish(&service, courier) != -1) {
-                                courier = -1;
-                            }
-                        }
+                        locationservice_distance_event(&service);
                         break;
                     default:
                         cuassert(0, "Invalid Distance Message for Location Server\n");
@@ -153,18 +138,14 @@ void LocationServer() {
             case TRAIN_MESSAGE: {
                 TrainMessage *tr_msg = &msg.tr_msg;
                 switch(tr_msg->type) {
-                    case COMMAND_REVERSE:
+                    case COMMAND_SET_SPEED:
                         // Unblock train task.
                         rply.type = TRAIN_MESSAGE;
                         Reply(tid, (char *)&rply, sizeof(rply));
 
                         // Update our train.
-                        locationservice_reverse_event(&service, tr_msg->train);
-                        if (courier >= 0) {
-                            if (location_publish(&service, courier) != -1) {
-                                courier = -1;
-                            }
-                        }
+                        locationservice_speed_event(&service, tr_msg->train, tr_msg->speed);
+                        
                         break;
                     default:
                         cuassert(0, "Invalid Train Message\n");
@@ -173,6 +154,12 @@ void LocationServer() {
             }
             default:
                 ulog("\nWARNING: Invalid Message Received\n");
+        }
+
+        if (courier >= 0) {
+            if (location_publish(&service, courier) != -1) {
+                courier = -1;
+            }
         }
     }
 

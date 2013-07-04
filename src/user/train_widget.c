@@ -32,7 +32,7 @@ int train_display_update(int index, int number, struct track_node *landmark, int
     if (!landmark) {
         sprintf(position, "N/A");
     } else {
-        sprintf(position, "%s %dcm", landmark->name, distance/10);
+        sprintf(position, "%s %dmm", landmark->name, distance / 1000);
     }
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', position);
     pos += sprintf(pos, "\0338");

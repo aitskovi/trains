@@ -14,10 +14,8 @@ enum DISTANCE_MESSAGE_TYPE {
 
 typedef struct DistanceServerMessage {
     int type;
-    union {
-        int train;
-        int time;
-    };
+    int train;
+    int distance;
     int subscribers[MAX_SUBSCRIBERS];
 } DistanceServerMessage;
 

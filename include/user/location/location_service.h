@@ -6,11 +6,26 @@
 
 #define MAX_PENDING_SENSORS 4
 #define MAX_TRAINS 8
+#define MAX_TRAIN_IDS 80
+
+typedef struct TrainAcceleration {
+    int start;
+    int end;
+    int ticks;
+} TrainAcceleration;
 
 typedef struct TrainLocation {
-    int number;
+    int id;
+
     struct track_edge *edge;
     int distance;
+
+    int velocity;
+    int speed;
+
+    int accelerating;
+    TrainAcceleration acceleration;  /* Train's Acceleration */
+
     struct track_node *next_sensor;
 } TrainLocation;
 
@@ -18,46 +33,33 @@ typedef struct LocationService {
     struct TrainLocation trains[MAX_TRAINS];
     int num_trains;
 
+    int train_to_index[MAX_TRAIN_IDS];
+
     struct circular_queue events;
     int subscribers[MAX_SUBSCRIBERS];
 } LocationService;
 
 void locationservice_initialize(struct LocationService *service);
 
-/**
- * Notify the locationservice of a sensor hit.
- */
+void locationservice_associate(LocationService *service, TrainLocation *train, struct track_edge *edge);
+
 int locationservice_sensor_event(struct LocationService *service, char name, int number);
+int locationservice_distance_event(struct LocationService *service);
+int locationservice_speed_event(struct LocationService *service, int train_number, int speed);
 
-/**
- * Notify the locationservice of 1cm movement.
- */
-int locationservice_distance_event(struct LocationService *service, int train);
+int locationservice_add_train(struct LocationService *service, int train_number);
 
-/**
- * Add a train for LocationService to track.
- */
-int locationservice_add_train(struct LocationService *service, int train);
+void locationservice_add_event(LocationService *service, TrainLocation *train);
+int locationservice_pop_event(
+        struct LocationService *service, 
+        int *train,
+        struct track_node** landmark,
+        struct track_edge** edge,
+        int *distance,
+        int *subscribers);
 
-/**
- * Notify our service of the reverse event.
- */
-int locationservice_reverse_event(struct LocationService *service, int train);
 
-/**
- * Get an event from the service.
- */
-int locationservice_pop(struct LocationService *service, int *train, struct track_node** landmark, struct track_edge** edge, int *distance, int *subscribers);
-
-/**
- * Subscribe to LocationService events.
- */
 int locationservice_subscribe(struct LocationService *service, int tid);
-
-/**
- * Unsubscribe to LocationService events.
- */
 int locationservice_unsubscribe(struct LocationService *service, int tid);
-
 
 #endif

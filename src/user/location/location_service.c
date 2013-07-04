@@ -4,13 +4,55 @@
 #include <memory.h>
 #include <track.h>
 #include <track_node.h>
+#include <calibration.h>
 
-#define CM 10
+#define CM 10000
+#define MM 1000
+#define UM 1
+
+static void update_speed(TrainLocation *train, int speed) {
+    // TODO: Update acceleration.
+    /*
+    train->accelerating = 1;
+    train->acceleration.start = velocity(train->id, train->speed, train->edge);
+    train->acceleration.end = velocity(train->id, speed, train->edge);
+    train->acceleration.ticks = 0;
+    */
+    train->velocity = velocity(train->id, speed, train->edge);
+    train->speed = speed;
+}
+
+static TrainLocation *update_max_velocity(TrainLocation *train, int velocity) {
+    if (train->accelerating) {
+        train->acceleration.end = velocity;
+    } else {
+        train->velocity = velocity;
+    }
+}
+
+static TrainLocation *get_train_location(LocationService *service, int train) {
+    int index = service->train_to_index[train];
+    if (index < 0) return 0;
+    return &service->trains[index];
+}
+
+static TrainLocation *add_train_location(LocationService *service, int train) {
+    int index = service->num_trains;
+    service->trains[index].id = train;
+    service->num_trains++;
+    service->train_to_index[train] = index;
+    return &service->trains[index];
+}
 
 void locationservice_initialize(struct LocationService *service) {
+    memset(service->trains, 0, sizeof(TrainLocation) * MAX_TRAINS);
     service->num_trains = 0;
 
     int i;
+    for (i = 0; i < MAX_TRAIN_IDS; ++i) {
+        service->train_to_index[i] = -1;
+    }
+
     for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
         service->subscribers[i] = 0;
     }
@@ -18,8 +60,8 @@ void locationservice_initialize(struct LocationService *service) {
     circular_queue_initialize(&(service->events));
 }
 
-static void locationservice_event(LocationService *service, int train_index) {
-    int error = circular_queue_push(&service->events, (void *)train_index); 
+void locationservice_add_event(LocationService *service, TrainLocation *train) {
+    int error = circular_queue_push(&service->events, (void *)train->id); 
     cuassert(!error, "Overrun LocationService Event Queue");
 }
 
@@ -30,6 +72,9 @@ void locationservice_associate(LocationService *service, TrainLocation *train, t
 
     train->distance -= (train->edge ? train->edge->dist : 0);
     train->edge = edge;
+
+    // TODO: Deal with acceleration as we switch track segments.
+    train->velocity = velocity(train->id, train->speed, train->edge);
 
     // We've reached a sensor. Reset our distance measurement.
     if (train->edge->src->type == NODE_SENSOR) {
@@ -50,7 +95,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
         TrainLocation *train = &service->trains[i];
         if (train->next_sensor == sensor) {
             locationservice_associate(service, train, sensor_edge);
-            locationservice_event(service, i);
+            locationservice_add_event(service, train);
             return 0;
         }
     }
@@ -63,7 +108,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
 
         if (!train->edge) {
             locationservice_associate(service, train, sensor_edge);
-            locationservice_event(service, last_train);
+            locationservice_add_event(service, train);
         }
         
         return 0;
@@ -72,39 +117,33 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
     return -1;
 }
 
-int locationservice_distance_event(struct LocationService *service, int train_number) {
-    int index;
-    for (index = 0; index < service->num_trains; ++index) {
-        if (service->trains[index].number == train_number) break;
+int locationservice_distance_event(struct LocationService *service) {
+    int i;
+    for (i = 0; i < service->num_trains; ++i) {
+        TrainLocation *train = &service->trains[i];
+
+        if (!train->edge) return 0;
+        if (!train->edge->dest) return 0;
+
+        train->distance += train->velocity;
+
+        // TODO: Accelerate if we need to.
+
+        if ((train->distance / MM) >= train->edge->dist  && train->edge->dest->type != NODE_SENSOR) {
+            track_edge *next_edge = track_next_edge(train->edge->dest);
+            locationservice_associate(service, train, next_edge);
+        }
+
+        locationservice_add_event(service, train);
     }
-
-    cuassert(index < service->num_trains, "Distance event for Invalid Train");
-
-    TrainLocation *train = &service->trains[index];
-    if (!train->edge) return 0;
-    if (!train->edge->dest) return 0;
-
-    train->distance += CM;
-
-    if (train->distance >= train->edge->dist && train->edge->dest->type != NODE_SENSOR) {
-        track_edge *next_edge = track_next_edge(train->edge->dest);
-        locationservice_associate(service, train, next_edge);
-    }
-
-    locationservice_event(service, index);
 
     return 0;
 }
 
-int locationservice_reverse_event(struct LocationService *service, int train_number) {
-    int index;
-    for (index = 0; index < service->num_trains; ++index) {
-        if (service->trains[index].number == train_number) break;
-    }
+static int locationservice_reverse_event(struct LocationService *service, int train_number) {
+    TrainLocation *train = get_train_location(service, train_number);
+    cuassert(train, "Reverse event for invalid train");
 
-    cuassert(index < service->num_trains, "Reverse event for Invalid Train");
-
-    struct TrainLocation *train = &service->trains[index];
     if (!train->edge) return 0;
 
     // Throw us on the opposite edge, and reverse our distance.
@@ -114,46 +153,43 @@ int locationservice_reverse_event(struct LocationService *service, int train_num
     // Associate us with the correct landmark and sensor.
     train->next_sensor = track_next_sensor(train->edge->src);
 
-    locationservice_event(service, index);
+    locationservice_add_event(service, train);
 
     return 0;
+}
+
+int locationservice_speed_event(struct LocationService *service, int train_number, int speed) {
+    if (speed == 15) return locationservice_reverse_event(service, train_number);
+
+    TrainLocation *train = get_train_location(service, train_number);
+    cuassert(train, "Speed event for invalid train");
+
+    // TODO: Set-up acceleration stuff. For now, just set our speed.
+    update_speed(train, speed);
 }
 
 int locationservice_add_train(struct LocationService *service, int train_number) {
-    if (service->num_trains == MAX_TRAINS) return -1;
+    cuassert(service->num_trains < MAX_TRAINS, "Attempting to add too many trains");
 
     // Ensure a duplicate train doesn't exit.
-    int index;
-    for (index = 0; index < service->num_trains; ++index) {
-        if (service->trains[index].number == train_number) return -2;
-    }
+    if (get_train_location(service, train_number)) return -2;
 
-    index = service->num_trains;
-    service->num_trains++;
-
-    // Initialize train train location.
-    TrainLocation *train = &service->trains[index];
-    train->number = train_number;
-    train->distance = 0;
-    train->edge = 0;
-    train->next_sensor = 0;
-
-    locationservice_event(service, index);
-
+    TrainLocation *train = add_train_location(service, train_number);
+    
+    locationservice_add_event(service, train);
     return 0;
 }
 
-int locationservice_pop(struct LocationService *service, int *train,
+int locationservice_pop_event(struct LocationService *service, int *train,
                                                          struct track_node** landmark,
                                                          struct track_edge** edge,
                                                          int *distance,
                                                          int *subscribers) {
     if (circular_queue_empty(&(service->events))) return -1;
 
-    int event = (int)circular_queue_pop(&service->events);
-
-    struct TrainLocation *tlocation = &(service->trains[event]);
-    *train = tlocation->number;
+    int id = (int)circular_queue_pop(&service->events);
+    struct TrainLocation *tlocation = get_train_location(service, id);
+    *train = tlocation->id;
     *landmark = tlocation->edge ? tlocation->edge->src : 0;
     *edge = tlocation->edge;
     *distance = tlocation->distance;

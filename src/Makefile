@@ -39,10 +39,7 @@ ARMOBJECTS = kernel.o\
 			 location_courier.o\
 			 mission_control.o\
 			 train_task.o\
-			 distance_server.o\
-			 distance_service.o\
 			 distance_notifier.o\
-			 distance_courier.o\
 			 calibration.o
 
 X86OBJECTS = log_x86.o\
