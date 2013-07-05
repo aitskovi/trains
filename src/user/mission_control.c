@@ -148,6 +148,8 @@ void mission_control() {
                     for (i = 1; i < 19; ++i) {
                         SetSwitch(i, STRAIGHT);
                     }
+                    SetSwitch(8, CURVED);
+                    SetSwitch(11, CURVED);
                     SetSwitch(153, STRAIGHT);
                     SetSwitch(154, STRAIGHT);
                     SetSwitch(155, STRAIGHT);

@@ -10,6 +10,17 @@ int distance_for_tick(int train, int tick, int start_speed, int end_speed);
 int timeout_for_speed(int train, int speed);
 int stopping_distance_for_speed(int train, int speed);
 
+enum CALIBRATION_MESSAGE_TYPE {
+    CALIBRATION_INFO_MESSAGE,
+};
+
+typedef struct CalibrationMessage {
+    int type;
+    int train;
+    int speed;
+    int error;
+} CalibrationMessage;
+
 void calibration_server();
 
 #endif

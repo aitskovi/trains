@@ -134,7 +134,7 @@ int locationservice_distance_event(struct LocationService *service) {
             locationservice_associate(service, train, next_edge);
         }
 
-        locationservice_add_event(service, train);
+        if (train->velocity > 0) locationservice_add_event(service, train);
     }
 
     return 0;

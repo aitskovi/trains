@@ -19,30 +19,44 @@ int velocity(int train, int speed, track_edge *edge) {
 
 struct location_event {
     track_edge *edge;
-    int distance;
+    int sensor_distance;
+    int edge_distance;
     int time;
 };
 
 void calibration_update(struct location_event *event, track_edge *edge, int distance) {
-    if (event->edge == edge) return;
-    if (!edge || !edge->src) return;
+    if (!edge) return;
 
-    event->distance += event->edge->dist;
-    event->edge = edge;
+    if (!event->edge) {
+        event->edge = edge;
+        event->edge_distance = distance;
+        return;
+    }
+
+    if (event->edge == edge) {
+        event->edge_distance = distance;
+        return;
+    }
+
+    event->sensor_distance += event->edge->dist;
 
     if (edge->src->type == NODE_SENSOR) {
         int time = Time();
 
-        if (event->edge) {
-            int elapsed_time = time - event->time;
-            ulog("Time: %d ticks", elapsed_time);
-            ulog("Distance: %d", event->distance * 1000);
-            ulog("Speed: %d um/tick", event->distance * 1000 / elapsed_time);
-        }
+        int elapsed_time = time - event->time;
+        int elapsed_sensor_distance_mm = event->sensor_distance;
+        int elapsed_edge_distance_um = event->edge_distance + 5300 - event->edge->dist * 1000;
+        int elapsed_edge_distance_mm = elapsed_edge_distance_um / 1000;
+        ulog("Time: %d ticks", elapsed_time);
+        ulog("Distance: %d mm", event->sensor_distance);
+        ulog("Speed: %d um/tick", elapsed_sensor_distance_mm * 1000 / elapsed_time);
+        ulog("Error: %d mm", elapsed_edge_distance_mm);
 
-        event->distance = 0;
+        event->sensor_distance = 0;
         event->time = Time();
     }
+
+    event->edge = edge;
 }
 
 void calibration_server() {
@@ -81,6 +95,10 @@ void calibration_server() {
         if (num_trains == index) {
             number_to_train[index] = msg.ls_msg.train;
             num_trains++;
+            location_events[index].edge = 0;
+            location_events[index].sensor_distance = 0;
+            location_events[index].edge_distance = 0;
+            location_events[index].time = 0;
         }
 
         calibration_update(&location_events[index], msg.ls_msg.edge, msg.ls_msg.distance);

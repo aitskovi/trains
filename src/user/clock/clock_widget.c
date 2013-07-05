@@ -31,5 +31,4 @@ void clock_widget() {
 
         Delay(6);
     }
-
 }
