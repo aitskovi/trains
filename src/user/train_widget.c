@@ -16,7 +16,7 @@
 /**
  * Update a specific train.
  */
-int train_display_update(int index, int number, struct track_node *landmark, int distance) {
+static int train_display_update(int index, int number, struct track_edge *edge, int distance) {
     char command[128];
     char *pos = &command[0];
 
@@ -29,10 +29,10 @@ int train_display_update(int index, int number, struct track_node *landmark, int
     // Draw Train Position
     pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 2, index * TRAIN_COLUMN_WIDTH + 1);
     char position[TRAIN_COLUMN_WIDTH];
-    if (!landmark) {
+    if (!edge) {
         sprintf(position, "N/A");
     } else {
-        sprintf(position, "%s %dmm", landmark->name, distance / 1000);
+        sprintf(position, "%s %dmm", edge->src->name, distance / 1000);
     }
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', position);
     pos += sprintf(pos, "\0338");
@@ -42,7 +42,7 @@ int train_display_update(int index, int number, struct track_node *landmark, int
     return 0;
 }
 
-int train_display_init() {
+static int train_display_init() {
     char command[128];
     char *pos = &command[0];
     pos += sprintf(pos, "\0337\033[%u;%uH", TRAIN_TABLE_HEIGHT, 1);
@@ -96,7 +96,7 @@ void train_widget() {
         }
 
         // Update Train List.
-        train_display_update(index, msg.ls_msg.train, msg.ls_msg.landmark, msg.ls_msg.distance);
+        train_display_update(index, msg.ls_msg.train, msg.ls_msg.edge, msg.ls_msg.distance);
     }
 
     Exit();
