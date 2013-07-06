@@ -262,7 +262,7 @@ class edge:
         try:
           assert len(line) == 3
           assert line[2] == 'mm'
-          self.dist = int(line[1])
+          self.dist = int(line[1]) * 1000
         except (AssertionError, ValueError):
           state.error("expected 'distance <INTEGER> mm'")
       else:

@@ -252,6 +252,7 @@ void mission_control() {
 
 
         default:
+            ulog("Message type is %d", msg.type);
             cuassert(0, "Mission control received unknown message");
             break;
         }

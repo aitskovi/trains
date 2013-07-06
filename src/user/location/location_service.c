@@ -130,7 +130,7 @@ int locationservice_distance_event(struct LocationService *service) {
 
         // TODO: Accelerate if we need to.
 
-        if ((train->distance / MM) >= train->edge->dist  && train->edge->dest->type != NODE_SENSOR) {
+        if (train->distance >= train->edge->dist && train->edge->dest->type != NODE_SENSOR) {
             track_edge *next_edge = track_next_edge(train->edge->dest);
             locationservice_associate(service, train, next_edge);
         }

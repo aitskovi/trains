@@ -66,9 +66,9 @@ void calibration_update(struct location_event *event, track_edge *edge, int dist
         int time = Time();
 
         int elapsed_time = time - event->time;
-        int elapsed_sensor_distance_mm = event->sensor_distance;
-        int elapsed_edge_distance_um = event->edge_distance + 5300 - event->edge->dist * 1000;
-        int elapsed_speed_um_tick = elapsed_sensor_distance_mm * 1000 / elapsed_time;
+        int elapsed_sensor_distance_um = event->sensor_distance;
+        int elapsed_edge_distance_um = event->edge_distance + 5300 - event->edge->dist;
+        int elapsed_speed_um_tick = elapsed_sensor_distance_um / elapsed_time;
         int elapsed_edge_distance_mm = elapsed_edge_distance_um / 1000;
         /*
         ulog("Time: %d ticks", elapsed_time);
