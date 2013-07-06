@@ -33,7 +33,6 @@ void location_courier() {
         consumer_msg.type = LOCATION_SERVER_MESSAGE;
         consumer_msg.ls_msg.type = LOCATION_COURIER_REQUEST;
         consumer_msg.ls_msg.train = producer_rply.ls_msg.train;
-        consumer_msg.ls_msg.landmark = producer_rply.ls_msg.landmark;
         consumer_msg.ls_msg.distance = producer_rply.ls_msg.distance;
         consumer_msg.ls_msg.edge = producer_rply.ls_msg.edge;
 

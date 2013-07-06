@@ -166,6 +166,7 @@ int locationservice_speed_event(struct LocationService *service, int train_numbe
 
     // TODO: Set-up acceleration stuff. For now, just set our speed.
     update_speed(train, speed);
+    return 0;
 }
 
 int locationservice_add_train(struct LocationService *service, int train_number) {
@@ -181,7 +182,6 @@ int locationservice_add_train(struct LocationService *service, int train_number)
 }
 
 int locationservice_pop_event(struct LocationService *service, int *train,
-                                                         struct track_node** landmark,
                                                          struct track_edge** edge,
                                                          int *distance,
                                                          int *subscribers) {
@@ -190,7 +190,6 @@ int locationservice_pop_event(struct LocationService *service, int *train,
     int id = (int)circular_queue_pop(&service->events);
     struct TrainLocation *tlocation = get_train_location(service, id);
     *train = tlocation->id;
-    *landmark = tlocation->edge ? tlocation->edge->src : 0;
     *edge = tlocation->edge;
     *distance = tlocation->distance;
 

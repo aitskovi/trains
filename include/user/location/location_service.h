@@ -53,7 +53,6 @@ void locationservice_add_event(LocationService *service, TrainLocation *train);
 int locationservice_pop_event(
         struct LocationService *service, 
         int *train,
-        struct track_node** landmark,
         struct track_edge** edge,
         int *distance,
         int *subscribers);
