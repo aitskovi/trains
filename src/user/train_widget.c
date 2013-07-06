@@ -61,7 +61,7 @@ static int train_calibration_update(int index, int number, int velocity, int err
     // Draw Train Error.
     pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 6, index * TRAIN_COLUMN_WIDTH + 1);
     char error_buf[TRAIN_COLUMN_WIDTH];
-    sprintf(error_buf, "%dum", error);
+    sprintf(error_buf, "%dmm", error / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', error_buf);
 
     pos += sprintf(pos, "\0338");
@@ -103,6 +103,7 @@ static int get_train_index(int *number_to_train, int *num_trains, int id) {
 }
 
 void train_widget() {
+    RegisterAs("TrainWidget");
 
     // Find the location server and subscribe.
     tid_t location_server_tid = WhoIs("LocationServer");

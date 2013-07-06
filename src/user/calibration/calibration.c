@@ -27,13 +27,26 @@ int calibration_error(int train) {
 }
 
 struct location_event {
+    int train;
     track_edge *edge;
     int sensor_distance;
     int edge_distance;
     int time;
 };
 
-void calibration_update(struct location_event *event, track_edge *edge, int distance) {
+static void publish_calibration(int tid, int train, int velocity, int error) {
+    // Notify the distance server of the change.
+    Message msg, reply;
+    msg.type = CALIBRATION_MESSAGE;
+    msg.cs_msg.type = CALIBRATION_INFO;
+    msg.cs_msg.train = train;
+    msg.cs_msg.velocity = velocity;
+    msg.cs_msg.error = error;
+    Send(tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    cuassert(CALIBRATION_MESSAGE == reply.type, "Calibration task received invalid msg");
+}
+
+void calibration_update(struct location_event *event, track_edge *edge, int distance, tid_t tid) {
     if (!edge) return;
 
     if (!event->edge) {
@@ -55,14 +68,19 @@ void calibration_update(struct location_event *event, track_edge *edge, int dist
         int elapsed_time = time - event->time;
         int elapsed_sensor_distance_mm = event->sensor_distance;
         int elapsed_edge_distance_um = event->edge_distance + 5300 - event->edge->dist * 1000;
+        int elapsed_speed_um_tick = elapsed_sensor_distance_mm * 1000 / elapsed_time;
         int elapsed_edge_distance_mm = elapsed_edge_distance_um / 1000;
+        /*
         ulog("Time: %d ticks", elapsed_time);
         ulog("Distance: %d mm", event->sensor_distance);
-        ulog("Speed: %d um/tick", elapsed_sensor_distance_mm * 1000 / elapsed_time);
+        ulog("Speed: %d um/tick", elapsed_speed_um_tick);
         ulog("Error: %d mm", elapsed_edge_distance_mm);
+        */
 
         event->sensor_distance = 0;
         event->time = Time();
+
+        publish_calibration(tid, event->train, elapsed_speed_um_tick, elapsed_edge_distance_um);
     }
 
     event->edge = edge;
@@ -73,6 +91,7 @@ void calibration_server() {
 
     tid_t location_server_tid = WhoIs("LocationServer");
     location_server_subscribe(location_server_tid);
+    tid_t train_widget_tid = WhoIs("TrainWidget");
 
     // Deal with our Subscription.
     int tid;
@@ -104,13 +123,14 @@ void calibration_server() {
         if (num_trains == index) {
             number_to_train[index] = msg.ls_msg.data.id;
             num_trains++;
+            location_events[index].train = msg.ls_msg.data.id;
             location_events[index].edge = 0;
             location_events[index].sensor_distance = 0;
             location_events[index].edge_distance = 0;
             location_events[index].time = 0;
         }
 
-        calibration_update(&location_events[index], msg.ls_msg.data.edge, msg.ls_msg.data.distance);
+        calibration_update(&location_events[index], msg.ls_msg.data.edge, msg.ls_msg.data.distance, train_widget_tid);
     }
 
     Exit();
