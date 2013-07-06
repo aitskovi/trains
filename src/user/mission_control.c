@@ -225,20 +225,20 @@ void mission_control() {
         case LOCATION_SERVER_MESSAGE:
             cuassert(ls_msg->type == LOCATION_COURIER_REQUEST, "Mission control received invalid location server request");
 
-            status = train_status_by_number(trains, ls_msg->train);
+            status = train_status_by_number(trains, ls_msg->data.id);
 
             if(!status){
                 ulog("\nGot location for non-existant train!");
                 break;
             }
 
-            if (ls_msg->edge && !status->position) {
+            if (ls_msg->data.edge && !status->position) {
                 mission_control_set_train_speed(status, 0);
-                status->position = ls_msg->edge;
-                status->dist = ls_msg->distance;
+                status->position = ls_msg->data.edge;
+                status->dist = ls_msg->data.distance;
             }
 
-            if (ls_msg->edge && ls_msg->edge->dest == status->dest) {
+            if (ls_msg->data.edge && ls_msg->data.edge->dest == status->dest) {
                 mission_control_set_train_speed(status, 0);
             }
 

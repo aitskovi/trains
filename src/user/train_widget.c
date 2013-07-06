@@ -86,17 +86,19 @@ void train_widget() {
         // Find the train index.
         int index;
         for (index = 0; index < num_trains; ++index) {
-            if (number_to_train[index] == msg.ls_msg.train) break;
+            if (number_to_train[index] == msg.ls_msg.data.id) break;
         }
 
         // We couldn't find index, add it instead.
         if (num_trains == index) {
-            number_to_train[index] = msg.ls_msg.train;
+            number_to_train[index] = msg.ls_msg.data.id;
             num_trains++;
         }
 
         // Update Train List.
-        train_display_update(index, msg.ls_msg.train, msg.ls_msg.edge, msg.ls_msg.distance);
+        train_display_update(index, msg.ls_msg.data.id,
+                                    msg.ls_msg.data.edge,
+                                    msg.ls_msg.data.distance);
     }
 
     Exit();

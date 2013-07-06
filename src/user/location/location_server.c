@@ -20,7 +20,7 @@ int AddTrain(int number) {
     struct Message msg, reply;
     msg.type = LOCATION_SERVER_MESSAGE;
     msg.ls_msg.type = LOCATION_TRAIN_REQUEST;
-    msg.ls_msg.train = number;
+    msg.ls_msg.data.id = number;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
     dassert(reply.type == LOCATION_TRAIN_RESPONSE, "Invalid response from switch server");
     return 0;
@@ -34,7 +34,7 @@ int location_publish(struct LocationService *service, int tid) {
     rply.type = LOCATION_SERVER_MESSAGE;
     rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
 
-    int result = locationservice_pop_event(service, &(rply.ls_msg.train), &(rply.ls_msg.edge), &(rply.ls_msg.distance), rply.ls_msg.subscribers);
+    int result = locationservice_pop_event(service, &rply.ls_msg.data, rply.ls_msg.subscribers);
     if (result == -1) return -1;
 
     Reply(tid, (char *) &rply, sizeof(rply));
@@ -105,7 +105,7 @@ void LocationServer() {
                         rply.ls_msg.type = LOCATION_TRAIN_RESPONSE;
                         Reply(tid, (char *) &rply, sizeof(rply));
 
-                        locationservice_add_train(&service, ls_msg->train);
+                        locationservice_add_train(&service, ls_msg->data.id);
                         break;
                     case LOCATION_COURIER_REQUEST: {
                         int result = location_publish(&service, tid);

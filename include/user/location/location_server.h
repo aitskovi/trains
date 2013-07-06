@@ -14,12 +14,20 @@ enum LOCATION_SERVER_MESSAGE_TYPE {
 
 struct track_node;
 
+typedef struct TrainData {
+    int id;
+    int speed;
+    int velocity;
+    struct track_edge *edge;
+    int distance;
+    int stopping_distance;
+    int error;
+} TrainData;
+
 typedef struct LocationServerMessage {
     int type;
 
-    int train;
-    struct track_edge *edge;
-    int distance;
+    TrainData data;
 
     int subscribers[MAX_SUBSCRIBERS];
 } LocationServerMessage;

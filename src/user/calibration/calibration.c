@@ -17,6 +17,15 @@ int velocity(int train, int speed, track_edge *edge) {
     else return 5300;
 }
 
+int stopping_distance(int train, int velocity) {
+    if (velocity == 0) return 0;
+    else return 700000;
+}
+
+int calibration_error(int train) {
+    return 10000;
+}
+
 struct location_event {
     track_edge *edge;
     int sensor_distance;
@@ -88,12 +97,12 @@ void calibration_server() {
         // Find the train index.
         int index;
         for (index = 0; index < num_trains; ++index) {
-            if (number_to_train[index] == msg.ls_msg.train) break;
+            if (number_to_train[index] == msg.ls_msg.data.id) break;
         }
 
         // We couldn't find index, add it instead.
         if (num_trains == index) {
-            number_to_train[index] = msg.ls_msg.train;
+            number_to_train[index] = msg.ls_msg.data.id;
             num_trains++;
             location_events[index].edge = 0;
             location_events[index].sensor_distance = 0;
@@ -101,7 +110,7 @@ void calibration_server() {
             location_events[index].time = 0;
         }
 
-        calibration_update(&location_events[index], msg.ls_msg.edge, msg.ls_msg.distance);
+        calibration_update(&location_events[index], msg.ls_msg.data.edge, msg.ls_msg.data.distance);
     }
 
     Exit();

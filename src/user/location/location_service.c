@@ -5,6 +5,7 @@
 #include <track.h>
 #include <track_node.h>
 #include <calibration.h>
+#include <location_server.h>
 
 #define CM 10000
 #define MM 1000
@@ -181,17 +182,19 @@ int locationservice_add_train(struct LocationService *service, int train_number)
     return 0;
 }
 
-int locationservice_pop_event(struct LocationService *service, int *train,
-                                                         struct track_edge** edge,
-                                                         int *distance,
-                                                         int *subscribers) {
+int locationservice_pop_event(LocationService *service, TrainData *data, int *subscribers) {
     if (circular_queue_empty(&(service->events))) return -1;
 
     int id = (int)circular_queue_pop(&service->events);
-    struct TrainLocation *tlocation = get_train_location(service, id);
-    *train = tlocation->id;
-    *edge = tlocation->edge;
-    *distance = tlocation->distance;
+    struct TrainLocation *train = get_train_location(service, id);
+
+    data->id = id;
+    data->speed = train->speed;
+    data->velocity = train->velocity;
+    data->edge = train->edge;
+    data->distance = train->distance;
+    data->stopping_distance = stopping_distance(train->id, train->velocity);
+    data->error = calibration_error(train->id);
 
     int i;
     for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
