@@ -7,6 +7,7 @@
 #include <shell.h>
 #include <distance_server.h>
 #include <switch_server.h>
+#include <calibration.h>
 
 enum MESSAGE_TYPE {
     SENSOR_SERVER_MESSAGE,
@@ -15,6 +16,7 @@ enum MESSAGE_TYPE {
     SHELL_MESSAGE,
     DISTANCE_SERVER_MESSAGE,
     SWITCH_SERVER_MESSAGE,
+    CALIBRATION_MESSAGE,
 };
 
 typedef struct Message {
@@ -26,6 +28,7 @@ typedef struct Message {
         ShellMessage sh_msg;
         DistanceServerMessage ds_msg;
         SwitchServerMessage sw_msg;
+        CalibrationMessage cs_msg;
     };
 } Message;
 

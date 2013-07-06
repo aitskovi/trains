@@ -167,6 +167,8 @@ int locationservice_speed_event(struct LocationService *service, int train_numbe
 
     // TODO: Set-up acceleration stuff. For now, just set our speed.
     update_speed(train, speed);
+
+    locationservice_add_event(service, train);
     return 0;
 }
 

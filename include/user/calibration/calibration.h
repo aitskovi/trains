@@ -13,13 +13,13 @@ int timeout_for_speed(int train, int speed);
 int stopping_distance_for_speed(int train, int speed);
 
 enum CALIBRATION_MESSAGE_TYPE {
-    CALIBRATION_INFO_MESSAGE,
+    CALIBRATION_INFO,
 };
 
 typedef struct CalibrationMessage {
-    int type;
+    enum CALIBRATION_MESSAGE_TYPE type;
     int train;
-    int speed;
+    int velocity;
     int error;
 } CalibrationMessage;
 

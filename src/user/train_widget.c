@@ -11,12 +11,12 @@
 #include <syscall.h>
 
 #define TRAIN_TABLE_HEIGHT 9
-#define TRAIN_COLUMN_WIDTH 10
+#define TRAIN_COLUMN_WIDTH 12
 
 /**
  * Update a specific train.
  */
-static int train_display_update(int index, int number, struct track_edge *edge, int distance) {
+static int train_position_update(int index, int number, struct track_edge *edge, int distance, int velocity) {
     char command[128];
     char *pos = &command[0];
 
@@ -35,6 +35,35 @@ static int train_display_update(int index, int number, struct track_edge *edge, 
         sprintf(position, "%s %dmm", edge->src->name, distance / 1000);
     }
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', position);
+
+    // Draw Calibrated Train Velocity
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 3, index * TRAIN_COLUMN_WIDTH + 1);
+    char velocity_buf[TRAIN_COLUMN_WIDTH];
+    sprintf(velocity_buf, "%dum/tick", velocity);
+    pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', velocity_buf);
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
+
+    return 0;
+}
+
+static int train_calibration_update(int index, int number, int velocity, int error) {
+    char command[128];
+    char *pos = &command[0];
+
+    // Draw Train Speed
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 5, index * TRAIN_COLUMN_WIDTH + 1);
+    char velocity_buf[TRAIN_COLUMN_WIDTH];
+    sprintf(velocity_buf, "%dum/tick", velocity);
+    pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', velocity_buf);
+
+    // Draw Train Error.
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 6, index * TRAIN_COLUMN_WIDTH + 1);
+    char error_buf[TRAIN_COLUMN_WIDTH];
+    sprintf(error_buf, "%dum", error);
+    pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', error_buf);
+
     pos += sprintf(pos, "\0338");
 
     Write(COM2, command, pos - command);
@@ -48,20 +77,35 @@ static int train_display_init() {
     pos += sprintf(pos, "\0337\033[%u;%uH", TRAIN_TABLE_HEIGHT, 1);
     pos += sprintf(pos, "Trains:");
     pos += sprintf(pos, "\0338");
+
+    pos += sprintf(pos, "\0337\033[%u;%uH", TRAIN_TABLE_HEIGHT + 4, 1);
+    pos += sprintf(pos, "Calibration:");
+    pos += sprintf(pos, "\0338");
+
     Write(COM2, command, pos - command);
     return 0;
 }
 
+static int get_train_index(int *number_to_train, int *num_trains, int id) {
+    // Find the train index.
+    int index;
+    for (index = 0; index < *num_trains; ++index) {
+        if (number_to_train[index] == id) break;
+    }
+
+    // We couldn't find index, add it instead.
+    if (*num_trains == index) {
+        number_to_train[index] = id;
+        *num_trains++;
+    }
+
+    return index;
+}
+
 void train_widget() {
 
-    // Find the location server.
-    int location_server_tid = -2;
-    do {
-        location_server_tid = WhoIs("LocationServer");
-        dlog("Location Server Tid %d\n", sensor_server_tid);
-    } while (location_server_tid < 0);
-
-    // Subscribe.
+    // Find the location server and subscribe.
+    tid_t location_server_tid = WhoIs("LocationServer");
     location_server_subscribe(location_server_tid);
 
     // Initial Display.
@@ -75,30 +119,37 @@ void train_widget() {
     for(;;) {
         // Recieve a Sensor Message.
         Receive(&tid, (char *) &msg, sizeof(msg));
-        cuassert(msg.type == LOCATION_SERVER_MESSAGE, "Invalid Message");
-        cuassert(msg.ls_msg.type == LOCATION_COURIER_REQUEST, "Invalid Location Widget Request");
 
-        // Ack Location Message.
-        rply.type = LOCATION_SERVER_MESSAGE;
-        rply.ss_msg.type = LOCATION_COURIER_RESPONSE;
-        Reply(tid, (char *) &rply, sizeof(rply));
+        switch(msg.type) {
+            case LOCATION_SERVER_MESSAGE: {
+                cuassert(msg.ls_msg.type == LOCATION_COURIER_REQUEST, "Invalid Location Widget Request");
 
-        // Find the train index.
-        int index;
-        for (index = 0; index < num_trains; ++index) {
-            if (number_to_train[index] == msg.ls_msg.data.id) break;
+                // Ack Location Message.
+                rply.type = LOCATION_SERVER_MESSAGE;
+                rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
+                Reply(tid, (char *) &rply, sizeof(rply));
+
+                TrainData* data = &msg.ls_msg.data;
+                int index = get_train_index(number_to_train, &num_trains, data->id);
+                train_position_update(index, data->id, data->edge, data->distance, data->velocity);
+
+                break;
+            }
+            case CALIBRATION_MESSAGE: {
+                cuassert(msg.cs_msg.type == CALIBRATION_INFO, "Invalid Location Widget Request");
+
+                // Ack Calibration Message.
+                rply.type = CALIBRATION_MESSAGE;
+                rply.cs_msg.type = CALIBRATION_INFO;
+                Reply(tid, (char *) &rply, sizeof(rply));
+
+                int index = get_train_index(number_to_train, &num_trains, msg.cs_msg.train);
+                train_calibration_update(index, msg.cs_msg.train, msg.cs_msg.velocity, msg.cs_msg.error);
+                break;
+            }
+            default:
+                cuassert(0, "Invalid Train Widget Message");
         }
-
-        // We couldn't find index, add it instead.
-        if (num_trains == index) {
-            number_to_train[index] = msg.ls_msg.data.id;
-            num_trains++;
-        }
-
-        // Update Train List.
-        train_display_update(index, msg.ls_msg.data.id,
-                                    msg.ls_msg.data.edge,
-                                    msg.ls_msg.data.distance);
     }
 
     Exit();
