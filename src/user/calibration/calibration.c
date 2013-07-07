@@ -11,6 +11,16 @@
 
 #define MAX_TRAINS 8
 
+typedef struct TrainCalibration {
+    int id;
+    int average_speed;
+    int error;
+    int sensor_distance;
+    int time;
+
+    TrainData data;
+} TrainCalibration;
+
 int velocity(int train, int speed, track_edge *edge) {
     // TODO: Use the velocity tables.
     if (speed == 0) return 0;
@@ -46,44 +56,39 @@ static void publish_calibration(int tid, int train, int velocity, int error) {
     cuassert(CALIBRATION_MESSAGE == reply.type, "Calibration task received invalid msg");
 }
 
-void calibration_update(struct location_event *event, track_edge *edge, int distance, tid_t tid) {
-    if (!edge) return;
+int calibration_update(TrainCalibration *calibration, TrainData *data) {
+    if (!data->edge) return 0;
 
-    if (!event->edge) {
-        event->edge = edge;
-        event->edge_distance = distance;
-        return;
+    TrainData *old_data = &calibration->data;
+    TrainData *new_data = data;
+
+    if (!old_data->edge || old_data->edge == new_data->edge) {
+        calibration->data = *new_data;
+        return 0;
     }
 
-    if (event->edge == edge) {
-        event->edge_distance = distance;
-        return;
-    }
+    // We've passed an edge, add its distance.
+    calibration->sensor_distance += old_data->edge->dist;
 
-    event->sensor_distance += event->edge->dist;
-
-    if (edge->src->type == NODE_SENSOR) {
+    // If we're switching to a sensor, do some calibration.
+    if (new_data->edge->src->type == NODE_SENSOR) {
         int time = Time();
+        int elapsed_time = time - calibration->time;
+        int elapsed_sensor_distance = calibration->sensor_distance;
+        int elapsed_edge_distance = old_data->distance + old_data->velocity - old_data->edge->dist;
+        int elapsed_speed_um_tick = elapsed_sensor_distance / elapsed_time;
 
-        int elapsed_time = time - event->time;
-        int elapsed_sensor_distance_um = event->sensor_distance;
-        int elapsed_edge_distance_um = event->edge_distance + 5300 - event->edge->dist;
-        int elapsed_speed_um_tick = elapsed_sensor_distance_um / elapsed_time;
-        int elapsed_edge_distance_mm = elapsed_edge_distance_um / 1000;
-        /*
-        ulog("Time: %d ticks", elapsed_time);
-        ulog("Distance: %d mm", event->sensor_distance);
-        ulog("Speed: %d um/tick", elapsed_speed_um_tick);
-        ulog("Error: %d mm", elapsed_edge_distance_mm);
-        */
+        calibration->sensor_distance = 0;
+        calibration->data = *new_data;
+        calibration->average_speed = elapsed_speed_um_tick;
+        calibration->error = elapsed_edge_distance;
+        calibration->time = time;
 
-        event->sensor_distance = 0;
-        event->time = Time();
-
-        publish_calibration(tid, event->train, elapsed_speed_um_tick, elapsed_edge_distance_um);
+        return 1;
+    } else {
+        calibration->data = *new_data;
+        return 0;
     }
-
-    event->edge = edge;
 }
 
 void calibration_server() {
@@ -98,8 +103,7 @@ void calibration_server() {
     struct Message msg, rply;
 
     int number_to_train[MAX_TRAINS];
-    struct location_event location_events[MAX_TRAINS];
-    int errors[MAX_TRAINS];
+    TrainCalibration calibrations[MAX_TRAINS];
 
     int num_trains = 0;
     for(;;) {
@@ -113,24 +117,25 @@ void calibration_server() {
         rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
         Reply(tid, (char *) &rply, sizeof(rply));
 
+        TrainData *data = &msg.ls_msg.data;
         // Find the train index.
         int index;
         for (index = 0; index < num_trains; ++index) {
-            if (number_to_train[index] == msg.ls_msg.data.id) break;
+            if (number_to_train[index] == data->id) break;
         }
 
         // We couldn't find index, add it instead.
         if (num_trains == index) {
-            number_to_train[index] = msg.ls_msg.data.id;
+            number_to_train[index] = data->id;
             num_trains++;
-            location_events[index].train = msg.ls_msg.data.id;
-            location_events[index].edge = 0;
-            location_events[index].sensor_distance = 0;
-            location_events[index].edge_distance = 0;
-            location_events[index].time = 0;
+
+            memset(&calibrations[index], 0, sizeof(TrainCalibration));
         }
 
-        calibration_update(&location_events[index], msg.ls_msg.data.edge, msg.ls_msg.data.distance, train_widget_tid);
+        TrainCalibration *calibration = &calibrations[index];
+        if (calibration_update(calibration, data)) {
+            publish_calibration(train_widget_tid, data->id, calibration->average_speed, calibration->error);
+        }
     }
 
     Exit();
