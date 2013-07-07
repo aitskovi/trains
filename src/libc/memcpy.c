@@ -28,13 +28,25 @@ void *memcpy4(void *destination, void *source, unsigned int len) {
     return destination;
 }
 
+static void *unaligned_memcpy(void *destination, void *source, unsigned int len) {
+    char *dst = (char *)destination;
+    char *src = (char *)source;
+
+    unsigned int i;
+    for (i = 0; i < len; ++i) {
+        *dst++ = *src++;
+    }
+
+    return destination;
+}
+
 void *memcpy(void *destination, void *source, unsigned int len) {
     char *dst = (char *)destination;
     char *src = (char *)source;
 
     if ((unsigned int) destination % 4
             || (unsigned int) source % 4) {
-        log("Memcpy called with unaligned pointers!");
+        return unaligned_memcpy(destination, source, len);
     } else {
         unsigned int bulk_size = len - len % 4;
         memcpy4(destination, source, bulk_size);

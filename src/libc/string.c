@@ -4,7 +4,7 @@
 #include <memory.h>
 
 /**
- * Return the length of a null terminated string.
+ *  the length of a null terminated string.
  */
 unsigned int strlen(char *a) {
     unsigned int length = 0;
