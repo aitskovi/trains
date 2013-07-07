@@ -203,6 +203,25 @@ int parse_go(char *str, int *train, char *landmark) {
     return 1;
 }
 
+int parse_stop(char *str, int *train, char *landmark) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 's') return 0;
+    if (*str++ != 't') return 0;
+    if (*str++ != 'o') return 0;
+    if (*str++ != 'p') return 0;
+
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    while(is_whitespace(*str)) str++;
+    while(!is_whitespace(*str)) *landmark++ = *str++;
+    *landmark = 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -307,6 +326,18 @@ void shell() {
                 sh_msg->position = track_get_by_name(landmark_buffer1);
                 if (!sh_msg->position) {
                     ulog("\nCan't find landmark %s", landmark_buffer1);
+                } else {
+                    Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                    cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                    cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+                }
+            } else if (parse_stop(line_buffer, &train, landmark_buffer1)) {
+                ulog("\nShell making train %u stop after hitting %s", train, landmark_buffer1);
+                sh_msg->type = SHELL_STOP;
+                sh_msg->train_no = train;
+                sh_msg->position = track_get_by_name(landmark_buffer1);
+                if (!sh_msg->position || sh_msg->position->type != NODE_SENSOR) {
+                    ulog("\nCan't find sensor %s", landmark_buffer1);
                 } else {
                     Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                     cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");

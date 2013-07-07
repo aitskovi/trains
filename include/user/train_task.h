@@ -19,6 +19,7 @@ typedef struct TrainMessage {
         COMMAND_REVERSE,
         COMMAND_AWAITING,
         COMMAND_GOTO,
+        COMMAND_STOP,
         COMMAND_ACKNOWLEDGED
     } type;
     speed_t speed;

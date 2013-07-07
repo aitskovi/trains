@@ -22,7 +22,7 @@ typedef struct TrainStatus {
     int awaiting_instruction; // Waiting
     int has_queued_instruction;
     TrainMessage queued_instruction;
-    track_node *dest;
+    track_node *dest, *stop;
     track_edge *position;
     unsigned int dist;
 } TrainStatus;
@@ -35,6 +35,7 @@ void train_status_init(TrainStatus *status, unsigned char train_no, tid_t tid) {
     status->position = 0;
     status->dist = 0;
     status->dest = 0;
+    status->stop = 0;
 }
 
 TrainStatus * train_status_by_number(TrainStatus *status, unsigned char train_no) {
@@ -92,6 +93,19 @@ static void mission_control_set_train_dest(TrainStatus *status, track_node *node
     msg.type = TRAIN_MESSAGE;
     TrainMessage *train_command = &msg.tr_msg;
     train_command->type = COMMAND_GOTO;
+    train_command->destination = node;
+    Send(status->tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    cuassert(reply.type == TRAIN_MESSAGE, "Unexpected reply from train task");
+    cuassert(reply.tr_msg.type == COMMAND_ACKNOWLEDGED, "Unexpected reply from train task");
+}
+
+static void mission_control_set_train_stop(TrainStatus *status, track_node *node) {
+    status->stop = node;
+
+    Message msg, reply;
+    msg.type = TRAIN_MESSAGE;
+    TrainMessage *train_command = &msg.tr_msg;
+    train_command->type = COMMAND_STOP;
     train_command->destination = node;
     Send(status->tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
     cuassert(reply.type == TRAIN_MESSAGE, "Unexpected reply from train task");
@@ -174,6 +188,16 @@ void mission_control() {
                         break;
                     }
                     mission_control_set_train_dest(status, sh_msg->position);
+
+                    break;
+
+                case SHELL_STOP:
+                    status = train_status_by_number(trains, sh_msg->train_no);
+                    if (!status) {
+                        ulog("\nCould not find train");
+                        break;
+                    }
+                    mission_control_set_train_stop(status, sh_msg->position);
 
                     break;
 

@@ -134,6 +134,8 @@ void train_task(int train_no) {
     track_edge *our_position, *old_position;
     unsigned int our_position_distance, old_position_distance;
 
+    track_node *stop_sensor = 0;
+
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
 
@@ -150,12 +152,16 @@ void train_task(int train_no) {
                 train_reverse(train_no, our_speed, location_server_tid);
                 break;
             case (COMMAND_GOTO):
-                ulog("Train received command to goto %s", tr_command->destination);
+                ulog("Train received command to goto %s", tr_command->destination->name);
                 path_reserved_pos = path_pos = 0;
                 path_reserved_distance = 0;
                 // TODO calculate in a different thread
                 calculate_path(our_position->src, tr_command->destination, path, &path_length);
                 train_set_speed(train_no, CRUISING_SPEED, location_server_tid);
+                break;
+            case (COMMAND_STOP):
+                ulog("Train received command to stop at %s", tr_command->destination->name);
+                stop_sensor = tr_command->destination;
                 break;
             default:
                 cuassert(0, "Invalid Train Task Command");
@@ -179,6 +185,10 @@ void train_task(int train_no) {
             ls_msg->data.distance = min(ls_msg->data.distance, ls_msg->data.edge->dist);
             our_position = ls_msg->data.edge;
             our_position_distance = ls_msg->data.distance;
+
+            if (our_position != old_position && stop_sensor && our_position->src == stop_sensor) {
+                train_set_speed(train_no, 0, location_server_tid);
+            }
 
             // Nothing left to do if we're not en route somewhere
             if (!path_length) {

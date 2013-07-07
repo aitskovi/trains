@@ -22,6 +22,7 @@ typedef struct ShellMessage {
         SHELL_REVERSE_TRAIN,
         SHELL_SET_TRAIN_SPEED,
         SHELL_GO,
+        SHELL_STOP,
         SHELL_SET_SWITCH_POSITION,
         SHELL_SUCCESS_REPLY
     } type;
