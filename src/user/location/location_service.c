@@ -46,7 +46,7 @@ static TrainLocation *add_train_location(LocationService *service, int train) {
 }
 
 void locationservice_initialize(struct LocationService *service) {
-    memset(service->trains, 0, sizeof(TrainLocation) * MAX_TRAINS);
+    memset(service->trains, 0, sizeof(service->trains));
     service->num_trains = 0;
 
     int i;

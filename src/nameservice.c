@@ -75,13 +75,9 @@ void nameservice_initialize(struct NameService *service) {
     struct Registration *registrations = service->registrations;
 
     // Initialize the Registration Structs.
+    memset(service->registrations, 0, sizeof(service->registrations));
     int i;
     for (i = 0; i < MAX_REGISTRATIONS; ++i) {
-        char *name = registrations[i].name;
-        int j;
-        for (j = 0; j < MAX_NAME_LENGTH; ++j) {
-            name[j] = 0;
-        }
         registrations[i].tid = -1;
     }
 }
