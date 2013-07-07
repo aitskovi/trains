@@ -123,6 +123,7 @@ void mission_control() {
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
+        //ulog("Src is %u", tid);
         switch (msg.type) {
 
         /*
@@ -212,6 +213,7 @@ void mission_control() {
             break;
 
         default:
+            ulog("Src is %u", tid);
             ulog("Message type is %d", msg.type);
             cuassert(0, "Mission control received unknown message");
             break;
