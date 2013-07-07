@@ -66,11 +66,9 @@ static int distance_between_nodes (track_node *node1, track_node *node2) {
             break;
         }
     }
-    /*
     if (node1->reverse == node2) {
         result = 0;
     }
-    */
     return result;
 }
 
@@ -103,6 +101,7 @@ static unsigned int distance_travelled(track_edge *edge1, unsigned int distance1
         }
     }
 
+    return 0;
     ulog("\nCould not calculate distance travelled");
 }
 
@@ -136,6 +135,8 @@ void train_task(int train_no) {
 
     track_node *stop_sensor = 0;
 
+    int finished_reversing = 0;
+
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
 
@@ -155,6 +156,7 @@ void train_task(int train_no) {
                 ulog("Train received command to goto %s", tr_command->destination->name);
                 path_reserved_pos = path_pos = 0;
                 path_reserved_distance = 0;
+                finished_reversing = 0;
                 // TODO calculate in a different thread
                 calculate_path(our_position->src, tr_command->destination, path, &path_length);
                 train_set_speed(train_no, CRUISING_SPEED, location_server_tid);
@@ -188,6 +190,16 @@ void train_task(int train_no) {
 
             if (our_position != old_position && stop_sensor && our_position->src == stop_sensor) {
                 train_set_speed(train_no, 0, location_server_tid);
+            }
+
+            // For reversing
+            if (finished_reversing) {
+                ulog("Finished reversing");
+                path_reserved_pos = path_pos = 0;
+                path_reserved_distance = 0;
+                finished_reversing = 0;
+                // TODO calculate in a different thread
+                calculate_path(our_position->src, path[path_length - 1], path, &path_length);
             }
 
             // Nothing left to do if we're not en route somewhere
@@ -240,6 +252,14 @@ void train_task(int train_no) {
                 cuassert(dist >= 0, "Disconnected nodes in path!");
 
                 //ulog("Train reserved node %s while %u um ahead of %s, buffer space is now %u um", path[j]->name, our_position_distance, our_position->src->name, path_reserved_distance);
+
+                // We're reversing
+                if (dist == 0) {
+                    ulog("Train reversing at %s while %u um ahead of %s", path[j]->name, our_position_distance, our_position->src->name);
+                    train_reverse(train_no, CRUISING_SPEED, location_server_tid);
+                    finished_reversing = 1;
+                    break;
+                }
 
                 if (path[j]->type == NODE_BRANCH) {
                     int direction = direction_between_nodes(path[j], path[j+1]);
