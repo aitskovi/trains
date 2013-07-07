@@ -3,10 +3,11 @@
 
 #define HEAP_SIZE 10 * 1024 * 1024
 
+#include <memcpy.h>
+
 /**
  * Memory Utilities.
  */
-void *memcpy(void *destination, void *source, unsigned int len);
 void *memset(void *destination, unsigned char value, unsigned int len);
 
 /**

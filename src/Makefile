@@ -46,6 +46,7 @@ ARMOBJECTS = kernel.o\
 		     clock_widget.o\
 			 shell.o\
 			 nameservice.o\
+			 memcpy.o\
 			 		  	 
 
 X86OBJECTS = log_x86.o\
