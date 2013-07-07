@@ -229,7 +229,6 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
         }
 
         // If there is enough space around current node we could also reverse
-        /*
         if (can_reverse_at_node(current)) {
             neighbour = current->reverse;
             if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
@@ -240,7 +239,7 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
                 }
             }
         }
-        */
+
 
         if (current == dest) {
             break;

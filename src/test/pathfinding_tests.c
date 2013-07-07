@@ -128,7 +128,7 @@ void pathfinding_suite_reset() {
 struct vsuite *pathfinding_suite() {
     struct vsuite *suite = vsuite_create("Pathfinding Tests", pathfinding_suite_reset);
     vsuite_add_test(suite, pathfinding_noreverse_test);
-    //vsuite_add_test(suite, pathfinding_simplereverse_test);
+    vsuite_add_test(suite, pathfinding_simplereverse_test);
     vsuite_add_test(suite, pathfinding_reverseeligible_test);
     return suite;
 }
