@@ -8,6 +8,7 @@
 #include <switch_server.h>
 
 #define SENSORS_PER_TYPE 16
+#define TRAIN_LENGTH 250000
 
 static track_node track[TRACK_MAX];
 
@@ -60,6 +61,7 @@ struct track_node *track_next_sensor(struct track_node *node) {
  * Do a dfs until we hit all sensors after us.
  */
 
+
 int track_sensor_search(struct track_node *node, struct track_node **sensors) {
     struct track_node **iterator = sensors;
     int i;
@@ -80,9 +82,11 @@ int track_sensor_search(struct track_node *node, struct track_node **sensors) {
     return iterator - sensors;
 }
 
+
 /**
  * Generate the next sensor on the track we can hit.
  */
+
 
 int track_next_sensors(int node, struct track_node** sensors) {
     track_node *tnode = &track[node];
@@ -110,6 +114,7 @@ int sensor_eq(track_node *sensor, char name, int num) {
 track_node *track_get_sensor(char sensor, int num) {
     return &(track[sensor_to_idx(sensor, num)]);
 }
+
 
 track_node *track_get_by_name(char * name) {
     unsigned int i;
@@ -139,6 +144,54 @@ static track_node * get_closest_unvisited_node() {
     }
 
     return &track[result];
+}
+
+static int has_room_ahead_on_edge(track_edge *edge, int branch_allowed) {
+    if (edge->dist > TRAIN_LENGTH) return 1;
+    if (edge->dest) {
+        switch (edge->dest->type) {
+        case NODE_SENSOR:
+            return 1;
+        case NODE_BRANCH:
+            return branch_allowed;
+        case NODE_MERGE:
+            return !branch_allowed;
+        case NODE_EXIT:
+            return 1;
+        default:
+            return 0;
+        }
+    }
+    return 0;
+}
+
+static int has_room_ahead(track_node *node, int branch_allowed) {
+    track_edge *forward = &node->edge[0];
+    track_edge *forward2 = &node->edge[1];
+    switch (node->type) {
+    case NODE_BRANCH:
+        return has_room_ahead_on_edge(forward, branch_allowed) && has_room_ahead_on_edge(forward2, branch_allowed);
+    case NODE_NONE:
+        return 0;
+    default:
+        return has_room_ahead_on_edge(forward, branch_allowed);
+    }
+    return 0;
+}
+
+static int has_room_behind(track_node *node) {
+    return has_room_ahead(node->reverse, 0);
+}
+
+int can_reverse_at_node(track_node *node) {
+    switch (node->type) {
+    case NODE_EXIT:
+        return 1;
+    case NODE_SENSOR:
+    case NODE_BRANCH:
+        return (has_room_ahead(node, 1) && has_room_behind(node));
+    }
+    return 0;
 }
 
 // O(v^2) Dijkstra's
@@ -175,10 +228,9 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
             }
         }
 
+        // If there is enough space around current node we could also reverse
         /*
-
-        // If the current node is a sensor node and TODO there's enough space, another edge is the reverse edge
-        if (current->type == NODE_SENSOR) {
+        if (can_reverse_at_node(current)) {
             neighbour = current->reverse;
             if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
                 unsigned int dist = current->distance + 0;
@@ -188,7 +240,6 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
                 }
             }
         }
-
         */
 
         if (current == dest) {
