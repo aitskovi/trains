@@ -171,7 +171,7 @@ int kmy_parent_tid_test() {
 int kcreate_test() {
     reset();
 
-    kcreate(t2, MEDIUM, 0);
+    kcreate(t2, MEDIUM, 0, 0);
     vassert(t2->state == READY);
     vassert(task_get_return_value(t2) > t2->tid);
 

@@ -12,6 +12,7 @@
 #include <train_task.h>
 #include <nameserver.h>
 #include <track.h>
+#include <memory.h>
 
 #define MAX_TRAINS 5
 
@@ -58,42 +59,43 @@ TrainStatus * train_status_by_tid(TrainStatus *status, tid_t tid) {
     return 0;
 }
 
-static void queue_train_command(TrainStatus *status, TrainMessage *message) {
-    status->queued_instruction = *message;
-    status->has_queued_instruction = 1;
-}
-
-static void flush_train_status(TrainStatus *status) {
-    Message reply;
-    TrainMessage *tr_reply = &reply.tr_msg;
-    if (status->awaiting_instruction && status->has_queued_instruction) {
-        *tr_reply = status->queued_instruction;
-        reply.type = TRAIN_MESSAGE;
-        //ulog("\nFlushed train status");
-        Reply(status->tid, (char *) &reply, sizeof(reply));
-        status->has_queued_instruction = 0;
-        status->awaiting_instruction = 0;
-    }
-}
-
 static void mission_control_set_train_speed(TrainStatus *status, unsigned char speed) {
-    TrainMessage train_command;
-    train_command.speed = speed;
-    train_command.type = COMMAND_SET_SPEED;
-    queue_train_command(status, &train_command);
-    flush_train_status(status);
+    // TODO store speed in train status struct?
+    ulog("Mission control setting train speed for train %u to %u", (unsigned int) status->train_no, speed);
+
+    Message msg, reply;
+    msg.type = TRAIN_MESSAGE;
+    TrainMessage *train_command = &msg.tr_msg;
+    train_command->speed = speed;
+    train_command->type = COMMAND_SET_SPEED;
+    Send(status->tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    cuassert(reply.type == TRAIN_MESSAGE, "Unexpected reply from train task");
+    cuassert(reply.tr_msg.type == COMMAND_ACKNOWLEDGED, "Unexpected reply from train task");
 }
 
 static void mission_control_reverse_train(TrainStatus *status) {
-    TrainMessage train_command;
-    train_command.type = COMMAND_REVERSE;
     status->position = status->position->reverse;
-    queue_train_command(status, &train_command);
-    flush_train_status(status);
+
+    Message msg, reply;
+    msg.type = TRAIN_MESSAGE;
+    TrainMessage *train_command = &msg.tr_msg;
+    train_command->type = COMMAND_REVERSE;
+    Send(status->tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    cuassert(reply.type == TRAIN_MESSAGE, "Unexpected reply from train task");
+    cuassert(reply.tr_msg.type == COMMAND_ACKNOWLEDGED, "Unexpected reply from train task");
 }
 
 static void mission_control_set_train_dest(TrainStatus *status, track_node *node) {
     status->dest = node;
+
+    Message msg, reply;
+    msg.type = TRAIN_MESSAGE;
+    TrainMessage *train_command = &msg.tr_msg;
+    train_command->type = COMMAND_GOTO;
+    train_command->destination = node;
+    Send(status->tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    cuassert(reply.type == TRAIN_MESSAGE, "Unexpected reply from train task");
+    cuassert(reply.tr_msg.type == COMMAND_ACKNOWLEDGED, "Unexpected reply from train task");
 }
 
 void mission_control() {
@@ -105,9 +107,6 @@ void mission_control() {
     ShellMessage *sh_msg = &msg.sh_msg;
     ShellMessage *sh_reply = &reply.sh_msg;
 
-    TrainMessage *tr_msg = &msg.tr_msg;
-    TrainMessage *tr_reply = &reply.tr_msg;
-
     LocationServerMessage *ls_msg = &msg.ls_msg;
     LocationServerMessage *ls_reply = &reply.ls_msg;
 
@@ -117,16 +116,10 @@ void mission_control() {
 
     TrainStatus *status;
 
-    // Find the location server.
-    tid_t location_server_tid;
-    do {
-        location_server_tid = WhoIs("LocationServer");
-    } while (location_server_tid < 0);
+    tid_t location_server_tid = WhoIs("LocationServer");
 
     // Subscribe.
     location_server_subscribe(location_server_tid);
-
-    track_node *B4;
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
@@ -140,9 +133,6 @@ void mission_control() {
             switch (sh_msg->type) {
                 case SHELL_INIT_TRACK:
                     track_initialize(sh_msg->track);
-
-                    B4 = track_get_by_name("B4");
-                    ulog("\nMission control B4 was %s", B4->name);
 
                     int i;
                     for (i = 1; i < 19; ++i) {
@@ -160,13 +150,12 @@ void mission_control() {
                     new_child = Execute(HIGH, train_task, sh_msg->train_no);
                     status = &trains[num_trains++];
                     train_status_init(status, sh_msg->train_no, new_child);
-                    mission_control_set_train_speed(status, 2);
                     AddTrain(sh_msg->train_no);
+                    mission_control_set_train_speed(status, 2);
                     break;
                 case SHELL_SET_TRAIN_SPEED:
                     status = train_status_by_number(trains, sh_msg->train_no);
                     mission_control_set_train_speed(status, sh_msg->speed);
-
                     break;
                 case SHELL_SET_SWITCH_POSITION:
                     SetSwitch(sh_msg->switch_no, sh_msg->switch_pos);
@@ -183,18 +172,7 @@ void mission_control() {
                         ulog("\nCould not find train");
                         break;
                     }
-                    if (!status->position) {
-                        ulog("\nCould not find train position");
-                        break;
-                    }
-                    if (configure_track_for_path(status->position->src, sh_msg->position)) {
-                        ulog("\nCould not find forward path to destination");
-                        mission_control_reverse_train(status);
-                        cuassert(!configure_track_for_path(status->position->src, sh_msg->position), "Could not find path either way!!!");
-                        break;
-                    }
                     mission_control_set_train_dest(status, sh_msg->position);
-                    mission_control_set_train_speed(status, 11);
 
                     break;
 
@@ -206,17 +184,6 @@ void mission_control() {
             sh_reply->type = SHELL_SUCCESS_REPLY;
             Reply(tid, (char *) &reply, sizeof(reply));
 
-            break;
-
-        /*
-         * Train is waiting for command
-         */
-        case TRAIN_MESSAGE:
-            //ulog("\nGot train awaiting command");
-            cuassert(COMMAND_AWAITING == tr_msg->type, "Mission control received invalid message from train");
-            status = train_status_by_tid(trains, tid);
-            status->awaiting_instruction = 1;
-            flush_train_status(status);
             break;
 
         /*
@@ -238,18 +205,11 @@ void mission_control() {
                 status->dist = ls_msg->data.distance;
             }
 
-            if (ls_msg->data.edge && ls_msg->data.edge->dest == status->dest) {
-                mission_control_set_train_speed(status, 0);
-            }
-
             reply.type = LOCATION_SERVER_MESSAGE;
             ls_reply->type = LOCATION_COURIER_RESPONSE;
-
             Reply(tid, (char *) &reply, sizeof(reply));
 
             break;
-
-
 
         default:
             ulog("Message type is %d", msg.type);

@@ -20,7 +20,7 @@ int track_initialize(char track_name) {
             init_trackb(track);
             break;
         default:
-            ulog("Invalid Track\n");
+            //ulog("Invalid Track\n");
             break;
     }
 
@@ -55,9 +55,11 @@ struct track_node *track_next_sensor(struct track_node *node) {
     return dest;
 }
 
+
 /**
  * Do a dfs until we hit all sensors after us.
  */
+
 int track_sensor_search(struct track_node *node, struct track_node **sensors) {
     struct track_node **iterator = sensors;
     int i;
@@ -81,6 +83,7 @@ int track_sensor_search(struct track_node *node, struct track_node **sensors) {
 /**
  * Generate the next sensor on the track we can hit.
  */
+
 int track_next_sensors(int node, struct track_node** sensors) {
     track_node *tnode = &track[node];
 
@@ -139,11 +142,13 @@ static track_node * get_closest_unvisited_node() {
 }
 
 // O(v^2) Dijkstra's
-int configure_track_for_path(track_node *src, track_node *dest) {
+int calculate_path(track_node *src, track_node *dest, track_node **path, unsigned int *path_length) {
     track_node **previous[TRACK_MAX];
+    track_node **next[TRACK_MAX];
     memset(previous, 0, sizeof(previous));
+    memset(next, 0, sizeof(next));
 
-    track_node *current;
+    track_node *current, *neighbour;
 
     // Configure distance to be +inf
     unsigned int i;
@@ -160,7 +165,7 @@ int configure_track_for_path(track_node *src, track_node *dest) {
         unsigned int j;
         // For each neighbour
         for (j = 0; j < NUM_NODE_EDGES[current->type]; ++j) {
-            track_node *neighbour = current->edge[j].dest;
+            neighbour = current->edge[j].dest;
             if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
                 unsigned int dist = current->distance + current->edge[j].dist;
                 if (dist < neighbour->distance) {
@@ -169,40 +174,49 @@ int configure_track_for_path(track_node *src, track_node *dest) {
                 }
             }
         }
+
         /*
+
+        // If the current node is a sensor node and TODO there's enough space, another edge is the reverse edge
+        if (current->type == NODE_SENSOR) {
+            neighbour = current->reverse;
+            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
+                unsigned int dist = current->distance + 0;
+                if (dist < neighbour->distance) {
+                    neighbour->distance = dist;
+                    previous[neighbour - track] = current;
+                }
+            }
+        }
+
+        */
+
         if (current == dest) {
-            ulog("\nDijsktras found dest");
             break;
         }
-        */
     }
-
-    ulog("\nDijsktras finished");
 
     if (dest->distance == 0xFFFFFFFF) {
         return 1;
     }
 
-    // Path may not exist since we are not supporting reverse atm
+    // Reverse the linked list we built
     current = dest;
     while (src != previous[current - track]) {
         track_node *prev = previous[current - track];
-        if (!prev) {
-            ulog("\nInvalid prev pointer");
-            break;
-        }
-        if (prev->type == NODE_BRANCH) {
-            if (prev->edge[DIR_STRAIGHT].dest == current) {
-                SetSwitch(prev->num, STRAIGHT);
-            } else if (prev->edge[DIR_CURVED].dest == current) {
-                SetSwitch(prev->num, CURVED);
-            } else {
-                ulog("\nDijsktra path was invalid");
-            }
-        }
+        next[prev - track] = current;
         current = prev;
     }
+    next[src - track] = current;
+
+    // Output to client
+    *path_length = 0;
+    current = src;
+    do {
+        path[(*path_length)++] = current;
+        current = next[current - track];
+    } while (current != dest);
+    path[(*path_length)++] = dest;
 
     return 0;
-
 }

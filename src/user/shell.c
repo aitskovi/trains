@@ -186,24 +186,6 @@ int parse_ad(char *str, int *train) {
     return 1;
 }
 
-int parse_p(char *str, char *landmark1, char *landmark2) {
-    // Skip Whitespace.
-    while(is_whitespace(*str)) str++;
-
-    if (*str != 'p') return 0;
-    str++;
-
-    while(is_whitespace(*str)) str++;
-    while(!is_whitespace(*str)) *landmark1++ = *str++;
-    *landmark1 = 0;
-
-    while(is_whitespace(*str)) str++;
-    while(!is_whitespace(*str)) *landmark2++ = *str++;
-    *landmark2 = 0;
-
-    return 1;
-}
-
 int parse_go(char *str, int *train, char *landmark) {
     // Skip Whitespace.
     while(is_whitespace(*str)) str++;
@@ -318,9 +300,6 @@ void shell() {
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
-            } else if (parse_p(line_buffer, landmark_buffer1, landmark_buffer2)) {
-                ulog("Calculating path between %s and %s", landmark_buffer1, landmark_buffer2);
-                configure_track_for_path(track_get_by_name(landmark_buffer1), track_get_by_name(landmark_buffer2));
             } else if (parse_go(line_buffer, &train, landmark_buffer1)) {
                 ulog("\nShell making train %u go to %s", train, landmark_buffer1);
                 sh_msg->type = SHELL_GO;

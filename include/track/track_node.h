@@ -36,19 +36,4 @@ struct track_node {
   int visited;
 };
 
-/*
-typedef enum {
-    ACTION_REVERSE,
-    ACTION_SET_TURNOUT,
-    ACTION_STOP
-} action_type;
-
-struct action_item {
-    track_node *location;
-    unsigned int distance;
-    action_type type;
-    unsigned char direction;
-};
-*/
-
 #endif

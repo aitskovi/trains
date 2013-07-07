@@ -40,7 +40,13 @@ ARMOBJECTS = kernel.o\
 			 mission_control.o\
 			 train_task.o\
 			 distance_notifier.o\
-			 calibration.o
+			 calibration.o\
+			 sensor_service.o\
+			 train_widget.o\
+		     clock_widget.o\
+			 shell.o\
+			 nameservice.o\
+			 		  	 
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
@@ -52,7 +58,6 @@ OBJECTS = bwio.o\
 		  messaging.o\
 		  memory.o\
 		  ksyscalls.o\
-		  nameservice.o\
 		  string.o\
 		  random.o\
 		  bits.o\
@@ -68,13 +73,10 @@ OBJECTS = bwio.o\
 		  serial.o\
 		  conv.o\
 		  sprintf.o\
-		  shell.o\
-		  clock_widget.o\
 		  ring_buffer.o\
-		  sensor_service.o\
 		  track_data.o\
 		  track.o\
-		  train_widget.o
+		  
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
 
@@ -126,7 +128,7 @@ project1.elf : project1.o $(ARMOBJECTS) $(OBJECTS)
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
+unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o scheduling_tests.o pathfinding_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:

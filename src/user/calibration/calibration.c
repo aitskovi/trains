@@ -19,7 +19,7 @@ int velocity(int train, int speed, track_edge *edge) {
 
 int stopping_distance(int train, int velocity) {
     if (velocity == 0) return 0;
-    else return 700000;
+    else return 600000;
 }
 
 int calibration_error(int train) {
