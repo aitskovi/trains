@@ -116,6 +116,8 @@ void switch_publish(int turnout, unsigned char state, tid_t tid) {
 }
 
 void switch_set(int turnout, unsigned char state, tid_t location_server_tid) {
+
+
     char command[3] = {state, turnout, 32};
     Write(COM1, command, 3);
     switches[switch_to_index(turnout)] = state;
@@ -126,6 +128,9 @@ int SetSwitch(switch_t switch_no, unsigned char direction) {
     if (server_tid < 0) {
         return -1;
     }
+
+    if (switch_get_position(switch_no) == direction) return 0;
+
     SwitchServerMessage msg, reply;
     msg.type = SET_SWITCH;
     msg.switch_no = switch_no;
