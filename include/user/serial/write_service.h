@@ -14,7 +14,7 @@ void writeservice_initialize(struct WriteService *service, int channel);
 /**
  * Enqueue a string into the service.
  */
-int writeservice_enqueue(struct WriteService *service, char *str, unsigned int size);
+void writeservice_enqueue(struct WriteService *service, char *str, unsigned int size);
 
 /**
  * Attempt to flush a character from the service.

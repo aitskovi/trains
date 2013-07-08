@@ -29,7 +29,14 @@ int velocity(int train, int speed, track_edge *edge) {
 
 int stopping_distance(int train, int velocity) {
     if (velocity == 0) return 0;
-    else return 600000;
+    else return (0.0100 * velocity * velocity + 74.6926 * velocity);
+}
+
+int acceleration(int train, int start, int end, int tick) {
+    int d = stopping_distance(train, end) - stopping_distance(train, start);
+    int v = end - start;
+    ulog("D = %d, V = %d", d, v);
+    return v * v / (2 * d);
 }
 
 int calibration_error(int train) {

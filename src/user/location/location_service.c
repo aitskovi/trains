@@ -11,19 +11,35 @@
 #define MM 1000
 #define UM 1
 
-static void update_speed(TrainLocation *train, int speed) {
-    // TODO: Update acceleration.
-    /*
-    train->accelerating = 1;
-    train->acceleration.start = velocity(train->id, train->speed, train->edge);
-    train->acceleration.end = velocity(train->id, speed, train->edge);
-    train->acceleration.ticks = 0;
-    */
-    train->velocity = velocity(train->id, speed, train->edge);
-    train->speed = speed;
+static void update_velocity(TrainLocation *train) {
+    if (!train->accelerating) return;
+
+    train->velocity += acceleration(train->id, train->acceleration.start, train->acceleration.end, train->acceleration.ticks);
+    train->acceleration.ticks++;
+
+    if (train->velocity >= train->acceleration.end) {
+        train->velocity = train->acceleration.end;
+        train->accelerating = 0;
+    }
 }
 
-static TrainLocation *update_max_velocity(TrainLocation *train, int velocity) {
+static void update_speed(TrainLocation *train, int speed) {
+    if (speed != 0) {
+        // TODO: Update acceleration.
+        train->accelerating = 1;
+        train->acceleration.start = velocity(train->id, train->speed, train->edge);
+        train->acceleration.end = velocity(train->id, speed, train->edge);
+        train->acceleration.ticks = 0;
+    } else {
+        train->accelerating = 0;
+        train->velocity = 0;
+    }
+
+    train->speed = speed;
+    update_velocity(train);
+}
+
+static void update_max_velocity(TrainLocation *train, int velocity) {
     if (train->accelerating) {
         train->acceleration.end = velocity;
     } else {
@@ -75,7 +91,8 @@ void locationservice_associate(LocationService *service, TrainLocation *train, t
     train->edge = edge;
 
     // TODO: Deal with acceleration as we switch track segments.
-    train->velocity = velocity(train->id, train->speed, train->edge);
+    int max_velocity = velocity(train->id, train->speed, train->edge);
+    update_max_velocity(train, max_velocity);
 
     // We've reached a sensor. Reset our distance measurement.
     if (train->edge->src->type == NODE_SENSOR) {
@@ -127,8 +144,7 @@ int locationservice_distance_event(struct LocationService *service) {
         if (!train->edge->dest) return 0;
 
         train->distance += train->velocity;
-
-        // TODO: Accelerate if we need to.
+        update_velocity(train);
 
         if (train->distance >= train->edge->dist && train->edge->dest->type != NODE_SENSOR) {
             track_edge *next_edge = track_next_edge(train->edge->dest);
@@ -167,6 +183,9 @@ int locationservice_speed_event(struct LocationService *service, int train_numbe
 
     // TODO: Set-up acceleration stuff. For now, just set our speed.
     update_speed(train, speed);
+    if (train->accelerating) {
+        ulog("Train is Accelerating!");
+    }
 
     locationservice_add_event(service, train);
     return 0;
