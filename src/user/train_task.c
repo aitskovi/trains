@@ -48,7 +48,7 @@ static void train_reverse(int train, speed_t new_speed, tid_t location_server) {
 
     // Block for a while (1.5s) to let train stop.
     // TODO adjust this for speed
-    Delay(150);
+    Delay(300);
 
     // Reverse the Train.
     train_set_speed(train, 15, location_server);
@@ -129,7 +129,7 @@ void train_task(int train_no) {
     unsigned int path_length = 0;
     unsigned int path_pos = 0;
     unsigned int path_reserved_pos = 0;
-    unsigned int path_reserved_distance = 0;
+    int path_reserved_distance = 0;
 
     track_edge *our_position, *old_position;
     unsigned int our_position_distance, old_position_distance;
@@ -195,9 +195,6 @@ void train_task(int train_no) {
                 goto DONE_PROCESSING_LOCATION_SERVER_MESSAGE;
             }
 
-            unsigned int dist_elapsed = distance_travelled(old_position, old_position_distance, our_position, our_position_distance);
-            path_reserved_distance -= dist_elapsed;
-
             // Figure out where we are in the path
             unsigned int i, j;
             int found = 0;
@@ -218,11 +215,10 @@ void train_task(int train_no) {
                 //calculate_path(our_position->src, tr_command->destination, path, &path_length);
             }
 
-            // While path_reserved_distance < stopping_distance
-            // Reserve edges/nodes and switch switches
-            // If reserving destination node, issue stop command
 
-            j = path_reserved_pos;
+            // Reserve up to us + stopping distance
+            path_reserved_distance = -our_position_distance;
+            j = path_pos;
             while (1) {
                 if (path_reserved_distance > ls_msg->data.stopping_distance) {
                     break;
@@ -243,17 +239,17 @@ void train_task(int train_no) {
                 int dist = distance_between_nodes(path[j], path[j+1]);
                 cuassert(dist >= 0, "Disconnected nodes in path!");
 
-                ulog("Train reserved node %s while %u um ahead of %s, buffer space is now %u um", path[j]->name, our_position_distance, our_position->src->name, path_reserved_distance);
+                //ulog("Train reserved node %s while %u um ahead of %s, buffer space is now %u um", path[j]->name, our_position_distance, our_position->src->name, path_reserved_distance);
 
                 if (path[j]->type == NODE_BRANCH) {
                     int direction = direction_between_nodes(path[j], path[j+1]);
                     cuassert(direction >= 0, "Disconnected nodes in path!");
 
                     if (D_STRAIGHT == direction) {
-                        ulog("Node %s switched to straight", path[j]->name);
+                        //ulog("Node %s switched to straight", path[j]->name);
                         SetSwitch(path[j]->num, STRAIGHT);
                     } else if (D_CURVED == direction) {
-                        ulog("Node %s switched to curved", path[j]->name);
+                        //ulog("Node %s switched to curved", path[j]->name);
                         SetSwitch(path[j]->num, CURVED);
                     } else {
                         ulog ("INVALID DIRECTION");
@@ -262,7 +258,6 @@ void train_task(int train_no) {
 
                 path_reserved_distance += dist;
                 ++j;
-                ++path_reserved_pos;
             }
 
             DONE_PROCESSING_LOCATION_SERVER_MESSAGE:
