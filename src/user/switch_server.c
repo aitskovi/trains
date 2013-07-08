@@ -32,7 +32,7 @@ int switch_update(int number, unsigned char position);
 
 void switches_init() {
     int i;
-    for (i = 0; i < NUM_SWITCHES; ++i) {
+    for (i = 0; i < NUM_SWITCHES + NUM_AUXILLARY_SWITCHES; ++i) {
         switches[i] = 0;
     }
 
