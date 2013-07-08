@@ -17,23 +17,25 @@ static void update_velocity(TrainLocation *train) {
     train->velocity += acceleration(train->id, train->acceleration.start, train->acceleration.end, train->acceleration.ticks);
     train->acceleration.ticks++;
 
-    if (train->velocity >= train->acceleration.end) {
-        train->velocity = train->acceleration.end;
-        train->accelerating = 0;
+    if (train->acceleration.start > train->acceleration.end) {
+        if (train->velocity <= train->acceleration.end) {
+            train->velocity = train->acceleration.end;
+            train->accelerating = 0;
+        }
+    } else {
+        if (train->velocity >= train->acceleration.end) {
+            train->velocity = train->acceleration.end;
+            train->accelerating = 0;
+        }
     }
 }
 
 static void update_speed(TrainLocation *train, int speed) {
-    if (speed != 0) {
-        // TODO: Update acceleration.
-        train->accelerating = 1;
-        train->acceleration.start = velocity(train->id, train->speed, train->edge);
-        train->acceleration.end = velocity(train->id, speed, train->edge);
-        train->acceleration.ticks = 0;
-    } else {
-        train->accelerating = 0;
-        train->velocity = 0;
-    }
+    // TODO: Update acceleration.
+    train->accelerating = 1;
+    train->acceleration.start = velocity(train->id, train->speed, train->edge);
+    train->acceleration.end = velocity(train->id, speed, train->edge);
+    train->acceleration.ticks = 0;
 
     train->speed = speed;
     update_velocity(train);
@@ -143,6 +145,7 @@ int locationservice_distance_event(struct LocationService *service) {
         if (!train->edge) return 0;
         if (!train->edge->dest) return 0;
 
+        int old_velocity = train->velocity;
         train->distance += train->velocity;
         update_velocity(train);
 
@@ -151,7 +154,7 @@ int locationservice_distance_event(struct LocationService *service) {
             locationservice_associate(service, train, next_edge);
         }
 
-        if (train->velocity > 0) locationservice_add_event(service, train);
+        if (old_velocity > 0) locationservice_add_event(service, train);
     }
 
     return 0;

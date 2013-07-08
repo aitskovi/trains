@@ -35,9 +35,16 @@ int stopping_distance(int train, int velocity) {
 int acceleration(int train, int start, int end, int tick) {
     int d = stopping_distance(train, end) - stopping_distance(train, start);
     int v = end - start;
-    ulog("D = %d, V = %d", d, v);
     return v * v / (2 * d);
 }
+
+/*
+int deceleration(int train, int start, int end, int tick) {
+    int d = stopping_distance(train, end) - stopping_distance(train, start);
+    int v = end - start;
+    return v * v / (2 * d);
+}
+*/
 
 int calibration_error(int train) {
     return 10000;
