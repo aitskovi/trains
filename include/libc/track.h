@@ -7,6 +7,7 @@
 #define TRACK_B 'B'
 
 int track_initialize(char track);
+void track_set_reverse_penalty(unsigned int penalty);
 
 /**
  * Generate the next sensor on the track we can hit.

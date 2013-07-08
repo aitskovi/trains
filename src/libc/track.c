@@ -11,6 +11,7 @@
 #define TRAIN_LENGTH 250000
 
 static track_node track[TRACK_MAX];
+static unsigned int REVERSE_PENALTY;
 
 int track_initialize(char track_name) {
     switch(track_name) {
@@ -25,7 +26,13 @@ int track_initialize(char track_name) {
             break;
     }
 
+    // Default penalty for reversing is one meter
+    REVERSE_PENALTY = 1000000;
     return 0;
+}
+
+void track_set_reverse_penalty(unsigned int penalty) {
+    REVERSE_PENALTY = penalty;
 }
 
 struct track_edge *track_next_edge(struct track_node *node) {
@@ -232,7 +239,7 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
         if (can_reverse_at_node(current)) {
             neighbour = current->reverse;
             if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
-                unsigned int dist = current->distance + 0;
+                unsigned int dist = current->distance + REVERSE_PENALTY;
                 if (dist < neighbour->distance) {
                     neighbour->distance = dist;
                     previous[neighbour - track] = current;
