@@ -26,8 +26,8 @@ int track_initialize(char track_name) {
             break;
     }
 
-    // Default penalty for reversing is one meter
-    REVERSE_PENALTY = 1000000;
+    // Default penalty for reversing is one hundred meter (basically only want to reverse if impossible to find other route)
+    REVERSE_PENALTY = 100000000;
     return 0;
 }
 
@@ -46,6 +46,8 @@ struct track_edge *track_next_edge(struct track_node *node) {
 }
 
 struct track_node *track_next_landmark(struct track_node *node) {
+    if (!node) return 0;
+
     int edge_direction = DIR_AHEAD;
 
     if (node->type == NODE_BRANCH) {
@@ -56,6 +58,8 @@ struct track_node *track_next_landmark(struct track_node *node) {
 }
 
 struct track_node *track_next_sensor(struct track_node *node) {
+    if (!node) return 0;
+
     struct track_node *dest = track_next_landmark(node);
     while(dest && dest->type != NODE_SENSOR) {
         dest = track_next_landmark(dest);

@@ -11,6 +11,8 @@
 #define MM 1000
 #define UM 1
 
+#define min(a,b) (a) < (b) ? (a) : (b)
+
 static void update_velocity(TrainLocation *train) {
     if (!train->accelerating) return;
 
@@ -149,7 +151,9 @@ int locationservice_distance_event(struct LocationService *service) {
         train->distance += train->velocity;
         update_velocity(train);
 
-        if (train->distance >= train->edge->dist && train->edge->dest->type != NODE_SENSOR) {
+        if (train->edge->dest->type == NODE_EXIT) {
+            train->distance = min(train->edge->dist, train->distance);
+        } else if (train->distance >= train->edge->dist && train->edge->dest->type != NODE_SENSOR) {
             track_edge *next_edge = track_next_edge(train->edge->dest);
             locationservice_associate(service, train, next_edge);
         }
@@ -173,6 +177,8 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
     // Associate us with the correct landmark and sensor.
     train->next_sensor = track_next_sensor(train->edge->src);
 
+    ulog("Got REVERSE event");
+
     locationservice_add_event(service, train);
 
     return 0;
@@ -187,7 +193,7 @@ int locationservice_speed_event(struct LocationService *service, int train_numbe
     // TODO: Set-up acceleration stuff. For now, just set our speed.
     update_speed(train, speed);
     if (train->accelerating) {
-        ulog("Train is Accelerating!");
+        //ulog("Train is Accelerating!");
     }
 
     locationservice_add_event(service, train);
