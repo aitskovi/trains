@@ -96,6 +96,11 @@ static void train_start_reversing(TrainStatus *status) {
 }
 
 static int distance_between_nodes (track_node *node1, track_node *node2) {
+    if (!node1 || !node2) {
+        ulog("distance_between_nodes called with null pointer");
+        return -2;
+    }
+
     int result = -1;
     unsigned int j;
     for (j = 0; j < NUM_NODE_EDGES[node1->type]; ++j) {
@@ -105,12 +110,18 @@ static int distance_between_nodes (track_node *node1, track_node *node2) {
         }
     }
     if (node1->reverse == node2) {
-        result = 0;
+        return 0;
     }
+
     return result;
 }
 
 static int direction_between_nodes(track_node *node1, track_node *node2) {
+    if (!node1 || !node2) {
+        ulog("direction_between_nodes called with null pointer");
+        return 0;
+    }
+
     int result = -1;
     unsigned int j;
     for (j = 0; j < NUM_NODE_EDGES[node1->type]; ++j) {
@@ -148,6 +159,46 @@ static unsigned int distance_travelled(Position *position1, Position *position2)
     return 0;
 }
 
+static int calculate_path_reserved_distance(TrainStatus *status) {
+    int result = 0;
+    result -= status->position.distance;
+    unsigned int i = status->path_pos;
+    while (1) {
+        if (status->path_reserved_pos < status->path_pos) {
+            return 0;
+        }
+
+        if (i >= status->path_length) {
+            break;
+        }
+
+        if (i >= status->path_reserved_pos) {
+            break;
+        }
+
+        track_node *current = status->path[i];
+        track_node *next    = status->path[i+1];
+
+        int thing = distance_between_nodes(current, next);
+        if (thing == -2) {
+            ulog("Failed in path_reserved_distance i: %u, current: %x, next: %x, path_length: %u", i, current, next, status->path_length);
+            return 10000000;
+        }
+        result += thing;
+        ++i;
+    }
+    return result;
+}
+
+static void reset_train(TrainStatus *status) {
+    status->path_length = 0;
+    status->path_reserved_distance = 0;
+    status->path_pos = 0;
+    status->path_reserved_pos = 0;
+    status->reversing_status = REVERSING_NOT;
+//    train_set_speed(status, 0);
+}
+
 static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) {
     status->old_position = status->position;
     status->position.distance = ls_msg->data.distance;
@@ -157,16 +208,15 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
 
     if (REVERSING_WAITING_FOR_LOCATION == status->reversing_status) {
         status->reversing_status = REVERSING_NOT;
+        /*
+        if (status->path_length) {
+            track_node *dest = status->path[status->path_length - 1];
+            reset_train(status);
+            calculate_path(status->position.edge->src, dest, status->path, &status->path_length);
+            train_set_speed(status, CRUISING_SPEED);
+        }
+        */
     }
-}
-
-static void reset_train(TrainStatus *status) {
-    status->path_length = 0;
-    status->path_reserved_distance = 0;
-    status->path_pos = 0;
-    status->path_reserved_pos = 0;
-    status->reversing_status = REVERSING_NOT;
-    train_set_speed(status, 0);
 }
 
 static void perform_path_actions(TrainStatus *status) {
@@ -180,8 +230,6 @@ static void perform_path_actions(TrainStatus *status) {
         return;
     }
 
-    status->path_reserved_distance -= distance_travelled(&status->old_position, &status->position);
-
     // Figure out where we are in the path
     unsigned int i, j;
     int found = 0;
@@ -194,12 +242,16 @@ static void perform_path_actions(TrainStatus *status) {
     }
 
     if (!found) {
-        ulog("Train %u got lost %u um ahead of %s, recalculating", status->train_no, status->position.distance, status->position.edge->src->name);
+        ulog("Train %u got lost %u um ahead of %s, stopping", status->train_no, status->position.distance, status->position.edge->src->name);
         track_node *dest = status->path[status->path_length - 1];
         reset_train(status);
+        train_set_speed(status, 0);
         calculate_path(status->position.edge->src, dest, status->path, &status->path_length);
         train_set_speed(status, CRUISING_SPEED);
+        return;
     }
+
+    status->path_reserved_distance = calculate_path_reserved_distance(status);
 
     // Reserve up to us + stopping distance
     j = status->path_reserved_pos;
@@ -218,12 +270,18 @@ static void perform_path_actions(TrainStatus *status) {
             ulog("Train arriving at %s while %u um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
             // We have arrived
             reset_train(status);
+            train_set_speed(status, 0);
             return;
         }
 
         track_node *next    = status->path[j+1];
 
+
         int dist = distance_between_nodes(current, next);
+        if (dist == -2) {
+            ulog("Failed in perform path actions j: %u, current: %x, next: %x, path_length: %u", j, current, next, status->path_length);
+            return;
+        }
         cuassert(dist >= 0, "Disconnected nodes in path!");
 
         ulog("Train reserved node %s while %u um ahead of %s, buffer space is now %u um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
@@ -231,10 +289,7 @@ static void perform_path_actions(TrainStatus *status) {
         // We're reversing
         if (dist == 0) {
             ulog("Train reversing at %s while %u um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
-            track_node *dest = status->path[status->path_length - 1];
-//            reset_train(status);
             train_start_reversing(status);
-//            calculate_path(next, dest, status->path, &status->path_length);
             return;
         }
 
@@ -282,6 +337,7 @@ static void perform_stop_action(TrainStatus *status) {
 
 void train_task(int train_no) {
     TrainStatus status;
+    memset(&status, 0, sizeof(TrainStatus));
     status.train_no = train_no;
 
     reset_train(&status);
@@ -316,10 +372,15 @@ void train_task(int train_no) {
                 train_start_reversing(&status);
                 break;
             case (COMMAND_GOTO):
-                ulog("Train received command to goto %s", tr_command->destination->name);
+                ulog("Train received command to goto %s from %s", tr_command->destination->name, status.position.edge->src->name);
                 reset_train(&status);
-                calculate_path(status.position.edge->src, tr_command->destination, status.path, &status.path_length);
-                train_set_speed(&status, CRUISING_SPEED);
+                int result = calculate_path(status.position.edge->src, tr_command->destination, status.path, &status.path_length);
+                if (result) {
+                    ulog("Could not calculate path");
+                    status.path_length = 0;
+                } else {
+                    train_set_speed(&status, CRUISING_SPEED);
+                }
                 break;
             case (COMMAND_STOP):
                 ulog("Train received command to stop at %s", tr_command->destination->name);
@@ -348,6 +409,7 @@ void train_task(int train_no) {
             reply.type = LOCATION_SERVER_MESSAGE;
             ls_reply->type = LOCATION_COURIER_RESPONSE;
             Reply(tid, (char *) &reply, sizeof(reply));
+
             break;
 
         }

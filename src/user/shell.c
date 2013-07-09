@@ -222,6 +222,26 @@ int parse_stop(char *str, int *train, char *landmark) {
     return 1;
 }
 
+int parse_rvpenalty(char *str, int *penalty) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 'r') return 0;
+    if (*str++ != 'v') return 0;
+    if (*str++ != 'p') return 0;
+    if (*str++ != 'e') return 0;
+    if (*str++ != 'n') return 0;
+    if (*str++ != 'a') return 0;
+    if (*str++ != 'l') return 0;
+    if (*str++ != 't') return 0;
+    if (*str++ != 'y') return 0;
+
+    *penalty = parse_uint(&str);
+    if (*penalty == -1) return 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -275,7 +295,7 @@ void shell() {
     while (1) {
         char command[50 + LINE_BUFFER_SIZE];
         char *pos;
-        int train, speed, number, direction, track;
+        int train, speed, number, direction, track, penalty;
         char landmark_buffer1[5];
         char landmark_buffer2[5];
 
@@ -343,6 +363,9 @@ void shell() {
                     cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                     cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
                 }
+            } else if (parse_rvpenalty(line_buffer, &penalty)) {
+                ulog("Setting reverse penalty to %u", penalty);
+                track_set_reverse_penalty(penalty);
             }
 
             line_buffer[line_buffer_pos + 1] = 0;

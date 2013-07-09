@@ -170,8 +170,11 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
 
     if (!train->edge) return 0;
 
-    // Throw us on the opposite edge, and reverse our distance.
-    train->edge = train->edge->reverse;
+    if (train->distance == 0 && train->edge->src->type == NODE_SENSOR) {
+        train->edge = &train->edge->src->reverse->edge[0];
+    } else {
+        train->edge = train->edge->reverse;
+    }
     train->distance = train->edge->dist - train->distance;
 
     // Associate us with the correct landmark and sensor.
