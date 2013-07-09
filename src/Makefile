@@ -2,16 +2,18 @@
 # Makefile for busy-wait IO tests
 #
 
-PARSE_TRACK = parse_track
+PARSE_TRACK = ../bin/parse_track
 
-VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track
+VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/ user/location/ user/distance/ user/calibration/
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor -I ../include/user/location -I ../include/user/distance -I ../include/user/calibration
 
 ifeq ($(ARCH), x86)
 	include x86.mk
 else
 	include arm.mk
 endif
+
+CFLAGS += -DCRITICAL
 
 ARMOBJECTS = kernel.o\
 			 context_switch.o\
@@ -27,10 +29,26 @@ ARMOBJECTS = kernel.o\
 			 read_notifier.o\
 			 read_server.o\
 			 swi_arm.o\
-			 train_server.o\
 			 sensor_server.o\
-			 switch_server.o
-			 
+			 switch_server.o\
+			 sensor_notifier.o\
+			 sensor_courier.o\
+			 sensor_widget.o\
+			 location_server.o\
+			 location_service.o\
+			 location_courier.o\
+			 mission_control.o\
+			 train_task.o\
+			 distance_notifier.o\
+			 calibration.o\
+			 sensor_service.o\
+			 train_widget.o\
+		     clock_widget.o\
+			 shell.o\
+			 nameservice.o\
+			 memcpy.o\
+			 		  	 
+
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
 	   		 
@@ -41,7 +59,6 @@ OBJECTS = bwio.o\
 		  messaging.o\
 		  memory.o\
 		  ksyscalls.o\
-		  nameservice.o\
 		  string.o\
 		  random.o\
 		  bits.o\
@@ -57,12 +74,12 @@ OBJECTS = bwio.o\
 		  serial.o\
 		  conv.o\
 		  sprintf.o\
-		  shell.o\
-		  clock_widget.o\
 		  ring_buffer.o\
-		  track_data.o
+		  track_data.o\
+		  track.o\
+		  
 
-all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf
+all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
 
 tests: unit_tests
 
@@ -104,11 +121,15 @@ kernel3.elf : kernel3.o $(ARMOBJECTS) $(OBJECTS)
 
 kernel4.elf : kernel4.o $(ARMOBJECTS) $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
+project1.elf : project1.o $(ARMOBJECTS) $(OBJECTS)
+	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
+
 	
 kerneltimings.elf : timings.o $(ARMOBJECTS) $(OBJECTS) 
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
-unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o scheduling_tests.o $(OBJECTS) $(X86OBJECTS)
+unit_tests: unit.o ksyscalls_tests.o messaging_tests.o circular_queue_tests.o memory_tests.o priority_queue_tests.o scheduling_tests.o pathfinding_tests.o $(OBJECTS) $(X86OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^ -lgcc
 	
 clean:

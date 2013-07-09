@@ -83,6 +83,18 @@ PriorityQueueElement priority_queue_extract(HeapPriorityQueue *queue) {
     return result;
 }
 
+void priority_queue_delete(HeapPriorityQueue *queue, void *data) {
+    int i;
+    for (i = 0; i < queue->pos; ++i) {
+        // Find the position.
+        if (queue->elements[i].data != data) continue;
+
+        queue->elements[i] = queue->elements[queue->pos - 1];
+        queue->pos--;
+        bubble_down(queue, i);
+    }
+}
+
 void priority_queue_insert(HeapPriorityQueue *queue, PriorityQueueElement element) {
     // TODO assert priority_queue_size() < buffer_size
     queue->elements[queue->pos] = element;

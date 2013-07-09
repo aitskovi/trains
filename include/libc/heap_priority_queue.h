@@ -23,6 +23,7 @@ HeapPriorityQueue priority_queue_create(PriorityQueueElement *buffer, unsigned i
 PriorityQueueElement priority_queue_peek(HeapPriorityQueue *queue);
 PriorityQueueElement priority_queue_extract(HeapPriorityQueue *queue);
 void priority_queue_insert(HeapPriorityQueue *queue, PriorityQueueElement element);
+void priority_queue_delete(HeapPriorityQueue *queue, void *data);
 unsigned int priority_queue_size(HeapPriorityQueue *queue);
 
 #endif /* HEAP_PRIORITY_QUEUE_H_ */

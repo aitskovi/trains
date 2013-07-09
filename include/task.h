@@ -5,7 +5,8 @@
 
 #define STACK_SIZE 1024 * 50 // 50kb stack
 
-#define MAX_TASKS 20
+#define MAX_TASKS 64
+#define MAX_SUBSCRIBERS ((MAX_TASKS - 1) / 32) + 1
 
 typedef int tid_t;
 

@@ -75,7 +75,6 @@ void clock_server() {
         switch(msg.type) {
         case TICK_REQUEST:
             time++;
-            dlog("Ticking %u!\n", time);
             reply.type = TICK_RESPONSE;
             Reply(tid, (char *) &reply, sizeof(reply));
             // Unblock all waiting tasks whose time has arrived

@@ -24,6 +24,7 @@ int Getc(int channel) {
             break;
         default:
             dlog("Sending to invalid Channel!\n");
+            break;
     }
 
     if (server_tid < 0) {
@@ -34,6 +35,31 @@ int Getc(int channel) {
     msg.type = GETC_REQUEST;
     Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
     dassert(reply.type == GETC_RESPONSE, "Invalid response from read server");
+    return reply.data;
+}
+
+int ReadClear(int channel) {
+    tid_t server_tid = -1;
+    switch(channel) {
+        case COM1:
+            server_tid = com1_read_server_tid;
+            break;
+        case COM2:
+            server_tid = com2_read_server_tid;
+            break;
+        default:
+            dlog("Sending to invalid Channel!\n");
+            break;
+    }
+
+    if (server_tid < 0) {
+        return -1;
+    }
+
+    ReadMessage msg, reply;
+    msg.type = CLEAR_REQUEST;
+    Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    dassert(reply.type == CLEAR_RESPONSE, "Invalid response from read server");
     return reply.data;
 }
 
@@ -85,6 +111,12 @@ void ReadServer() {
                 dlog("ReadServer: Getc Request\n");
                 readservice_getc(&service, tid);
                 break;
+            }
+            case CLEAR_REQUEST: {
+                rply.type = CLEAR_RESPONSE;
+                Reply(tid, (char *)&rply, sizeof(rply));
+
+                readservice_clear(&service);
             }
             default:
                 dlog("Invalid ReadServer Request: %x\n", msg);

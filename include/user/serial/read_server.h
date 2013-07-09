@@ -4,5 +4,6 @@
 void ReadServer();
 
 int Getc(int channel);
+int ReadClear(int channel);
 
 #endif

@@ -3,10 +3,15 @@
 
 #define MAX_NAME_LENGTH 20
 #define MAX_REGISTRATIONS 50
+#define MAX_WAITERS 20
+#define WAITING_TID -2
 
 struct Registration {
     char name[MAX_NAME_LENGTH];
     int tid;
+
+    int num_waiters;
+    int waiters[MAX_WAITERS];
 };
 
 struct NameService {
@@ -33,5 +38,8 @@ int nameservice_register(struct NameService *service, char *name, int tid);
  * Returns either the tid or -1 for not found.
  */
 int nameservice_lookup(struct NameService *service, char *name);
+
+int nameservice_wait(struct NameService *service, char *name, int tid);
+
 
 #endif

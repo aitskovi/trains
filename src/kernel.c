@@ -103,13 +103,15 @@ int handle(Task *task, Request *req) {
     return 0;
 }
 
-void dump_timing_info() {
+void dump_timing_info(unsigned int kernel_cpu_time) {
     unsigned int num_tasks, i, total_cpu_time;
     Task *tasks = get_tasks(&num_tasks);
     total_cpu_time = 0;
     for (i = 0; i < num_tasks; ++i) {
         total_cpu_time += tasks[i].cpu_time;
     }
+    total_cpu_time += kernel_cpu_time;
+
     log("\nTask runtime info:\n");
     for (i = 0; i < num_tasks; ++i) {
         unsigned int microseconds;
@@ -117,6 +119,12 @@ void dump_timing_info() {
         float percent = 100.0f * tasks[i].cpu_time / total_cpu_time;
         log("Task %u ran for %uus or %u percent of the time\n", tasks[i].tid, microseconds, (int) percent);
     }
+
+    // Print Kernel Info.
+    unsigned int microseconds;
+    microseconds = fine_time_to_usec(kernel_cpu_time);
+    float percent = 100.0f * kernel_cpu_time / total_cpu_time;
+    log("Kernel ran for %uus or %u percent of the time\n", microseconds, (int) percent);
 }
 
 int main() {
@@ -125,18 +133,22 @@ int main() {
     active = task_create(first, 0, MEDIUM);
     make_ready(active);
 
+    unsigned int kernel_cpu_time = 0;
     Request *req;
     FineTimer timer;
+    fine_timer_reset(&timer);
     while((active = schedule())) {
+        kernel_cpu_time += fine_timer_elapsed(&timer);
         fine_timer_reset(&timer);
         req = kernel_exit(active);
         active->cpu_time += fine_timer_elapsed(&timer);
+        fine_timer_reset(&timer);
         int shutdown = handle(active, req);
         if (shutdown) break;
     }
 
     // Print out runtime stats
-    dump_timing_info();
+    dump_timing_info(kernel_cpu_time);
 
     log ("Kernel exiting\n");
     disable_interrupts();

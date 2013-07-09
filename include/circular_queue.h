@@ -9,7 +9,7 @@
 #define CIRCULAR_QUEUE_H_
 
 // NOTE this must be a power of 2
-#define CIRCULAR_QUEUE_SIZE 100 // TODO write kmalloc/kfree, this is stupid
+#define CIRCULAR_QUEUE_SIZE 256 // TODO write kmalloc/kfree, this is stupid
 
 struct circular_queue {
 	void *elements[CIRCULAR_QUEUE_SIZE];

@@ -16,10 +16,10 @@ void enable_timer() {
     *crtl = 1 * MODE_MASK;
 
     // Set it's load value.
-    *ldr = 2000 / TICK_FREQUENCY;
+    *ldr = 5080;
 
     // Start the clock.
-    *crtl = ENABLE_MASK + MODE_MASK;
+    *crtl = ENABLE_MASK + MODE_MASK + CLKSEL_MASK;
 
 }
 
