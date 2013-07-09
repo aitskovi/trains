@@ -1,5 +1,7 @@
 #include <location_service.h>
 
+#include <common.h>
+#include <constants.h>
 #include <dassert.h>
 #include <memory.h>
 #include <track.h>
@@ -7,11 +9,6 @@
 #include <calibration.h>
 #include <location_server.h>
 
-#define CM 10000
-#define MM 1000
-#define UM 1
-
-#define min(a,b) (a) < (b) ? (a) : (b)
 
 static void update_velocity(TrainLocation *train) {
     if (!train->accelerating) return;
@@ -170,17 +167,18 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
 
     if (!train->edge) return 0;
 
-    if (train->distance == 0 && train->edge->src->type == NODE_SENSOR) {
+    // When we're reversing we want to reverse intellegently based on where we are over the
+    // sensor, e.g. if we will trigger it again.
+    if (train->distance < PICKUP_LENGTH_UM && train->edge->src->type == NODE_SENSOR) {
         train->edge = &train->edge->src->reverse->edge[0];
+        train->distance *= -1;
     } else {
         train->edge = train->edge->reverse;
+        train->distance = train->edge->dist - train->distance;
     }
-    train->distance = train->edge->dist - train->distance;
 
     // Associate us with the correct landmark and sensor.
     train->next_sensor = track_next_sensor(train->edge->src);
-
-    ulog("Got REVERSE event");
 
     locationservice_add_event(service, train);
 
