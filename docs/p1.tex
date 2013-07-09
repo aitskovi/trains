@@ -1,0 +1,94 @@
+\documentclass{article}
+
+\title{CS 452 Kernel Documentation}
+\author{
+  Avi Itskovich, 20332164
+  \and
+  Alex Ianus, 20342535
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+This documentation covers milestone one of our train project.
+
+\section{Operating Instructions}
+\begin{enumerate}
+  \item Reset the box and wait for the redboot prompt
+  \item load -b 0x00218000 -h 10.15.167.4 \$executable
+  \item go
+\end{enumerate}
+
+\section{Submitted Files}
+Root directory: /u1/aianus/cs452/handin/project1/
+
+\subsection{Executable}
+\begin{verbatim}
+e72ee3f6e997434411f764c079fa4b39  ./project1.elf
+\end{verbatim}
+
+\subsection{Code}
+\begin{verbatim}
+\end{verbatim}
+
+\section{User Program Description}
+
+Our train control system operates on a "stream" paradigm. Different components of the system emit streams of information which other parts consume. For each of these components any arbitrary task can call "subscribe" to recieve updates as they occur.
+
+\subsection{SensorServer}
+
+The SensorServer exports a stream of sensor events. It constantly polls the TrainController for sensor data, serializing it into single sensor fired events. Internally it uses a notifer to poll the sensor data and return it to it and a courier to hand out the data to subscribers.
+
+Inside the notifier we apply a filter to sensor data and only say a sensor was triggered when it switches from being "off" to being "on". An "on" to "on" transition gets filtered in the notifier. This serves two purposes: ignoring stuck switches, and ignoring the multiple events of a train passing over a sensor (we only get one instead).
+
+We run all the components of sensor system at the HIGH priority (our 3rd lowest).
+
+\subsection{LocationServer}
+
+Our train system has a central location server that manages train locations. The LocationServer consumes the SensorServer's stream of sensor updates. It also has a notifier task pinging it every tick to update the distances for moving trains. The LocationServer generates an event every-time a train moves, changes speed, and switches landmarks. Each of these events comes along with the following data:
+
+\begin{itemize}
+    \item Train Velocity in micrometres per tick.
+    \item The edge the train is on.
+    \item The distance along the edge we've travelled.
+    \item The train's stopping distance.
+    \item The train's error.
+\end{itemize}
+
+Internally the LocationServer uses a set of arrays to track train data. Each train has associated with it the sensors it is able to hit next and when one of these is hit, it's position is updated to be at that sensor. These are recalculated every time the train passes a sensor. Every tick the location server updates the position of each train. This consists of updating the current velocity based on acceleration, current distance on edge based on velocity and even changing edges if we've hit non-sensor landmarks.
+
+We run all the components of location system at the HIGH priority (our 3rd lowest).
+
+\subsection{Calibration}
+
+Train Calibration is currently quite simple. We have a basic formula for stopping distance and linear acceleration/deceleration for the train based on that. These are very simplistic functions that do no properly map the train's movement. However, they are sufficient for tracking the train when it is moving at full speed and stopping from full speed. Short trips are ill advised.
+
+The calibration was done through a set of manual measurements of stopping speed. The stop [train] [sensor] command was added for this purpose.  We caclulate and present the average speed between the last two sensors we passed on the screen as well as the error between actual distance travelled and estimated distance travelled between sensors.
+
+Calibration currently runs as a server that subscribes to location information.
+
+\subsection{Train Control}
+
+\subsection{Pathfinding}
+
+\subsection{Shell}
+
+\textbf{Shell Commands:}
+\begin{itemize}
+    \item in [track] - Tell the system which track you're using.
+    \item ad [train] - Add a train to the system.
+    \item stop [train] [sensor] - Tell a train to stop whenever it hits a specific sensor.
+    \item tr [train] [speed] - Change the speed of a train.
+    \item rv [train] - Reverse a train.
+\end{itemize}
+
+\subsection{Known Bugs and Limitations}
+\begin{itemize}
+\item Reverse operations require moving to a known sensor, this creates longer paths than required.
+\item Acceleration does not properly model the train.
+\end{itemize}
+
+\end{document}
