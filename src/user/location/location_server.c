@@ -114,24 +114,15 @@ void LocationServer() {
                         }
                     }
                         break;
-                    default:
-                        ulog("\nWARNING: Invalid Message Recieved\n");
-                        break;
-                }
-            }
-                break;
-            case DISTANCE_SERVER_MESSAGE: {
-                rply.type = DISTANCE_SERVER_MESSAGE;
-                DistanceServerMessage *ds_msg = &msg.ds_msg;
-                switch(ds_msg->type) {
-                    case DISTANCE_TIMEOUT_REQUEST:
-                        rply.ds_msg.type = DISTANCE_TIMEOUT_RESPONSE;
+                    case LOCATION_TICK_REQUEST:
+                        rply.ls_msg.type = LOCATION_TICK_RESPONSE;
                         Reply(tid, (char *) &rply, sizeof(rply));
 
                         locationservice_distance_event(&service);
                         break;
                     default:
-                        cuassert(0, "Invalid Distance Message for Location Server\n");
+                        ulog("\nWARNING: Invalid Message Recieved\n");
+                        break;
                 }
             }
                 break;
