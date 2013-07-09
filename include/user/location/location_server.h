@@ -10,6 +10,8 @@ enum LOCATION_SERVER_MESSAGE_TYPE {
     LOCATION_SUBSCRIBE_RESPONSE,
     LOCATION_TRAIN_REQUEST,         // Add a train.
     LOCATION_TRAIN_RESPONSE,
+    LOCATION_TICK_REQUEST,       // 1 tick timeout.
+    LOCATION_TICK_RESPONSE,
 };
 
 struct track_node;

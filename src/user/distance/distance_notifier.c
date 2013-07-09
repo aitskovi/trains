@@ -12,11 +12,11 @@ void distance_notifier() {
     int time = Time();
     struct Message msg, rply;
     for(;;) {
-        msg.type = DISTANCE_SERVER_MESSAGE;
-        msg.ds_msg.type = DISTANCE_TIMEOUT_REQUEST;
+        msg.type = LOCATION_SERVER_MESSAGE;
+        msg.ls_msg.type = LOCATION_TICK_REQUEST;
         Send(tid, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
-        cuassert(rply.type == DISTANCE_SERVER_MESSAGE, "Invalid Message Type");
-        cuassert(rply.ds_msg.type == DISTANCE_TIMEOUT_RESPONSE, "Invalid DistanceServer Reply");
+        cuassert(rply.type == LOCATION_SERVER_MESSAGE, "Invalid Message Type");
+        cuassert(rply.ls_msg.type == LOCATION_TICK_RESPONSE, "Invalid DistanceServer Reply");
 
         time += 1;
         DelayUntil(time);
