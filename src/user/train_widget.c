@@ -96,7 +96,7 @@ static int get_train_index(int *number_to_train, int *num_trains, int id) {
     // We couldn't find index, add it instead.
     if (*num_trains == index) {
         number_to_train[index] = id;
-        *num_trains++;
+        *num_trains = *num_trains + 1;
     }
 
     return index;
