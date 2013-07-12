@@ -104,7 +104,8 @@ void locationservice_associate(LocationService *service, TrainLocation *train, t
     }
 
     // Find next sensor.
-    train->next_sensor = track_next_sensor(train->edge->src);
+    train->num_pending_sensors = track_sensor_search(train->edge->src, train->next_sensors);
+    ulog("Pending Sensors: %d", train->num_pending_sensors);
 }
 
 int locationservice_sensor_event(struct LocationService *service, char name, int number) {
@@ -115,10 +116,13 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
     int i;
     for (i = 0; i < service->num_trains; ++i) {
         TrainLocation *train = &service->trains[i];
-        if (train->next_sensor == sensor) {
-            locationservice_associate(service, train, sensor_edge);
-            locationservice_add_event(service, train);
-            return 0;
+        int j;
+        for (j = 0; j < train->num_pending_sensors; ++j) {
+            if (train->next_sensors[j] == sensor) {
+                locationservice_associate(service, train, sensor_edge);
+                locationservice_add_event(service, train);
+                return 0;
+            }
         }
     }
 
@@ -178,7 +182,7 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
     train->distance = train->edge->dist - train->distance;
 
     // Associate us with the correct landmark and sensor.
-    train->next_sensor = track_next_sensor(train->edge->src);
+    train->num_pending_sensors = track_sensor_search(train->edge->src, train->next_sensors);
 
     ulog("Got REVERSE event");
 
