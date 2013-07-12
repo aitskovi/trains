@@ -29,7 +29,8 @@ typedef struct TrainLocation {
     int accelerating;
     TrainAcceleration acceleration;  /* Train's Acceleration */
 
-    struct track_node *next_sensor;
+    struct track_node *next_sensors[MAX_PENDING_SENSORS];
+    int num_pending_sensors;
 } TrainLocation;
 
 typedef struct LocationService {
