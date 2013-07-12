@@ -359,6 +359,10 @@ void train_task(int train_no) {
         switch (msg.type) {
 
         case TRAIN_MESSAGE:
+            // Unblock caller right away.
+            reply.type = TRAIN_MESSAGE;
+            tr_reply->type = COMMAND_ACKNOWLEDGED;
+            Reply(tid, (char *) &reply, sizeof(reply));
 
             switch (tr_command->type) {
             case (COMMAND_SET_SPEED):
@@ -391,12 +395,17 @@ void train_task(int train_no) {
                 break;
             }
 
-            reply.type = TRAIN_MESSAGE;
-            tr_reply->type = COMMAND_ACKNOWLEDGED;
-            Reply(tid, (char *) &reply, sizeof(reply));
             break;
 
         case LOCATION_SERVER_MESSAGE:
+            // Unblock the courier right away.
+            reply.type = LOCATION_SERVER_MESSAGE;
+            ls_reply->type = LOCATION_COURIER_RESPONSE;
+            Reply(tid, (char *) &reply, sizeof(reply));
+
+            if (ls_msg->data.id != status.train_no) {
+                break;
+            }
 
             // TODO remove this when no longer necessary
             ls_msg->data.distance = min(ls_msg->data.distance, ls_msg->data.edge->dist);
@@ -405,10 +414,6 @@ void train_task(int train_no) {
             perform_stop_action(&status);
             perform_reversing_actions(&status);
             perform_path_actions(&status);
-
-            reply.type = LOCATION_SERVER_MESSAGE;
-            ls_reply->type = LOCATION_COURIER_RESPONSE;
-            Reply(tid, (char *) &reply, sizeof(reply));
 
             break;
 
