@@ -105,7 +105,6 @@ void locationservice_associate(LocationService *service, TrainLocation *train, t
 
     // Find next sensor.
     train->num_pending_sensors = track_sensor_search(train->edge->src, train->next_sensors);
-    ulog("Pending Sensors: %d", train->num_pending_sensors);
 }
 
 int locationservice_sensor_event(struct LocationService *service, char name, int number) {

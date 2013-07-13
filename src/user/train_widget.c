@@ -16,7 +16,7 @@
 /**
  * Update a specific train.
  */
-static int train_position_update(int index, int number, struct track_edge *edge, int distance, int velocity) {
+static int train_position_update(int index, int number, struct track_edge *edge, int distance, int velocity, int stopping_distance) {
     char command[128];
     char *pos = &command[0];
 
@@ -43,6 +43,13 @@ static int train_position_update(int index, int number, struct track_edge *edge,
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', velocity_buf);
     pos += sprintf(pos, "\0338");
 
+    // Draw Calibrated Train Stopping Distance
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 4, index * TRAIN_COLUMN_WIDTH + 1);
+    char stop_buf[TRAIN_COLUMN_WIDTH];
+    sprintf(stop_buf, "%dum", stopping_distance);
+    pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', stop_buf);
+    pos += sprintf(pos, "\0338");
+
     Write(COM2, command, pos - command);
 
     return 0;
@@ -53,13 +60,13 @@ static int train_calibration_update(int index, int number, int velocity, int err
     char *pos = &command[0];
 
     // Draw Train Speed
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 5, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 6, index * TRAIN_COLUMN_WIDTH + 1);
     char velocity_buf[TRAIN_COLUMN_WIDTH];
     sprintf(velocity_buf, "%dum/tick", velocity);
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', velocity_buf);
 
     // Draw Train Error.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 6, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_TABLE_HEIGHT + 7, index * TRAIN_COLUMN_WIDTH + 1);
     char error_buf[TRAIN_COLUMN_WIDTH];
     sprintf(error_buf, "%dmm", error / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WIDTH, ' ', error_buf);
@@ -78,7 +85,7 @@ static int train_display_init() {
     pos += sprintf(pos, "Trains:");
     pos += sprintf(pos, "\0338");
 
-    pos += sprintf(pos, "\0337\033[%u;%uH", TRAIN_TABLE_HEIGHT + 4, 1);
+    pos += sprintf(pos, "\0337\033[%u;%uH", TRAIN_TABLE_HEIGHT + 5, 1);
     pos += sprintf(pos, "Calibration:");
     pos += sprintf(pos, "\0338");
 
@@ -132,7 +139,7 @@ void train_widget() {
 
                 TrainData* data = &msg.ls_msg.data;
                 int index = get_train_index(number_to_train, &num_trains, data->id);
-                train_position_update(index, data->id, data->edge, data->distance, data->velocity);
+                train_position_update(index, data->id, data->edge, data->distance, data->velocity, data->stopping_distance);
 
                 break;
             }
