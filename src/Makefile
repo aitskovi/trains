@@ -48,7 +48,7 @@ ARMOBJECTS = kernel.o\
 			 pubsub.o\
 			 courier.o\
 			 velocity_calibrator.o\
-			 		  	 
+			 reservation_server.o\			 		  	 
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
