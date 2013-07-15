@@ -27,7 +27,7 @@
 
 typedef struct {
     track_edge *edge;
-    unsigned int distance;
+    int distance;
 } Position;
 
 typedef struct {
@@ -38,7 +38,7 @@ typedef struct {
     Position position;
     speed_t speed;
     int velocity;
-    unsigned int stopping_distance;
+    int stopping_distance;
 
     // The previous position of the train
     Position old_position;
@@ -180,10 +180,6 @@ static int calculate_path_reserved_distance(TrainStatus *status) {
         track_node *next    = status->path[i+1];
 
         int thing = distance_between_nodes(current, next);
-        if (thing == -2) {
-            ulog("Failed in path_reserved_distance i: %u, current: %x, next: %x, path_length: %u", i, current, next, status->path_length);
-            return 10000000;
-        }
         result += thing;
         ++i;
     }
@@ -242,7 +238,7 @@ static void perform_path_actions(TrainStatus *status) {
     }
 
     if (!found) {
-        ulog("Train %u got lost %u um ahead of %s, stopping", status->train_no, status->position.distance, status->position.edge->src->name);
+        ulog("Train %u got lost %d um ahead of %s, stopping", status->train_no, status->position.distance, status->position.edge->src->name);
         track_node *dest = status->path[status->path_length - 1];
         reset_train(status);
         train_set_speed(status, 0);
@@ -267,7 +263,7 @@ static void perform_path_actions(TrainStatus *status) {
         track_node *current = status->path[j];
 
         if (j == status->path_length - 1) {
-            ulog("Train arriving at %s while %u um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
+            ulog("Train arriving at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
             // We have arrived
             reset_train(status);
             train_set_speed(status, 0);
@@ -278,17 +274,15 @@ static void perform_path_actions(TrainStatus *status) {
 
 
         int dist = distance_between_nodes(current, next);
-        if (dist == -2) {
-            ulog("Failed in perform path actions j: %u, current: %x, next: %x, path_length: %u", j, current, next, status->path_length);
-            return;
-        }
         cuassert(dist >= 0, "Disconnected nodes in path!");
 
-        ulog("Train reserved node %s while %u um ahead of %s, buffer space is now %u um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
+        ulog("Train reserved node %s while %d um ahead of %s, buffer space is now %d um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
 
         // We're reversing
         if (dist == 0) {
-            ulog("Train reversing at %s while %u um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
+            ulog("Train reversing at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
+            status->path_reserved_pos++;
+            status->path_reserved_distance = 0;
             train_start_reversing(status);
             return;
         }
