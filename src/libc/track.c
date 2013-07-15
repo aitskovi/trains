@@ -230,7 +230,7 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
         // For each neighbour
         for (j = 0; j < NUM_NODE_EDGES[current->type]; ++j) {
             neighbour = current->edge[j].dest;
-            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
+            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited && (neighbour->owner == 0 || neighbour->owner == 0)) {
                 unsigned int dist = current->distance + current->edge[j].dist;
                 if (dist < neighbour->distance) {
                     neighbour->distance = dist;
@@ -242,7 +242,7 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
         // If there is enough space around current node we could also reverse
         if (can_reverse_at_node(current)) {
             neighbour = current->reverse;
-            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
+            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited && (neighbour->owner == 0 || neighbour->owner == 0)) {
                 unsigned int dist = current->distance + REVERSE_PENALTY;
                 if (dist < neighbour->distance) {
                     neighbour->distance = dist;
