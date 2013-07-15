@@ -13,6 +13,7 @@
 
 #define CONSOLE_HEIGHT 30
 #define LINE_BUFFER_SIZE 70
+#define SCROLLABLE_AREA_SIZE 21
 
 typedef struct ShellMessage {
 

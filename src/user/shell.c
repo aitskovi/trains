@@ -25,6 +25,7 @@
 #include <dassert.h>
 #include <clock_server.h>
 #include <velocity_calibrator.h>
+#include <reservation_server.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -332,7 +333,7 @@ void generate_debug_area() {
     char command[200];
     char *pos = &command[0];
 
-    pos += sprintf(pos, (char *)SCROLLABLE_AREA, CONSOLE_HEIGHT + 1, CONSOLE_HEIGHT + 11);
+    pos += sprintf(pos, (char *)SCROLLABLE_AREA, CONSOLE_HEIGHT + 1, CONSOLE_HEIGHT + SCROLLABLE_AREA_SIZE);
     Write(COM2, command, pos - command);
 }
 
@@ -355,6 +356,8 @@ void shell() {
     Create(LOW, train_widget);
 
     Create(HIGH, switch_server);
+
+    Create(HIGH, reservation_server);
 
     // Create the debug print area.
     generate_debug_area();

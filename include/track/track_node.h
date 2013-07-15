@@ -34,6 +34,7 @@ struct track_node {
   track_edge edge[2];
   unsigned int distance;
   int visited;
+  unsigned int owner;
 };
 
 #endif
