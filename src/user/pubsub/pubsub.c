@@ -138,7 +138,10 @@ static int pubsubservice_unsubscribe(PubSubService *service, int tid, enum PUBSU
 }
 
 static void pubsubservice_subscribers(PubSubService *service, int *subscribers, enum PUBSUB_PRIORITY priority) {
-    memcpy(subscribers, service->subscribers[priority], sizeof(MAX_SUBSCRIBERS * sizeof(int)));
+    int i;
+    for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
+        subscribers[i] = service->subscribers[priority][i];
+    }
 }
 
 static int pubsubservice_pop(PubSubService *service, Message *msg, enum PUBSUB_PRIORITY priority) {
@@ -160,7 +163,6 @@ static int pubsubservice_empty(PubSubService *service, enum PUBSUB_PRIORITY prio
 
 static void pubsubservice_initialize(PubSubService *service) {
     multiqueue_initialize(&service->queue);
-    int i;
     memset(service->subscribers, 0, sizeof(service->subscribers));
 }
 

@@ -17,6 +17,7 @@
 #include <nameserver.h>
 #include <track_data.h>
 #include <switch_server.h>
+#include <pubsub.h>
 
 #define CRUISING_SPEED 11
 #define D_STRAIGHT 0
@@ -337,8 +338,7 @@ void train_task(int train_no) {
     reset_train(&status);
 
     // Subscribe.
-    tid_t location_server_tid = WhoIs("LocationServer");
-    location_server_subscribe(location_server_tid);
+    Subscribe("LocationServerStream", PUBSUB_HIGH);
 
     tid_t tid;
     Message msg, reply;

@@ -1,5 +1,6 @@
 #include <nameserver.h>
 
+#include <dassert.h>
 #include <nameservice.h>
 #include <bwio.h>
 #include <syscall.h>
@@ -27,6 +28,7 @@ int RegisterAs(char *name) {
 
     struct NameServerReply reply;
     int result = Send(nameserver_tid, (char *)&req, sizeof(req), (char *)&reply, sizeof(reply));
+    cuassert(result >= 0, "RegisterAs Failed");
     if (result < 0) {
         return result;
     }
@@ -53,6 +55,7 @@ int WhoIs(char *name) {
 
     struct NameServerReply reply;
     int result = Send(nameserver_tid, (char *)&req, sizeof(req), (char *)&reply, sizeof(reply));
+    cuassert(result >= 0, "WhoIs Failed");
     if (result < 0) {
         return result;
     }

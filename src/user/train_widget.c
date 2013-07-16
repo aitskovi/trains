@@ -9,6 +9,7 @@
 #include <nameserver.h>
 #include <encoding.h>
 #include <syscall.h>
+#include <pubsub.h>
 
 #define TRAIN_TABLE_HEIGHT 9
 #define TRAIN_COLUMN_WIDTH 12
@@ -113,8 +114,7 @@ void train_widget() {
     RegisterAs("TrainWidget");
 
     // Find the location server and subscribe.
-    tid_t location_server_tid = WhoIs("LocationServer");
-    location_server_subscribe(location_server_tid);
+    Subscribe("LocationServerStream", PUBSUB_LOW);
 
     // Initial Display.
     train_display_init();

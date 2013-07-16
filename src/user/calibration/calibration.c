@@ -8,6 +8,7 @@
 #include <syscall.h>
 #include <dassert.h>
 #include <clock_server.h>
+#include <pubsub.h>
 
 #define MAX_TRAINS 8
 
@@ -108,8 +109,7 @@ int calibration_update(TrainCalibration *calibration, TrainData *data) {
 void calibration_server() {
     RegisterAs("CalibrationServer");
 
-    tid_t location_server_tid = WhoIs("LocationServer");
-    location_server_subscribe(location_server_tid);
+    Subscribe("LocationServerStream", PUBSUB_MEDIUM);
     tid_t train_widget_tid = WhoIs("TrainWidget");
 
     // Deal with our Subscription.
