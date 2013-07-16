@@ -3,23 +3,61 @@
 #include <courier.h>
 #include <dassert.h>
 #include <encoding.h>
-#include <syscall.h>
 #include <memory.h>
 #include <memcpy.h>
+#include <nameserver.h>
+#include <nameservice.h>
+#include <string.h>
+#include <syscall.h>
 
 #define MAX_MESSAGES 100
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
 int Subscribe(char *name, enum PUBSUB_PRIORITY priority) {
+    Message msg, rply;
+    msg.type = PUBSUB_MESSAGE;
+    msg.ps_msg.type = SUBSCRIBE;
+    msg.ps_msg.priority = priority;
+
+    char stream_buf[MAX_NAME_LENGTH + 6];
+    char *pos = stream_buf;
+    pos += strcpy(name, pos);
+    pos += strcpy("Stream", pos);
+
+    tid_t server = WhoIs(stream_buf);
+
+    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
+
     return 0;
 }
 
-int Unsubscribe(char *name) {
+int Unsubscribe(char *name, enum PUBSUB_PRIORITY priority) {
+    Message msg, rply;
+    msg.type = PUBSUB_MESSAGE;
+    msg.ps_msg.type = UNSUBSCRIBE;
+    msg.ps_msg.priority = priority;
+
+    char stream_buf[MAX_NAME_LENGTH + 6];
+    char *pos = stream_buf;
+    pos += strcpy(name, pos);
+    pos += strcpy("Stream", pos);
+
+    tid_t server = WhoIs(stream_buf);
+
+    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
+
     return 0;
 }
 
 int Publish(tid_t tid, Message *msg) {
+    Message rply;
+
+    Send(tid, (char *)msg, sizeof(Message), (char *)&rply, sizeof(rply));
+    cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
+
     return 0;
 }
 
@@ -158,9 +196,23 @@ static void pubsub_publish(PubSubService *service, int *couriers) {
     }
 }
 
-void PubSubServer() {
+static void ConfigureStream() {
+    tid_t tid;
+    PubSubMessage msg, rply;
+
+    Receive(&tid, (char *)&msg, sizeof(msg));
+    cuassert(msg.type == CONFIGURE, "Received invalid message");
+
+    RegisterAs(msg.name);
+
+    Reply(tid, (char *)&rply, sizeof(rply));
+}
+
+static void PubSubServer() {
     PubSubService service;
     pubsubservice_initialize(&service);
+
+    ConfigureStream();
 
     tid_t couriers[PUBSUB_NUM_PRIORITIES];
     int i;
@@ -203,4 +255,16 @@ void PubSubServer() {
     }
 
     Exit();
+}
+
+tid_t CreateStream(char *name) {
+    tid_t server = Create(HIGHEST, PubSubServer);
+
+    PubSubMessage msg, rply;
+    msg.type = CONFIGURE;
+    msg.name = name;
+    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    cuassert(rply.type == CONFIGURE, "Invalid Configuration Reply");
+
+    return server;
 }
