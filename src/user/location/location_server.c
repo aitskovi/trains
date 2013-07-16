@@ -57,9 +57,8 @@ void LocationServer() {
     // Create a Distance Notifier.
     Create(HIGH, distance_notifier);
 
-    // Find the sensor server and subscribe to it.
-    tid_t sensor_server_tid = WhoIs("SensorServer");
-    sensor_server_subscribe(sensor_server_tid);
+    // Subscribe to sensor server.
+    Subscribe("SensorServerStream", PUBSUB_HIGH);
 
     // Start Serving Requests.
     int tid;

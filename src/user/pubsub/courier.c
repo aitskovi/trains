@@ -14,8 +14,9 @@ void courier(enum PUBSUB_PRIORITY priority) {
     for(;;) {
         producer_msg.type = PUBSUB_MESSAGE;
         producer_msg.ps_msg.type = COURIER;
+        producer_msg.ps_msg.priority = priority;
         Send(producer, (char *)&producer_msg, sizeof(producer_msg), 
-                                  (char *)&producer_rply, sizeof(producer_rply));
+                       (char *)&producer_rply, sizeof(producer_rply));
 
         // Send message to all consumers.
         consumer_msg = producer_rply;

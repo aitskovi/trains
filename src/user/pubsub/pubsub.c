@@ -20,12 +20,7 @@ int Subscribe(char *name, enum PUBSUB_PRIORITY priority) {
     msg.ps_msg.type = SUBSCRIBE;
     msg.ps_msg.priority = priority;
 
-    char stream_buf[MAX_NAME_LENGTH + 6];
-    char *pos = stream_buf;
-    pos += strcpy(name, pos);
-    pos += strcpy("Stream", pos);
-
-    tid_t server = WhoIs(stream_buf);
+    tid_t server = WhoIs(name);
 
     Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
     cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
@@ -39,12 +34,7 @@ int Unsubscribe(char *name, enum PUBSUB_PRIORITY priority) {
     msg.ps_msg.type = UNSUBSCRIBE;
     msg.ps_msg.priority = priority;
 
-    char stream_buf[MAX_NAME_LENGTH + 6];
-    char *pos = stream_buf;
-    pos += strcpy(name, pos);
-    pos += strcpy("Stream", pos);
-
-    tid_t server = WhoIs(stream_buf);
+    tid_t server = WhoIs(name);
 
     Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
     cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
@@ -171,12 +161,7 @@ static int pubsubservice_empty(PubSubService *service, enum PUBSUB_PRIORITY prio
 static void pubsubservice_initialize(PubSubService *service) {
     multiqueue_initialize(&service->queue);
     int i;
-    for (i = 0; i < PUBSUB_NUM_PRIORITIES; ++i) {
-        int j;
-        for (j = 0; j < MAX_SUBSCRIBERS; ++j) {
-            service->subscribers[i][j] = -1;
-        }
-    }
+    memset(service->subscribers, 0, sizeof(service->subscribers));
 }
 
 /**************************
@@ -205,6 +190,7 @@ static void ConfigureStream() {
 
     RegisterAs(msg.name);
 
+    rply.type = CONFIGURE;
     Reply(tid, (char *)&rply, sizeof(rply));
 }
 
@@ -224,23 +210,27 @@ static void PubSubServer() {
     Message msg, rply;
     for (;;) {
         Receive(&tid, (char *)&msg, sizeof(msg));
-        cuassert(msg.type == PUBSUB_MESSAGE, "Invalid Message for PubSub Server");
+        switch(msg.type) {
+            case PUBSUB_MESSAGE:
+                switch(msg.ps_msg.type) {
+                    case SUBSCRIBE:
+                        rply.type = PUBSUB_MESSAGE;
+                        Reply(tid, (char *)&rply, sizeof(rply));
 
-        switch(msg.ps_msg.type) {
-            case SUBSCRIBE:
-                rply.type = PUBSUB_MESSAGE;
-                Reply(tid, (char *)&rply, sizeof(rply));
+                        pubsubservice_subscribe(&service, tid, msg.ps_msg.priority);
+                        break;
+                    case UNSUBSCRIBE:
+                        rply.type = PUBSUB_MESSAGE;
+                        Reply(tid, (char *)&rply, sizeof(rply));
 
-                pubsubservice_subscribe(&service, tid, msg.ps_msg.priority);
-                break;
-            case UNSUBSCRIBE:
-                rply.type = PUBSUB_MESSAGE;
-                Reply(tid, (char *)&rply, sizeof(rply));
-
-                pubsubservice_unsubscribe(&service, tid, msg.ps_msg.priority);
-                break;
-            case COURIER:
-                couriers[msg.ps_msg.priority] = tid;
+                        pubsubservice_unsubscribe(&service, tid, msg.ps_msg.priority);
+                        break;
+                    case COURIER:
+                        couriers[msg.ps_msg.priority] = tid;
+                        break;
+                    default:
+                        cuassert(0, "Invalid Pubsub Message");
+                }
                 break;
             default:
                 // By default we get a publish.
