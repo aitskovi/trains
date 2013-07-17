@@ -73,7 +73,7 @@ static int release_track_node(unsigned int train_no, track_node *track) {
         }
     } else {
         ulog ("Train %u tried to release %s which is already free!", train_no, track->name);
-        return RESERVATION_ERROR;
+        return RESERVATION_SUCCESS;
     }
     unsigned int j;
     for (j = 0; j < NUM_NODE_EDGES[track->type]; ++j) {
@@ -85,8 +85,7 @@ static int release_track_node(unsigned int train_no, track_node *track) {
                     return RESERVATION_ERROR;
                 }
             } else {
-                ulog ("Train %u tried to release %s which is already free!", train_no, other_direction->name);
-                return RESERVATION_ERROR;
+                ulog ("Train %u error: Root node %s was not free but derivative node %s was free!", train_no, other_direction->name, track->name, other_direction->name);
             }
         }
     }
@@ -105,7 +104,7 @@ static int release_track_node(unsigned int train_no, track_node *track) {
 static int reserve_track_node(unsigned int train_no, track_node *track) {
     if (track->owner != 0) {
         if (track->owner == train_no) {
-            ulog ("Train %u tried reserving %s twice!", train_no, track->name);
+//            ulog ("Train %u tried reserving %s twice!", train_no, track->name);
             return RESERVATION_ALREADY_OWNER;
         }
         ulog ("Train %u failed to reserve %s which is owned by %u", train_no, track->name, track->owner);
