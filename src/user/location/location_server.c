@@ -8,7 +8,6 @@
 #include <syscall.h>
 #include <sensor_server.h>
 #include <task.h>
-#include <location_courier.h>
 #include <distance_notifier.h>
 #include <pubsub.h>
 

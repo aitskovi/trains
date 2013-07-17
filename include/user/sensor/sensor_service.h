@@ -31,15 +31,5 @@ int sensorservice_push(struct SensorService *service, char sensor, int number);
  */
 int sensorservice_pop(struct SensorService *service, char *sensor, int *number, int *subscribers);
 
-/**
- * Subscribe to sensor hits.
- */
-int sensorservice_subscribe(struct SensorService *service, int tid);
-
-/**
- * Unsubscribe from sensor hits.
- */
-int sensorservice_unsubscribe(struct SensorService *service, int tid);
-
 #endif
 

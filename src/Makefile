@@ -32,11 +32,9 @@ ARMOBJECTS = kernel.o\
 			 sensor_server.o\
 			 switch_server.o\
 			 sensor_notifier.o\
-			 sensor_courier.o\
 			 sensor_widget.o\
 			 location_server.o\
 			 location_service.o\
-			 location_courier.o\
 			 mission_control.o\
 			 train_task.o\
 			 distance_notifier.o\
