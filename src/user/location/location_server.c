@@ -105,6 +105,21 @@ void LocationServer() {
                 }
                 break;
             }
+            case SHELL_MESSAGE: {
+                ShellMessage *sh_msg = &msg.sh_msg;
+                switch(sh_msg->type) {
+                    case SHELL_ORIENT:
+                        rply.type = SHELL_MESSAGE;
+                        rply.sh_msg.type = SHELL_SUCCESS_REPLY;
+                        Reply(tid, (char *)&rply, sizeof(rply));
+
+                        locationservice_orientation_event(&service, sh_msg->train_no, sh_msg->orientation);
+                        break;
+                    default:
+                        cuassert(0, "Invalid Train Message\n");
+                }
+                break;
+            }
             default:
                 ulog("\nWARNING: Invalid Message Received\n");
         }

@@ -14,6 +14,12 @@ enum LOCATION_SERVER_MESSAGE_TYPE {
     LOCATION_TICK_RESPONSE,
 };
 
+enum TRAIN_ORIENTATION {
+    TRAIN_UNKNOWN = 0,
+    TRAIN_FORWARD,
+    TRAIN_BACKWARD,
+};
+
 struct track_node;
 
 typedef struct TrainData {
@@ -24,6 +30,7 @@ typedef struct TrainData {
     int distance;
     int stopping_distance;
     int error;
+    enum TRAIN_ORIENTATION orientation;
 } TrainData;
 
 typedef struct LocationServerMessage {

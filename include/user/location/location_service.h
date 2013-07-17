@@ -2,7 +2,7 @@
 #define _LOCATION_SERVICE_H_
 
 #include <circular_queue.h>
-#include <location_service.h>
+#include <location_server.h>
 #include <task.h>
 
 #define MAX_PENDING_SENSORS 4
@@ -31,6 +31,8 @@ typedef struct TrainLocation {
 
     struct track_node *next_sensors[MAX_PENDING_SENSORS];
     int num_pending_sensors;
+
+    enum TRAIN_ORIENTATION orientation;
 } TrainLocation;
 
 typedef struct LocationService {
@@ -49,6 +51,7 @@ void locationservice_associate(LocationService *service, TrainLocation *train, s
 int locationservice_sensor_event(LocationService *service, char name, int number);
 int locationservice_distance_event(LocationService *service);
 int locationservice_speed_event(LocationService *service, int train_number, int speed);
+int locationservice_orientation_event(LocationService *service, int train_number, enum TRAIN_ORIENTATION orientation);
 
 int locationservice_add_train(LocationService *service, int train_number);
 #endif

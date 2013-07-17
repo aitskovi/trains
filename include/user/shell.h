@@ -24,6 +24,7 @@ typedef struct ShellMessage {
         SHELL_GO,
         SHELL_STOP,
         SHELL_SET_SWITCH_POSITION,
+        SHELL_ORIENT,
         SHELL_SUCCESS_REPLY
     } type;
 
@@ -40,7 +41,10 @@ typedef struct ShellMessage {
     };
 
     track_node *position;
-    int distance;
+    union {
+        int distance;
+        int orientation;
+    };
 
 } ShellMessage;
 

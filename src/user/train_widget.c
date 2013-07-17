@@ -24,11 +24,13 @@
 #define STOPPING_DISTANCE_STRING "Stop Dist.:"
 #define MEASURED_VELOCITY_STRING "Mea. Speed:"
 #define ERROR_STRING "Error:"
+#define ORIENTATION_STRING "Orientation:"
 
 enum TRAIN_WIDGET_HEIGHTS {
     TRAIN_DISPLAY_HEIGHT = TRAIN_TABLE_HEIGHT,
     EMPTY_LINE_HEIGHT,
     TRAIN_ID_HEIGHT,
+    TRAIN_ORIENTATION_HEIGHT,
     TRAIN_LANDMARK_HEIGHT,
     TRAIN_DISTANCE_HEIGHT,
     TRAIN_ESTIMATED_VELOCITY_HEIGHT,
@@ -45,8 +47,33 @@ typedef struct DisplayData {
     int stopping_distance;
     int calibrated_velocity;
     int calibrated_error;
+    enum TRAIN_ORIENTATION orientation;
     struct track_node *reserved_nodes[MAX_RESERVED_NODES];
 } DisplayData;
+
+static void train_orientation_update(int index, DisplayData *data, enum TRAIN_ORIENTATION orientation) {
+    if (data->orientation == orientation) return;
+    data->orientation = orientation;
+
+    char command[128];
+    char *pos = &command[0];
+
+    pos += sprintf(pos, "\0337");
+    int offset = strlen(ORIENTATION_STRING);
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ORIENTATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    char position[TRAIN_COLUMN_WIDTH];
+    if (orientation == TRAIN_FORWARD) {
+        sprintf(position, "F");
+    } else if (orientation == TRAIN_BACKWARD) {
+        sprintf(position, "B");
+    } else {
+        sprintf(position, "N/A");
+    }
+    pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', position);
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
+}
 
 static void train_edge_update(int index, DisplayData *data, track_edge *edge) {
     if (data->edge == edge) return;
@@ -182,6 +209,10 @@ static void train_display_add(int index, DisplayData *display, int train) {
     pos += sprintf(pos, "\033[%u;%uH", TRAIN_ID_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, "Train: %d", train);
 
+    // Draw Orientation.
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ORIENTATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, ORIENTATION_STRING);
+
     // Draw Train Position
     pos += sprintf(pos, "\033[%u;%uH", TRAIN_LANDMARK_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, LANDMARK_STRING);
@@ -267,6 +298,7 @@ void train_widget() {
                     train_display_add(index, display, data->id);
                 }
 
+                train_orientation_update(index, display, data->orientation);
                 train_edge_update(index, display, data->edge);
                 train_distance_update(index, display, data->distance);
                 train_estimated_velocity_update(index, display, data->velocity);

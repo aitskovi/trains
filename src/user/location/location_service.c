@@ -74,6 +74,7 @@ static void locationservice_add_event(LocationService *service, TrainLocation *t
     msg.ls_msg.data.distance = train->distance;
     msg.ls_msg.data.stopping_distance = stopping_distance(train->id, train->velocity);
     msg.ls_msg.data.error = calibration_error(train->id);
+    msg.ls_msg.data.orientation = train->orientation;
 
     Publish(service->stream, &msg);
 }
@@ -186,6 +187,9 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
         train->distance = train->edge->dist - train->distance;
     }
 
+    if (train->orientation == TRAIN_FORWARD) train->orientation = TRAIN_BACKWARD;
+    else if (train->orientation == TRAIN_BACKWARD) train->orientation = TRAIN_FORWARD;
+
     // Associate us with the correct landmark and sensor.
     train->num_pending_sensors = track_sensor_search(train->edge->src, train->next_sensors);
 
@@ -202,9 +206,18 @@ int locationservice_speed_event(struct LocationService *service, int train_numbe
 
     // TODO: Set-up acceleration stuff. For now, just set our speed.
     update_speed(train, speed);
-    if (train->accelerating) {
-        //ulog("Train is Accelerating!");
-    }
+
+    locationservice_add_event(service, train);
+    return 0;
+}
+
+int locationservice_orientation_event(LocationService *service,
+                                      int train_number,
+                                      enum TRAIN_ORIENTATION orientation) {
+    TrainLocation *train = get_train_location(service, train_number);
+    cuassert(train, "Orientation event for invalid train");
+
+    train->orientation = orientation;
 
     locationservice_add_event(service, train);
     return 0;
