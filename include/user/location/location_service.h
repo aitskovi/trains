@@ -39,11 +39,10 @@ typedef struct LocationService {
 
     int train_to_index[MAX_TRAIN_IDS];
 
-    struct circular_queue events;
-    int subscribers[MAX_SUBSCRIBERS];
+    tid_t stream;
 } LocationService;
 
-void locationservice_initialize(struct LocationService *service);
+void locationservice_initialize(struct LocationService *service, tid_t publisher);
 
 void locationservice_associate(LocationService *service, TrainLocation *train, struct track_edge *edge);
 
@@ -52,11 +51,4 @@ int locationservice_distance_event(LocationService *service);
 int locationservice_speed_event(LocationService *service, int train_number, int speed);
 
 int locationservice_add_train(LocationService *service, int train_number);
-
-void locationservice_add_event(LocationService *service, TrainLocation *train);
-int locationservice_pop_event(LocationService *service, struct TrainData *data, int *subscribers);
-
-int locationservice_subscribe(LocationService *service, int tid);
-int locationservice_unsubscribe(LocationService *service, int tid);
-
 #endif

@@ -19,10 +19,6 @@ int sensor_to_int(char c) {
 void sensorservice_initialize(struct SensorService *service) {
     int i;
 
-    for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
-        service->subscribers[i] = 0;
-    }
-
     for (i = 0; i < NUM_SENSORS; ++i) {
         circular_queue_initialize(&(service->sensor_data[i]));
     }
@@ -67,32 +63,9 @@ int sensorservice_pop(struct SensorService *service, char *sensor, int *number, 
             *sensor = int_to_sensor(i); 
             *number = (int)circular_queue_pop(queue);
 
-            int j;
-            for (j = 0; j < MAX_SUBSCRIBERS; ++j) {
-                subscribers[j] = service->subscribers[j];
-            }
-
             return 0;
         }
     }
 
     return -1;
-}
-
-int sensorservice_subscribe(struct SensorService *service, int tid) {
-    int section = tid / 32;
-    int bit = 1 << (tid % 32);
-
-    service->subscribers[section] |= bit;
-
-    return 0;
-}
-
-int sensorservice_unsubscribe(struct SensorService *service, int tid) {
-    int section = tid / 32;
-    int bit  = 1 << (tid % 32);
-
-    service->subscribers[section] &= ~bit;
-
-    return 0;
 }

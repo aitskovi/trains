@@ -1,7 +1,7 @@
 #ifndef _NAMESERVICE_H_
 #define _NAMESERVICE_H_
 
-#define MAX_NAME_LENGTH 20
+#define MAX_NAME_LENGTH 40
 #define MAX_REGISTRATIONS 50
 #define MAX_WAITERS 20
 #define WAITING_TID -2
@@ -40,6 +40,5 @@ int nameservice_register(struct NameService *service, char *name, int tid);
 int nameservice_lookup(struct NameService *service, char *name);
 
 int nameservice_wait(struct NameService *service, char *name, int tid);
-
 
 #endif

@@ -7,6 +7,7 @@
 #include <shell.h>
 #include <switch_server.h>
 #include <calibration.h>
+#include <pubsub.h>
 
 enum MESSAGE_TYPE {
     SENSOR_SERVER_MESSAGE,
@@ -15,6 +16,7 @@ enum MESSAGE_TYPE {
     SHELL_MESSAGE,
     SWITCH_SERVER_MESSAGE,
     CALIBRATION_MESSAGE,
+    PUBSUB_MESSAGE,
 };
 
 typedef struct Message {
@@ -26,7 +28,9 @@ typedef struct Message {
         ShellMessage sh_msg;
         SwitchServerMessage sw_msg;
         CalibrationMessage cs_msg;
+        PubSubMessage ps_msg;
     };
+    int subscribers[MAX_SUBSCRIBERS];
 } Message;
 
 #endif
