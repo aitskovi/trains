@@ -264,6 +264,7 @@ void train_widget() {
 
     // Find the location server and subscribe.
     Subscribe("LocationServerStream", PUBSUB_LOW);
+    Subscribe("CalibrationServerStream", PUBSUB_LOW);
 
     // Initial Display.
     train_display_init();

@@ -61,14 +61,13 @@ struct location_event {
 
 static void publish_calibration(int tid, int train, int velocity, int error) {
     // Notify the distance server of the change.
-    Message msg, reply;
+    Message msg;
     msg.type = CALIBRATION_MESSAGE;
     msg.cs_msg.type = CALIBRATION_INFO;
     msg.cs_msg.train = train;
     msg.cs_msg.velocity = velocity;
     msg.cs_msg.error = error;
-    Send(tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-    cuassert(CALIBRATION_MESSAGE == reply.type, "Calibration task received invalid msg");
+    Publish(tid, &msg);
 }
 
 int calibration_update(TrainCalibration *calibration, TrainData *data) {
@@ -112,6 +111,8 @@ void calibration_server() {
     Subscribe("LocationServerStream", PUBSUB_MEDIUM);
     tid_t train_widget_tid = WhoIs("TrainWidget");
 
+    tid_t stream = CreateStream("CalibrationServerStream");
+
     // Deal with our Subscription.
     int tid;
     struct Message msg, rply;
@@ -148,7 +149,7 @@ void calibration_server() {
 
         TrainCalibration *calibration = &calibrations[index];
         if (calibration_update(calibration, data)) {
-            publish_calibration(train_widget_tid, data->id, calibration->average_speed, calibration->error);
+            publish_calibration(stream, data->id, calibration->average_speed, calibration->error);
         }
     }
 
