@@ -315,6 +315,22 @@ int parse_orient(char *str, int *train, int *orientation) {
     return 1;
 }
 
+int parse_simulate(char *str) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 's') return 0;
+    if (*str++ != 'i') return 0;
+    if (*str++ != 'm') return 0;
+    if (*str++ != 'u') return 0;
+    if (*str++ != 'l') return 0;
+    if (*str++ != 'a') return 0;
+    if (*str++ != 't') return 0;
+    if (*str++ != 'e') return 0;
+
+    return 1;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -338,9 +354,9 @@ void generate_debug_area() {
 }
 
 void shell() {
-
     tid_t mission_control_tid = WhoIs("MissionControl");
     tid_t location_server_tid = WhoIs("LocationServer");
+
 
     // Clear the screen.
     Write(COM2, (char *)CLEAR_SCREEN, strlen((char *)CLEAR_SCREEN));
@@ -452,6 +468,8 @@ void shell() {
                 tid_t calibrator = Execute(MEDIUM, velocity_calibrator, train);
                 WaitTid(calibrator);
                 ulog("Calibration Completed");
+            } else if (parse_simulate(line_buffer)) {
+                //Create(HIGH, simulation);
             }
 
             line_buffer[line_buffer_pos + 1] = 0;

@@ -201,7 +201,10 @@ int locationservice_distance_event(struct LocationService *service) {
             }
         }
 
-        if (old_velocity > 0 || train->velocity > 0) locationservice_add_event(service, train);
+
+        // TODO remove this!!!
+        static int tick = 0;
+        if (old_velocity > 0 || tick++ % 100 == 0 || train->velocity > 0) locationservice_add_event(service, train);
     }
 
     return 0;
