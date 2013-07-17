@@ -12,6 +12,7 @@
 
 static track_node track[TRACK_MAX];
 static unsigned int REVERSE_PENALTY;
+static unsigned int BLOCKED_TRACK_PENALTY;
 
 int track_initialize(char track_name) {
     switch(track_name) {
@@ -26,8 +27,9 @@ int track_initialize(char track_name) {
             break;
     }
 
-    // Default penalty for reversing is one hundred meter (basically only want to reverse if impossible to find other route)
-    REVERSE_PENALTY = 100000000;
+    // Default penalty for reversing and blocked track is ten, one hundred meter (basically only want to reverse/wait if impossible to find other route)
+    REVERSE_PENALTY = 10000000;
+    BLOCKED_TRACK_PENALTY = 100000000;
     return 0;
 }
 
@@ -230,8 +232,11 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
         // For each neighbour
         for (j = 0; j < NUM_NODE_EDGES[current->type]; ++j) {
             neighbour = current->edge[j].dest;
-            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited && (neighbour->owner == 0 || neighbour->owner == 0)) {
+            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
                 unsigned int dist = current->distance + current->edge[j].dist;
+                if (neighbour->owner) {
+                    dist += BLOCKED_TRACK_PENALTY;
+                }
                 if (dist < neighbour->distance) {
                     neighbour->distance = dist;
                     previous[neighbour - track] = current;
@@ -242,8 +247,11 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
         // If there is enough space around current node we could also reverse
         if (can_reverse_at_node(current)) {
             neighbour = current->reverse;
-            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited && (neighbour->owner == 0 || neighbour->owner == 0)) {
+            if (neighbour && neighbour->type != NODE_NONE && !neighbour->visited) {
                 unsigned int dist = current->distance + REVERSE_PENALTY;
+                if (neighbour->owner) {
+                    dist += BLOCKED_TRACK_PENALTY;
+                }
                 if (dist < neighbour->distance) {
                     neighbour->distance = dist;
                     previous[neighbour - track] = current;

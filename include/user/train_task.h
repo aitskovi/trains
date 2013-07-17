@@ -20,7 +20,8 @@ typedef struct TrainMessage {
         COMMAND_AWAITING,
         COMMAND_GOTO,
         COMMAND_STOP,
-        COMMAND_ACKNOWLEDGED
+        COMMAND_ACKNOWLEDGED,
+        COMMAND_RESET
     } type;
     speed_t speed;
     train_t train;
