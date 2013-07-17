@@ -10,6 +10,7 @@
 #include <sensor_server.h>
 #include <ts7200.h>
 #include <write_server.h>
+#include <pubsub.h>
 
 void sensor_list_print(char *sensors, int *numbers) {
 
@@ -53,15 +54,7 @@ void sensor_widget() {
     memset(triggered_sensor, 0, sizeof(triggered_sensor));
     memset(triggered_number, 0, sizeof(triggered_number));
 
-    // Find the sensor server.
-    int sensor_server_tid = -2;
-    do {
-        sensor_server_tid = WhoIs("SensorServer");
-        dlog("Sensor Server Tid %d\n", sensor_server_tid);
-    } while (sensor_server_tid < 0);
-
-    // Subscribe.
-    sensor_server_subscribe(sensor_server_tid);
+    Subscribe("SensorServerStream", PUBSUB_LOW);
 
     // Print our initial thing.
     sensor_list_print(triggered_sensor, triggered_number);

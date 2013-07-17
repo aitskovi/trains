@@ -130,10 +130,7 @@ void mission_control() {
 
     TrainStatus *status;
 
-    tid_t location_server_tid = WhoIs("LocationServer");
-
-    // Subscribe.
-    location_server_subscribe(location_server_tid);
+    Subscribe("LocationServerStream", PUBSUB_HIGH);
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));

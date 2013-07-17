@@ -4,8 +4,8 @@
 
 PARSE_TRACK = ../bin/parse_track
 
-VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/ user/location/ user/distance/ user/calibration/
-INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor -I ../include/user/location -I ../include/user/distance -I ../include/user/calibration
+VPATH += libc/ test/ user/ user/rps/ user/libc/ user/clock user/serial/ track/ user/sensor/ user/location/ user/distance/ user/calibration/ user/pubsub/
+INCLUDES = -I. -I../include -I../include/libc -I../include/user -I../include/user/rps -I../include/user/clock -I../include/user/serial -I../include/track -I../include/user/sensor -I ../include/user/location -I ../include/user/distance -I ../include/user/calibration -I ../include/user/pubsub
 
 ifeq ($(ARCH), x86)
 	include x86.mk
@@ -32,11 +32,9 @@ ARMOBJECTS = kernel.o\
 			 sensor_server.o\
 			 switch_server.o\
 			 sensor_notifier.o\
-			 sensor_courier.o\
 			 sensor_widget.o\
 			 location_server.o\
 			 location_service.o\
-			 location_courier.o\
 			 mission_control.o\
 			 train_task.o\
 			 distance_notifier.o\
@@ -47,6 +45,8 @@ ARMOBJECTS = kernel.o\
 			 shell.o\
 			 nameservice.o\
 			 memcpy.o\
+			 pubsub.o\
+			 courier.o\
 			 		  	 
 
 X86OBJECTS = log_x86.o\

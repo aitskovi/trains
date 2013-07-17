@@ -8,6 +8,7 @@
 #include <track_node.h>
 #include <calibration.h>
 #include <location_server.h>
+#include <encoding.h>
 
 
 static void update_velocity(TrainLocation *train) {
@@ -62,25 +63,30 @@ static TrainLocation *add_train_location(LocationService *service, int train) {
     return &service->trains[index];
 }
 
-void locationservice_initialize(struct LocationService *service) {
+static void locationservice_add_event(LocationService *service, TrainLocation *train) {
+    Message msg;
+    msg.type = LOCATION_SERVER_MESSAGE;
+    msg.ls_msg.type = LOCATION_COURIER_REQUEST;
+    msg.ls_msg.data.id = train->id;
+    msg.ls_msg.data.speed = train->speed;
+    msg.ls_msg.data.velocity = train->velocity;
+    msg.ls_msg.data.edge = train->edge;
+    msg.ls_msg.data.distance = train->distance;
+    msg.ls_msg.data.stopping_distance = stopping_distance(train->id, train->velocity);
+    msg.ls_msg.data.error = calibration_error(train->id);
+
+    Publish(service->stream, &msg);
+}
+
+void locationservice_initialize(struct LocationService *service, tid_t stream) {
     memset(service->trains, 0, sizeof(service->trains));
     service->num_trains = 0;
+    service->stream = stream;
 
     int i;
     for (i = 0; i < MAX_TRAIN_IDS; ++i) {
         service->train_to_index[i] = -1;
     }
-
-    for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
-        service->subscribers[i] = 0;
-    }
-
-    circular_queue_initialize(&(service->events));
-}
-
-void locationservice_add_event(LocationService *service, TrainLocation *train) {
-    int error = circular_queue_push(&service->events, (void *)train->id); 
-    cuassert(!error, "Overrun LocationService Event Queue");
 }
 
 /**
@@ -213,46 +219,5 @@ int locationservice_add_train(struct LocationService *service, int train_number)
     TrainLocation *train = add_train_location(service, train_number);
     
     locationservice_add_event(service, train);
-    return 0;
-}
-
-int locationservice_pop_event(LocationService *service, TrainData *data, int *subscribers) {
-    if (circular_queue_empty(&(service->events))) return -1;
-
-    int id = (int)circular_queue_pop(&service->events);
-    struct TrainLocation *train = get_train_location(service, id);
-
-    data->id = id;
-    data->speed = train->speed;
-    data->velocity = train->velocity;
-    data->edge = train->edge;
-    data->distance = train->distance;
-    data->stopping_distance = stopping_distance(train->id, train->velocity);
-    data->error = calibration_error(train->id);
-
-    int i;
-    for (i = 0; i < MAX_SUBSCRIBERS; ++i) {
-        subscribers[i] = service->subscribers[i];
-    }
-
-    return 0;
-}
-
-
-int locationservice_subscribe(struct LocationService *service, int tid) {
-    int section = tid / 32;
-    int bit = 1 << (tid % 32);
-
-    service->subscribers[section] |= bit;
-
-    return 0;
-}
-
-int locationservice_unsubscribe(struct LocationService *service, int tid) {
-    int section = tid / 32;
-    int bit  = 1 << (tid % 32);
-
-    service->subscribers[section] &= ~bit;
-
     return 0;
 }
