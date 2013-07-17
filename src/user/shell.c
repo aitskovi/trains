@@ -24,6 +24,7 @@
 #include <nameserver.h>
 #include <dassert.h>
 #include <clock_server.h>
+#include <velocity_calibrator.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -196,6 +197,34 @@ int parse_ad(char *str, int *train) {
     if (*str != 'a') return 0;
     str++;
     if (*str != 'd') return 0;
+    str++;
+
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    return 1;
+}
+
+int parse_calibrate(char *str, int *train) {
+    while(is_whitespace(*str)) ++str;
+
+    if (*str != 'c') return 0;
+    str++;
+    if (*str != 'a') return 0;
+    str++;
+    if (*str != 'l') return 0;
+    str++;
+    if (*str != 'i') return 0;
+    str++;
+    if (*str != 'b') return 0;
+    str++;
+    if (*str != 'r') return 0;
+    str++;
+    if (*str != 'a') return 0;
+    str++;
+    if (*str != 't') return 0;
+    str++;
+    if (*str != 'e') return 0;
     str++;
 
     *train = parse_uint(&str);
@@ -415,6 +444,11 @@ void shell() {
                 Send(location_server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+            } else if (parse_calibrate(line_buffer, &train)) {
+                ulog("Calibrating Train %d", train);
+                tid_t calibrator = Execute(MEDIUM, velocity_calibrator, train);
+                WaitTid(calibrator);
+                ulog("Calibration Completed");
             }
 
             line_buffer[line_buffer_pos + 1] = 0;

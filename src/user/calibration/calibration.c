@@ -30,22 +30,25 @@ int velocity(int train, int speed, track_edge *edge) {
 
 int stopping_distance(int train, int velocity) {
     if (velocity == 0) return 0;
-    else return (0.0100 * velocity * velocity + 74.6926 * velocity);
+    else return 0.0100 * velocity * velocity + 94.5345 * velocity;
+    //else return (0.0100 * velocity * velocity + 74.6926 * velocity);
 }
 
 int acceleration(int train, int start, int end, int tick) {
+    if (start > end) return deceleration(train, start, end, tick);
+
+    if (tick < 100) return 0;
+
     int d = stopping_distance(train, end) - stopping_distance(train, start);
     int v = end - start;
     return v * v / (2 * d);
 }
 
-/*
 int deceleration(int train, int start, int end, int tick) {
     int d = stopping_distance(train, end) - stopping_distance(train, start);
     int v = end - start;
     return v * v / (2 * d);
 }
-*/
 
 int calibration_error(int train) {
     return 10000;

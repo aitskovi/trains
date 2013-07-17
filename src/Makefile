@@ -47,6 +47,7 @@ ARMOBJECTS = kernel.o\
 			 memcpy.o\
 			 pubsub.o\
 			 courier.o\
+			 velocity_calibrator.o\
 			 		  	 
 
 X86OBJECTS = log_x86.o\
