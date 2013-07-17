@@ -27,27 +27,8 @@ int AddTrain(int number) {
     return 0;
 }
 
-/**
- * Publish a location through the courier.
- */
-int location_publish(struct LocationService *service, tid_t tid) {
-    struct Message rply;
-    rply.type = LOCATION_SERVER_MESSAGE;
-    rply.ls_msg.type = LOCATION_COURIER_REQUEST;
-
-    int result = locationservice_pop_event(service, &rply.ls_msg.data, rply.ls_msg.subscribers);
-    if (result == -1) return -1;
-
-    Publish(tid, &rply);
-
-    return 0;
-}
-
 void LocationServer() {
     server_tid = MyTid();
-
-    struct LocationService service;
-    locationservice_initialize(&service);
 
     RegisterAs("LocationServer");
 
@@ -57,7 +38,11 @@ void LocationServer() {
     // Subscribe to sensor server.
     Subscribe("SensorServerStream", PUBSUB_HIGH);
 
+    // Create a LocationStream.
     tid_t stream = CreateStream("LocationServerStream");
+
+    LocationService service;
+    locationservice_initialize(&service, stream);
 
     // Start Serving Requests.
     int tid;
@@ -124,18 +109,7 @@ void LocationServer() {
             default:
                 ulog("\nWARNING: Invalid Message Received\n");
         }
-
-        location_publish(&service, stream);
     }
 
     Exit();
-}
-
-void location_server_subscribe(int server) {
-    struct Message msg, rply;
-    msg.type = LOCATION_SERVER_MESSAGE;
-    msg.ls_msg.type = LOCATION_SUBSCRIBE_REQUEST;
-    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
-    cuassert(rply.type == LOCATION_SERVER_MESSAGE, "Invalid Response from LocationServer");
-    cuassert(rply.ls_msg.type == LOCATION_SUBSCRIBE_RESPONSE, "Invalid Response from Location Server");
 }

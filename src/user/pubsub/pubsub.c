@@ -153,8 +153,9 @@ static int pubsubservice_pop(PubSubService *service, Message *msg, enum PUBSUB_P
     }
 }
 
-static int pubsubservice_push(PubSubService *service, Message *msg) {
-    return multiqueue_push(&service->queue, msg);
+static void pubsubservice_push(PubSubService *service, Message *msg) {
+    int error = multiqueue_push(&service->queue, msg);
+    cuassert(!error, "Overrun PubSub Event Queue");
 }
 
 static int pubsubservice_empty(PubSubService *service, enum PUBSUB_PRIORITY priority) {
