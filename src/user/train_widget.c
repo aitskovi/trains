@@ -14,7 +14,7 @@
 #include <memory.h>
 
 #define TRAIN_TABLE_HEIGHT 9
-#define TRAIN_COLUMN_WIDTH 23
+#define TRAIN_COLUMN_WIDTH 40
 #define TRAIN_COLUMN_WRITABLE_WIDTH TRAIN_COLUMN_WIDTH - 1
 #define MAX_RESERVED_NODES 10
 
@@ -25,6 +25,7 @@
 #define STOPPING_DISTANCE_STRING "Stop Dist.:"
 #define MEASURED_VELOCITY_STRING "Mea. Speed:"
 #define ERROR_STRING "Error:"
+#define RESERVED_NODES_STRING "Reserved:"
 #define ORIENTATION_STRING "Orientation:"
 
 enum TRAIN_WIDGET_HEIGHTS {
@@ -38,6 +39,7 @@ enum TRAIN_WIDGET_HEIGHTS {
     TRAIN_STOPPING_DISTANCE_HEIGHT,
     TRAIN_MEASURED_VELOCITY_HEIGHT,
     TRAIN_ERROR_HEIGHT,
+    TRAIN_RESERVED_NODES_HEIGHT
 };
 
 typedef struct DisplayData {
@@ -49,7 +51,7 @@ typedef struct DisplayData {
     int calibrated_velocity;
     int calibrated_error;
     enum TRAIN_ORIENTATION orientation;
-    struct track_node *reserved_nodes[MAX_RESERVED_NODES];
+    track_node *reserved_nodes[MAX_RESERVED_NODES];
 } DisplayData;
 
 static void train_orientation_update(int index, DisplayData *data, enum TRAIN_ORIENTATION orientation) {
@@ -152,6 +154,54 @@ static void train_stopping_distance_update(int index, DisplayData *data, int sto
     Write(COM2, command, pos - command);
 }
 
+static void train_reserved_node_update(int index, DisplayData *data) {
+    char command[128];
+    char *pos = &command[0];
+
+    char buf[TRAIN_COLUMN_WIDTH];
+    char *buf_pos = &buf[0];
+
+    pos += sprintf(pos, "\0337");
+    int offset = strlen(STOPPING_DISTANCE_STRING);
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_RESERVED_NODES_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+
+    unsigned int j;
+    for (j = 0; j < MAX_RESERVED_NODES; ++j) {
+        if (data->reserved_nodes[j] != 0) {
+            buf_pos += sprintf(buf_pos, "%s ", data->reserved_nodes[j]->name);
+        }
+    }
+
+    pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
+}
+
+static void train_reserved_node_released(int index, DisplayData *data, track_node *node) {
+    unsigned int j;
+    for (j = 0; j < MAX_RESERVED_NODES; ++j) {
+        if (data->reserved_nodes[j] == node) {
+            data->reserved_nodes[j] = 0;
+            train_reserved_node_update(index, data);
+            return;
+        }
+    }
+    ulog("ERROR: Train widget got release event for unreserved node");
+}
+
+static void train_reserved_node_reserved(int index, DisplayData *data, track_node *node) {
+    unsigned int j;
+    for (j = 0; j < MAX_RESERVED_NODES; ++j) {
+        if (data->reserved_nodes[j] == 0) {
+            data->reserved_nodes[j] = node;
+            train_reserved_node_update(index, data);
+            return;
+        }
+    }
+    ulog("ERROR: Train widget: Reserved more than MAX_RESERVED_NODES");
+}
+
 static void train_calibrated_velocity_update(int index, DisplayData *data, int velocity) {
     if (data->calibrated_velocity == velocity) return;
     data->calibrated_velocity = velocity;
@@ -238,6 +288,10 @@ static void train_display_add(int index, DisplayData *display, int train) {
     pos += sprintf(pos, "\033[%u;%uH", TRAIN_ERROR_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ERROR_STRING);
 
+    // Draw Train Error.
+    pos += sprintf(pos, "\033[%u;%uH", TRAIN_RESERVED_NODES_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, RESERVED_NODES_STRING);
+
     pos += sprintf(pos, "\0338");
 
     Write(COM2, command, pos - command);
@@ -266,6 +320,7 @@ void train_widget() {
     // Find the location server and subscribe.
     Subscribe("LocationServerStream", PUBSUB_LOW);
     Subscribe("CalibrationServerStream", PUBSUB_LOW);
+    Subscribe("ReservationServerStream", PUBSUB_LOW);
 
     // Initial Display.
     train_display_init();
@@ -325,6 +380,31 @@ void train_widget() {
 
                 train_calibrated_velocity_update(index, display, msg.cs_msg.velocity);
                 train_error_update(index, display, msg.cs_msg.error);
+                break;
+            }
+            case RESERVATION_SERVER_MESSAGE: {
+                rply.type = RESERVATION_SERVER_MESSAGE;
+                rply.cs_msg.type = RESERVATION_SUCCESS_RESPONSE;
+                Reply(tid, (char *) &rply, sizeof(rply));
+
+                int old_num_trains = num_trains;
+                int index = get_train_index(number_to_train, &num_trains, msg.cs_msg.train);
+                DisplayData *display = &train_displays[index];
+                if (old_num_trains < num_trains) {
+                    train_display_add(index, display, msg.cs_msg.train);
+                }
+
+                switch (msg.rs_msg.type) {
+                    case RESERVATION_RESERVE:
+                        train_reserved_node_reserved(index, display, msg.rs_msg.node);
+                        break;
+                    case RESERVATION_RELEASE:
+                        train_reserved_node_released(index, display, msg.rs_msg.node);
+                        break;
+                    default:
+                        ulog("Train Widget: Invalid Reservation Server Message");
+                }
+
                 break;
             }
             default:

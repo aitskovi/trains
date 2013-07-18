@@ -12,6 +12,7 @@
 
 
 static tid_t server_tid = -1;
+static tid_t stream_tid = -1;
 
 int Reserve(unsigned int train_no, track_node *node) {
     Message msg, reply;
@@ -65,6 +66,28 @@ int Release(unsigned int train_no, track_node *node) {
     return RESERVATION_ERROR;
 }
 
+static void publish_track_release(unsigned int train_no, track_node *node) {
+    Message msg;
+    ReservationServerMessage *rs_msg = &msg.rs_msg;
+    msg.type = RESERVATION_SERVER_MESSAGE;
+
+    rs_msg->type = RESERVATION_RELEASE;
+    rs_msg->node = node;
+    rs_msg->train_no = train_no;
+    Publish(stream_tid, &msg);
+}
+
+static void publish_track_reserve(unsigned int train_no, track_node *node) {
+    Message msg;
+    ReservationServerMessage *rs_msg = &msg.rs_msg;
+    msg.type = RESERVATION_SERVER_MESSAGE;
+
+    rs_msg->type = RESERVATION_RESERVE;
+    rs_msg->node = node;
+    rs_msg->train_no = train_no;
+    Publish(stream_tid, &msg);
+}
+
 static int release_track_node(unsigned int train_no, track_node *track) {
     if (track->owner != 0) {
         if (track->owner != train_no) {
@@ -98,6 +121,7 @@ static int release_track_node(unsigned int train_no, track_node *track) {
         }
     }
     ulog ("Train %u successfully released %s", train_no, track->name);
+    publish_track_release(train_no, track);
     return RESERVATION_SUCCESS;
 }
 
@@ -128,6 +152,9 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
         }
     }
     ulog ("Train %u successfully reserved %s", train_no, track->name);
+
+    // Publish reservation
+    publish_track_reserve(train_no, track);
     return RESERVATION_SUCCESS;
 }
 
@@ -137,6 +164,8 @@ void reservation_server() {
     server_tid = MyTid();
 
     RegisterAs("ReservationServer");
+
+    stream_tid = CreateStream("ReservationServerStream");
 
     tid_t tid;
     Message msg, reply;
