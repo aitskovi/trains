@@ -4,6 +4,7 @@
 #include <circular_queue.h>
 #include <location_server.h>
 #include <task.h>
+#include <track_node.h>
 
 #define MAX_PENDING_SENSORS 4
 #define MAX_TRAINS 8
@@ -29,8 +30,10 @@ typedef struct TrainLocation {
     int accelerating;
     TrainAcceleration acceleration;  /* Train's Acceleration */
 
-    struct track_node *next_sensors[MAX_PENDING_SENSORS];
+    track_node *next_sensors[MAX_PENDING_SENSORS];
     int num_pending_sensors;
+
+    track_node *missed_sensor;
 
     enum TRAIN_ORIENTATION orientation;
 } TrainLocation;
