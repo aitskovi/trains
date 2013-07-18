@@ -116,25 +116,46 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
     track_node *sensor = track_get_sensor(name, number);
     track_edge *sensor_edge = &sensor->edge[DIR_STRAIGHT];
 
+    unsigned int num_matching_trains = 0;
+    int matching_trains[MAX_TRAINS];
+
     // Look for a train waiting for that sensor.
     int i;
     for (i = 0; i < service->num_trains; ++i) {
         TrainLocation *train = &service->trains[i];
+
         int j;
         for (j = 0; j < train->num_pending_sensors; ++j) {
             if (train->next_sensors[j] == sensor) {
-                train->missed_sensor = 0;
-                locationservice_associate(service, train, sensor_edge);
-                locationservice_add_event(service, train);
-                return 0;
+                matching_trains[num_matching_trains] = i;
+                num_matching_trains++;
             }
         }
+
         if (train->missed_sensor == sensor) {
             train->missed_sensor = 0;
             locationservice_associate(service, train, sensor_edge);
             locationservice_add_event(service, train);
             return 0;
         }
+    }
+
+    // Reduce Matching Trains.
+    int max_velocity = -1;
+    for (i = 0; i < num_matching_trains; ++i) {
+        TrainLocation *train = &service->trains[matching_trains[i]];
+        if (train->velocity > max_velocity) {
+            max_velocity = train->velocity;
+            matching_trains[0] = matching_trains[i];
+        }
+    }
+
+    if (num_matching_trains > 0) {
+        TrainLocation *train = &service->trains[matching_trains[0]];
+        train->missed_sensor = 0;
+        locationservice_associate(service, train, sensor_edge);
+        locationservice_add_event(service, train);
+        return 0;
     }
 
     // We couldn't find any trains. Do we have an unknown train we
