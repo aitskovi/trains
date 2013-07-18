@@ -10,6 +10,7 @@
 #include <location_server.h>
 #include <encoding.h>
 
+#define SENSOR_ERROR_OFFSET 10 * CM
 
 static void update_velocity(TrainLocation *train) {
     if (!train->accelerating) return;
@@ -122,10 +123,17 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
         int j;
         for (j = 0; j < train->num_pending_sensors; ++j) {
             if (train->next_sensors[j] == sensor) {
+                train->missed_sensor = 0;
                 locationservice_associate(service, train, sensor_edge);
                 locationservice_add_event(service, train);
                 return 0;
             }
+        }
+        if (train->missed_sensor == sensor) {
+            train->missed_sensor = 0;
+            locationservice_associate(service, train, sensor_edge);
+            locationservice_add_event(service, train);
+            return 0;
         }
     }
 
@@ -160,9 +168,16 @@ int locationservice_distance_event(struct LocationService *service) {
 
         if (train->edge->dest->type == NODE_EXIT) {
             train->distance = min(train->edge->dist, train->distance);
-        } else if (train->distance >= train->edge->dist && train->edge->dest->type != NODE_SENSOR) {
-            track_edge *next_edge = track_next_edge(train->edge->dest);
-            locationservice_associate(service, train, next_edge);
+        } else if (train->distance >= train->edge->dist) {
+            if (train->edge->dest->type != NODE_SENSOR) {
+                track_edge *next_edge = track_next_edge(train->edge->dest);
+                locationservice_associate(service, train, next_edge);
+            } else if (train->distance >= train->edge->dist + SENSOR_ERROR_OFFSET) {
+                cuassert(!train->missed_sensor, "Missed Multiple Sensors in a Row");
+                track_edge *next_edge = track_next_edge(train->edge->dest);
+                locationservice_associate(service, train, next_edge);
+                train->missed_sensor = next_edge->src;
+            }
         }
 
         if (old_velocity > 0 || train->velocity > 0) locationservice_add_event(service, train);
