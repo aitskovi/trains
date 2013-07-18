@@ -25,6 +25,7 @@
 #define D_STRAIGHT 0
 #define D_CURVED 1
 #define D_REVERSE 2
+#define FAILED_RESERVATIONS_BEFORE_RETRY 3000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -74,6 +75,10 @@ typedef struct {
 
     // Speed to return to after reversing is completed
     speed_t saved_speed;
+
+    // Number of times we've tried to reserve the same node and failed
+    // When this gets high enough we try a different path
+    unsigned int failed_reservations;
 
     // Reserved nodes
     struct circular_queue reserved_nodes;
@@ -202,6 +207,7 @@ static void train_reset(TrainStatus *status) {
     status->path_reserved_distance = 0;
     status->path_pos = 0;
     status->path_reserved_pos = 0;
+    status->failed_reservations = 0;
     status->reversing_status = REVERSING_NOT;
     status->stopping_status = STOPPING_NOT;
 
@@ -267,6 +273,20 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
     }
 }
 
+static void recalculate_path(TrainStatus *status) {
+    if (!status->path_length) {
+        ulog("Error: Recalculating non-existant path");
+        return;
+    }
+    track_node *dest = status->path[status->path_length - 1];
+    train_reset(status);
+    int result = calculate_path(status->position.edge->src, dest, status->path, &status->path_length);
+    if (result) {
+        ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);
+        train_reset(status);
+    }
+}
+
 static void perform_path_actions(TrainStatus *status) {
     int result;
 
@@ -298,21 +318,15 @@ static void perform_path_actions(TrainStatus *status) {
 
     if (!found) {
         ulog("Train %u got lost %d um ahead of %s, recalculating", status->train_no, status->position.distance, status->position.edge->src->name);
-        track_node *dest = status->path[status->path_length - 1];
-        train_reset(status);
-        int result = calculate_path(status->position.edge->src, dest, status->path, &status->path_length);
-        if (result) {
-            ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);
-            train_reset(status);
-            return;
-        }
+        train_set_speed(status, 0);
+        recalculate_path(status);
         return;
     }
 
     status->path_reserved_distance = calculate_path_reserved_distance(status);
 
     if (status->path_reserved_distance > status->stopping_distance + 50000) {
-        train_set_speed(status, CRUISING_SPEED);
+//        train_set_speed(status, CRUISING_SPEED);
         return;
     }
 
@@ -347,19 +361,21 @@ static void perform_path_actions(TrainStatus *status) {
         if (result == RESERVATION_ERROR) {
             ulog ("Reservation error occurred");
             train_start_stopping(status);
+            train_reset(status);
             return;
         } else if (result == RESERVATION_FAILURE) {
-            ulog ("Train %u: Reservation of %s failed, waiting", status->train_no, current->name);
-            track_node *dest = status->path[status->path_length - 1];
-            train_reset(status);
-            int result = calculate_path(status->position.edge->src, dest, status->path, &status->path_length);
-            if (result) {
-                ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);
-                train_reset(status);
-                return;
+            if (!status->failed_reservations) {
+                ulog ("Train %u: Reservation of %s failed, waiting", status->train_no, current->name);
+                train_start_stopping(status);
+            }
+            status->failed_reservations++;
+            if (status->failed_reservations > FAILED_RESERVATIONS_BEFORE_RETRY) {
+                ulog ("Train %u: Timed out reserving %s, recalculating", status->train_no, current->name);
+                recalculate_path(status);
             }
             return;
         } else {
+            status->failed_reservations = 0;
             ulog("Train reserved node %s while %d um ahead of %s, buffer space is now %d um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
             if (result == RESERVATION_SUCCESS) {
                 circular_queue_push(&status->reserved_nodes, current);
