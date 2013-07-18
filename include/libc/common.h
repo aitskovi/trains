@@ -3,6 +3,7 @@
 
 #define abs(exp) (exp) < 0 ? -1 * (exp) : (exp)
 #define min(a,b) (a) < (b) ? (a) : (b)
+#define max(a,b) (a) > (b) ? (a) : (b)
 
 #define CM 10000
 #define MM 1000

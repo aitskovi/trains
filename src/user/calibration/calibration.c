@@ -9,8 +9,10 @@
 #include <dassert.h>
 #include <clock_server.h>
 #include <pubsub.h>
+#include <common.h>
 
 #define MAX_TRAINS 8
+#define STOPPING_DISTANCE 11
 
 typedef struct TrainCalibration {
     int id;
@@ -25,23 +27,42 @@ typedef struct TrainCalibration {
 int velocity(int train, int speed, track_edge *edge) {
     // TODO: Use the velocity tables.
     if (speed == 0) return 0;
+
+    if (train == 49) return 5683;
+    else if (train == 50) return 5213;
+    else if (train == 47) return 5311;
     else return 5300;
 }
 
-int stopping_distance(int train, int velocity) {
-    if (velocity == 0) return 0;
-    else return 0.0100 * velocity * velocity + 94.5345 * velocity;
+int stopping_distance(int train, int v) {
+    if (v == 0) return 0;
+    /*
+    if (v == velocity(train, 11, 0)) {
+        if (train == 49) return 74000;
+        else if (train == 50) return 62000;
+        else if (train == 47) return 72000;
+        else return 70000;
+    } else {
+    */
+    //else return 0.0100 * velocity * velocity + 94.5345 * velocity;
     //else return (0.0100 * velocity * velocity + 74.6926 * velocity);
+    else return max(0, 132 * v - 24948);
 }
 
 int acceleration(int train, int start, int end, int tick) {
     if (start > end) return deceleration(train, start, end, tick);
+    if (tick < 35) return 0;
+    tick = tick - 35;
 
+    double dv = -0.0004 * tick * tick + 0.1756 * tick;
+    return max(0, (int)dv + 1);
+    /*
     if (tick < 100) return 0;
 
     int d = stopping_distance(train, end) - stopping_distance(train, start);
     int v = end - start;
     return v * v / (2 * d);
+    */
 }
 
 int deceleration(int train, int start, int end, int tick) {
