@@ -7,7 +7,6 @@
 struct circular_queue;
 
 struct SensorService {
-    int subscribers[MAX_SUBSCRIBERS];
     struct circular_queue sensor_data[NUM_SENSORS];
 };
 
@@ -29,7 +28,7 @@ int sensorservice_push(struct SensorService *service, char sensor, int number);
 /**
  * Grab a sensor hit from the service.
  */
-int sensorservice_pop(struct SensorService *service, char *sensor, int *number, int *subscribers);
+int sensorservice_pop(struct SensorService *service, char *sensor, int *number);
 
 #endif
 
