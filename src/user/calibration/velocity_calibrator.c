@@ -5,6 +5,7 @@
 #include <pubsub.h>
 #include <syscall.h>
 #include <nameserver.h>
+#include <clock_server.h>
 
 #define NUM_INNER_SWITCHES 5
 #define MIN_SPEED 4
@@ -12,7 +13,6 @@
 #define NUM_SAMPLES 10
 
 void velocity_calibrator(int train) {
-    tid_t location_server = WhoIs("LocationServer");
     tid_t mission_control = WhoIs("MissionControl");
 
     int switches[NUM_INNER_SWITCHES];

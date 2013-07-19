@@ -37,14 +37,9 @@ typedef struct LocationServerMessage {
     int type;
 
     TrainData data;
-
-    int subscribers[MAX_SUBSCRIBERS];
 } LocationServerMessage;
 
 void LocationServer();
-
-/** Subscribe to the LocationServer */
-void location_server_subscribe(int server);
 
 int AddTrain(int number);
 

@@ -10,6 +10,7 @@
 #include <clock_server.h>
 #include <pubsub.h>
 #include <common.h>
+#include <memory.h>
 
 #define MAX_TRAINS 8
 #define STOPPING_DISTANCE 11
@@ -49,6 +50,12 @@ int stopping_distance(int train, int v) {
     else return max(0, 132 * v - 24948);
 }
 
+int deceleration(int train, int start, int end, int tick) {
+    int d = stopping_distance(train, end) - stopping_distance(train, start);
+    int v = end - start;
+    return v * v / (2 * d);
+}
+
 int acceleration(int train, int start, int end, int tick) {
     if (start > end) return deceleration(train, start, end, tick);
     if (tick < 35) return 0;
@@ -63,12 +70,6 @@ int acceleration(int train, int start, int end, int tick) {
     int v = end - start;
     return v * v / (2 * d);
     */
-}
-
-int deceleration(int train, int start, int end, int tick) {
-    int d = stopping_distance(train, end) - stopping_distance(train, start);
-    int v = end - start;
-    return v * v / (2 * d);
 }
 
 int calibration_error(int train) {
@@ -133,7 +134,6 @@ void calibration_server() {
     RegisterAs("CalibrationServer");
 
     Subscribe("LocationServerStream", PUBSUB_MEDIUM);
-    tid_t train_widget_tid = WhoIs("TrainWidget");
 
     tid_t stream = CreateStream("CalibrationServerStream");
 
