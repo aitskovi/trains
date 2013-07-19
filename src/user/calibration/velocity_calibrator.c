@@ -8,9 +8,9 @@
 #include <clock_server.h>
 
 #define NUM_INNER_SWITCHES 5
-#define MIN_SPEED 4
+#define MIN_SPEED 2
 #define MAX_SPEED 14
-#define NUM_SAMPLES 10
+#define NUM_SAMPLES 12
 
 void velocity_calibrator(int train) {
     tid_t mission_control = WhoIs("MissionControl");
