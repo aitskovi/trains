@@ -31,7 +31,7 @@ static void publish(struct SensorService *service, int tid) {
         msg.type = SENSOR_SERVER_MESSAGE;
         msg.ss_msg.type = SENSOR_COURIER_REQUEST;
 
-        int result = sensorservice_pop(service, &(msg.ss_msg.sensor), &(msg.ss_msg.number), msg.subscribers);
+        int result = sensorservice_pop(service, &(msg.ss_msg.sensor), &(msg.ss_msg.number));
         if (result == -1) break;
 
         Publish(tid, &msg);

@@ -10,9 +10,14 @@
 #include <clock_server.h>
 #include <pubsub.h>
 #include <common.h>
+#include <memory.h>
 
 #define MAX_TRAINS 8
 #define STOPPING_DISTANCE 11
+#define NUM_SPEEDS 15
+#define MAX_TRAIN_IDS 80
+
+static short velocities[MAX_TRAIN_IDS][NUM_SPEEDS];
 
 typedef struct TrainCalibration {
     int id;
@@ -24,14 +29,64 @@ typedef struct TrainCalibration {
     TrainData data;
 } TrainCalibration;
 
-int velocity(int train, int speed, track_edge *edge) {
-    // TODO: Use the velocity tables.
-    if (speed == 0) return 0;
+void initialize_calibration() {
+    memset(velocities, 0, sizeof(velocities));
 
-    if (train == 49) return 5683;
-    else if (train == 50) return 5213;
-    else if (train == 47) return 5311;
-    else return 5300;
+    velocities[47][0] = 0;
+    velocities[47][1] = 694;
+    velocities[47][2] = 694;
+    velocities[47][3] = 1282;
+    velocities[47][4] = 1813;
+    velocities[47][5] = 2392;
+    velocities[47][6] = 2933;
+    velocities[47][7] = 3505;
+    velocities[47][8] = 3864;
+    velocities[47][9] = 4371;
+    velocities[47][10] = 4772;
+    velocities[47][11] = 5331;
+    velocities[47][12] = 5467;
+    velocities[47][13] = 5534;
+    velocities[47][14] = 5575;
+
+
+    velocities[49][0] = 0;
+    velocities[49][1] = 737;
+    velocities[49][2] = 737;
+    velocities[49][3] = 1335;
+    velocities[49][4] = 1840;
+    velocities[49][5] = 2359;
+    velocities[49][6] = 2846;
+    velocities[49][7] = 3443;
+    velocities[49][8] = 3968;
+    velocities[49][9] = 4601;
+    velocities[49][10] = 5069;
+    velocities[49][11] = 5660;
+    velocities[49][12] = 6207;
+    velocities[49][13] = 6308;
+    velocities[49][14] = 6362;
+
+    velocities[50][0] = 0;
+    velocities[50][1] = 660;
+    velocities[50][2] = 660;
+    velocities[50][3] = 1253;
+    velocities[50][4] = 1753;
+    velocities[50][5] = 2213;
+    velocities[50][6] = 2733;
+    velocities[50][7] = 3286;
+    velocities[50][8] = 3827;
+    velocities[50][9] = 4340;
+    velocities[50][10] = 4827;
+    velocities[50][11] = 5286;
+    velocities[50][12] = 5767;
+    velocities[50][13] = 5968;
+    velocities[50][14] = 6141;
+}
+
+
+int velocity(int train, int speed, track_edge *edge) {
+    cuassert(train == 47 || train == 49 || train == 50, "Using uncalibrated train!");
+
+    return velocities[train][speed];
 }
 
 int stopping_distance(int train, int v) {
@@ -46,13 +101,20 @@ int stopping_distance(int train, int v) {
     */
     //else return 0.0100 * velocity * velocity + 94.5345 * velocity;
     //else return (0.0100 * velocity * velocity + 74.6926 * velocity);
-    else return max(0, 132 * v - 24948);
+    else return max(0, 123 * v - 12584);
+    //else return max(0, 132 * v - 24948);
+}
+
+int deceleration(int train, int start, int end, int tick) {
+    int d = stopping_distance(train, end) - stopping_distance(train, start);
+    int v = end - start;
+    return v * v / (2 * d);
 }
 
 int acceleration(int train, int start, int end, int tick) {
     if (start > end) return deceleration(train, start, end, tick);
-    if (tick < 35) return 0;
-    tick = tick - 35;
+    if (tick < 60) return 0;
+    tick = tick - 60;
 
     double dv = -0.0004 * tick * tick + 0.1756 * tick;
     return max(0, (int)dv + 1);
@@ -63,12 +125,6 @@ int acceleration(int train, int start, int end, int tick) {
     int v = end - start;
     return v * v / (2 * d);
     */
-}
-
-int deceleration(int train, int start, int end, int tick) {
-    int d = stopping_distance(train, end) - stopping_distance(train, start);
-    int v = end - start;
-    return v * v / (2 * d);
 }
 
 int calibration_error(int train) {
@@ -130,10 +186,11 @@ int calibration_update(TrainCalibration *calibration, TrainData *data) {
 }
 
 void calibration_server() {
+    initialize_calibration();
+
     RegisterAs("CalibrationServer");
 
     Subscribe("LocationServerStream", PUBSUB_MEDIUM);
-    tid_t train_widget_tid = WhoIs("TrainWidget");
 
     tid_t stream = CreateStream("CalibrationServerStream");
 

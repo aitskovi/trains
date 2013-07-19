@@ -55,7 +55,7 @@ int sensorservice_push(struct SensorService *service, char sensor, int number) {
     return circular_queue_push(&(service->sensor_data[sensor_num]), (void *)number);
 }
 
-int sensorservice_pop(struct SensorService *service, char *sensor, int *number, int *subscribers) {
+int sensorservice_pop(struct SensorService *service, char *sensor, int *number) {
     int i;
     for (i = 0; i < NUM_SENSORS; ++i) {
         struct circular_queue *queue = &(service->sensor_data[i]);
