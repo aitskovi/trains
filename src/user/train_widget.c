@@ -11,6 +11,7 @@
 #include <syscall.h>
 #include <pubsub.h>
 #include <string.h>
+#include <memory.h>
 
 #define TRAIN_TABLE_HEIGHT 9
 #define TRAIN_COLUMN_WIDTH 23

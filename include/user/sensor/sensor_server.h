@@ -37,7 +37,6 @@ typedef struct SensorServerMessage {
      */
     char sensor;
     int number;
-    int subscribers[MAX_SUBSCRIBERS];
 
 } SensorServerMessage;
 
