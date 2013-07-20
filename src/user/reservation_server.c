@@ -38,7 +38,7 @@ int Reserve(unsigned int train_no, track_node *node) {
         return RESERVATION_ALREADY_OWNER;
     }
 
-    ulog("Received invalid reply from reservation server!");
+    //ulog("Received invalid reply from reservation server!");
     return RESERVATION_ERROR;
 }
 
@@ -62,7 +62,7 @@ int Release(unsigned int train_no, track_node *node) {
         return RESERVATION_SUCCESS;
     }
 
-    ulog("Received invalid reply from reservation server on release!");
+    //ulog("Received invalid reply from reservation server on release!");
     return RESERVATION_ERROR;
 }
 
@@ -74,7 +74,11 @@ static void publish_track_release(unsigned int train_no, track_node *node) {
     rs_msg->type = RESERVATION_RELEASE;
     rs_msg->node = node;
     rs_msg->train_no = train_no;
+    //ulog("Publishing release to %d", stream_tid);
+    ulog("ReservationServer: Release %s from %d, I am %d", rs_msg->node->name, stream_tid, MyTid());
     Publish(stream_tid, &msg);
+    //ulog("Published release to %d", stream_tid);
+
 }
 
 static void publish_track_reserve(unsigned int train_no, track_node *node) {
@@ -85,17 +89,19 @@ static void publish_track_reserve(unsigned int train_no, track_node *node) {
     rs_msg->type = RESERVATION_RESERVE;
     rs_msg->node = node;
     rs_msg->train_no = train_no;
+    ulog("ReservationServer: Reserve %s from %d, I am %d", rs_msg->node->name, stream_tid, MyTid());
+    //ulog("Publishing reserve to %d", stream_tid);
     Publish(stream_tid, &msg);
 }
 
 static int release_track_node(unsigned int train_no, track_node *track) {
     if (track->owner != 0) {
         if (track->owner != train_no) {
-            ulog ("Train %u tried to release %s which belongs to %u!", train_no, track->name, track->owner);
+            //ulog ("Train %u tried to release %s which belongs to %u!", train_no, track->name, track->owner);
             return RESERVATION_ERROR;
         }
     } else {
-        ulog ("Train %u tried to release %s which is already free!", train_no, track->name);
+        //ulog ("Train %u tried to release %s which is already free!", train_no, track->name);
         return RESERVATION_SUCCESS;
     }
     unsigned int j;
@@ -104,11 +110,11 @@ static int release_track_node(unsigned int train_no, track_node *track) {
             track_node *other_direction = track->edge[j].dest->reverse;
             if (other_direction->owner != 0) {
                 if (other_direction->owner != train_no) {
-                    ulog ("Train %u tried to release %s which belongs to %u!", train_no, other_direction->name, other_direction->owner);
+                    //ulog ("Train %u tried to release %s which belongs to %u!", train_no, other_direction->name, other_direction->owner);
                     return RESERVATION_ERROR;
                 }
             } else {
-                ulog ("Train %u error: Root node %s was not free but derivative node %s was free!", train_no, other_direction->name, track->name, other_direction->name);
+                //ulog ("Train %u error: Root node %s was not free but derivative node %s was free!", train_no, other_direction->name, track->name, other_direction->name);
             }
         }
     }
@@ -120,7 +126,7 @@ static int release_track_node(unsigned int train_no, track_node *track) {
             other_direction->owner = 0;
         }
     }
-    ulog ("Train %u successfully released %s", train_no, track->name);
+    //ulog ("Train %u successfully released %s", train_no, track->name);
     publish_track_release(train_no, track);
     return RESERVATION_SUCCESS;
 }
@@ -152,7 +158,7 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
         }
     }
 
-    ulog ("Train %u successfully reserved %s", train_no, track->name);
+    //ulog ("Train %u successfully reserved %s", train_no, track->name);
     // Publish reservation
     publish_track_reserve(train_no, track);
     return RESERVATION_SUCCESS;
@@ -165,7 +171,7 @@ void reservation_server() {
 
     RegisterAs("ReservationServer");
 
-    stream_tid = CreateStream("ReservationServerStream");
+    stream_tid = WhoIs("TrainWidget");//CreateStream("ReservationServerStream");
 
     tid_t tid;
     Message msg, reply;

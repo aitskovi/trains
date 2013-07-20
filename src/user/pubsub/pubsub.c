@@ -10,7 +10,7 @@
 #include <string.h>
 #include <syscall.h>
 
-#define MAX_MESSAGES 100
+#define MAX_MESSAGES 128
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -22,7 +22,8 @@ int Subscribe(char *name, enum PUBSUB_PRIORITY priority) {
 
     tid_t server = WhoIs(name);
 
-    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    int size = Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    cuassert(size >= 0, "Message Not Sent Correctly");
     cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
 
     return 0;
@@ -36,7 +37,8 @@ int Unsubscribe(char *name, enum PUBSUB_PRIORITY priority) {
 
     tid_t server = WhoIs(name);
 
-    Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    int size = Send(server, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+    cuassert(size >= 0, "Message Not Sent Correctly");
     cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
 
     return 0;
@@ -45,8 +47,12 @@ int Unsubscribe(char *name, enum PUBSUB_PRIORITY priority) {
 int Publish(tid_t tid, Message *msg) {
     Message rply;
 
-    Send(tid, (char *)msg, sizeof(Message), (char *)&rply, sizeof(rply));
-    cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
+    int size = Send(tid, (char *)msg, sizeof(Message), (char *)&rply, sizeof(rply));
+    if (size < 0) {
+        ulog("Size was %d", size);
+    }
+    //cuassert(size >= 0, "Message Not Sent Correctly");
+    //cuassert(rply.type == PUBSUB_MESSAGE, "Non pubsub message from pubsub server");
 
     return 0;
 }
@@ -109,11 +115,9 @@ static void multiqueue_initialize(MsgMultiQueue *queue) {
     queue->write_count = 0;
 }
 
-/*
 static unsigned int multiqueue_size(MsgMultiQueue *queue, enum PUBSUB_PRIORITY priority) {
     return queue->write_count - queue->read_count[priority];
 }
-*/
 
 /**************************
  *      PubSubService     *
@@ -173,14 +177,19 @@ static void pubsubservice_initialize(PubSubService *service) {
 
 static void pubsub_publish(PubSubService *service, int *couriers) {
     int priority;
-    for (priority = 0; priority < PUBSUB_NUM_PRIORITIES; ++priority) {
-        if (couriers[priority] != -1 && !pubsubservice_empty(service, priority)) {
-            Message rply;
-            pubsubservice_pop(service, &rply, priority);
-            pubsubservice_subscribers(service, rply.subscribers, priority);
-            Reply(couriers[priority], (char *)&rply, sizeof(rply));
-            couriers[priority] = -1;
-        }
+    for (priority = 0; priority < PUBSUB_NUM_PRIORITIES; priority++) {
+        if (couriers[priority] == -1) continue;
+        if (pubsubservice_empty(service, priority)) continue;
+
+        Message rply;
+
+        int error = pubsubservice_pop(service, &rply, priority);
+        cuassert(!error, "Error popping off pubsub queue");
+
+        pubsubservice_subscribers(service, rply.subscribers, priority);
+        Reply(couriers[priority], (char *)&rply, sizeof(rply));
+
+        couriers[priority] = -1;
     }
 }
 
@@ -207,7 +216,11 @@ static void PubSubServer() {
     int i;
     for (i = 0; i < PUBSUB_NUM_PRIORITIES; ++i) {
         Execute(HIGHEST, courier, i);
+        couriers[i] = -1;
     }
+
+    //tid_t you = WhoIs("ReservationServerStream");
+    //tid_t me = MyTid();
 
     int tid; 
     Message msg, rply;
@@ -229,6 +242,9 @@ static void PubSubServer() {
                         pubsubservice_unsubscribe(&service, tid, msg.ps_msg.priority);
                         break;
                     case COURIER:
+                        //if (me == you) {
+                            //ulog("Courier Here, %d", msg.ps_msg.priority);
+                        //}
                         couriers[msg.ps_msg.priority] = tid;
                         break;
                     default:
@@ -236,11 +252,14 @@ static void PubSubServer() {
                 }
                 break;
             default:
-                // By default we get a publish.
+                //if (me == you) {
+                    //ulog("PubSubMessage %s", msg.rs_msg.node->name);
+                //}
+                
+                pubsubservice_push(&service, &msg);
+
                 rply.type = PUBSUB_MESSAGE;
                 Reply(tid, (char *)&rply, sizeof(rply));
-
-                pubsubservice_push(&service, &msg);
                 break;
         }
 

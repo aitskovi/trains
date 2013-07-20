@@ -86,6 +86,7 @@ void WriteServer() {
             }
             case WRITE_REQUEST: {
                 writeservice_enqueue(&service, msg.data, msg.length);
+
                 rply.type = WRITE_RESPONSE;
                 Reply(tid, (char *)&rply, sizeof(rply));
                 break;

@@ -1,11 +1,13 @@
 #include <ksyscalls.h>
 
+#include <dassert.h>
 #include <task.h>
 #include <scheduling.h>
 #include <messaging.h>
 #include <waiting.h>
 
 int ksend(Task *active, int tid, char *msg, int msglen, char *reply, int replylen) {
+    int logging = active->tid == 36 || active->tid == 34;
     // TODO Make sure you're not sending message to yourself.
     int invalid = task_is_invalid(tid);
     if (invalid) {
@@ -15,10 +17,16 @@ int ksend(Task *active, int tid, char *msg, int msglen, char *reply, int replyle
     }
 
     int result = msg_send(active->tid, tid, msg, msglen, reply, replylen);
-    if (result != 0) return -1;
+    if (result != 0) {
+        if (logging) log("%d Message Failed!", active->tid);
+        task_set_return_value(active, result);
+        make_ready(active);
+        return -1;
+    }
 
     Task *task = task_get(tid);
     if (task->state == RECV_BLOCKED) {
+        if (logging) log("%d Got Rply Blocked", active->tid);
         // Unblock the recieve blocked task waiting for a message.
         int recv_result = msg_recieve(tid, 0, 0, 0);
         // TODO Assert that recieve result is not error.
@@ -26,6 +34,7 @@ int ksend(Task *active, int tid, char *msg, int msglen, char *reply, int replyle
         make_ready(task);
         active->state = RPLY_BLOCKED;
     } else {
+        if (logging) log("%d, Got Send Blocked", active->tid);
         active->state = SEND_BLOCKED;
     }
 
@@ -39,6 +48,8 @@ int krecieve(Task *active, int *tid, char *msg, int msglen) {
         active->state = RECV_BLOCKED;
     } else {
         // Grab the task, move it to next state.
+        int logging = *tid == 36 || *tid == 34;
+        if (logging) log("%d got unblocked by %d", *tid, active->tid);
         Task *task = task_get(*tid);
         task->state = RPLY_BLOCKED;
 
@@ -59,6 +70,9 @@ int kreply(Task *active, int tid, char *reply, int replylen) {
         return 0;
     }
 
+    int logging = tid == 36 || tid == 34;
+    if (logging) log("Replying to %d from %d", tid, active->tid);
+
     int result = msg_reply(tid, reply, replylen);
     if (result < 0) {
         task_set_return_value(active, -3);
@@ -68,6 +82,7 @@ int kreply(Task *active, int tid, char *reply, int replylen) {
 
     // Unblock the task replied to.
     Task *task = task_get(tid);
+    ckassert(task->state == RPLY_BLOCKED, "Task is not reply blocked");
     task_set_return_value(task, result);
     make_ready(task);
 

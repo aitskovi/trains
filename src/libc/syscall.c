@@ -2,6 +2,7 @@
 
 #include <bwio.h>
 #include <request.h>
+#include <dassert.h>
 
 int MyTid() {
 	Request req;
@@ -50,7 +51,9 @@ int Send(tid_t tid, char *msg, int msglen, char *reply, int replylen) {
     req.args[2] = (void *)msglen;
     req.args[3] = reply;
     req.args[4] = (void *)replylen;
-    return syscall(&req);
+    int result = syscall(&req);
+    cuassert(result >= 0, "Reply Error!");
+    return result;
 }
 
 int Receive(tid_t *tid, char *msg, int msglen) {
@@ -61,7 +64,9 @@ int Receive(tid_t *tid, char *msg, int msglen) {
     req.args[0] = tid;
     req.args[1] = msg;
     req.args[2] = (void *)msglen;
-    return syscall(&req);
+    int result = syscall(&req);
+    cuassert(result >= 0, "Reply Error!");
+    return result;
 }
 
 int Reply(tid_t tid, char *reply, int replylen) {
@@ -72,7 +77,9 @@ int Reply(tid_t tid, char *reply, int replylen) {
     req.args[0] = (void *)tid;
     req.args[1] = reply;
     req.args[2] = (void *)replylen;
-    return syscall(&req);
+    int result = syscall(&req);
+    cuassert(result >= 0, "Reply Error!");
+    return result;
 }
 
 int AwaitEvent(int event) {

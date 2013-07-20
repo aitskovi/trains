@@ -11,7 +11,9 @@ void log(char *fmt, ...) {
     va_list va;
 
     va_start(va,fmt);
+    bwprintf(COM2, "\0337\033[%u;%uH\n", CONSOLE_HEIGHT + SCROLLABLE_AREA_SIZE, 1);
     bwformat(COM2 , fmt, va );
+    bwprintf(COM2, "\0338");
     va_end(va);
 }
 

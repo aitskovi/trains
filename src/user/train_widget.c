@@ -179,7 +179,7 @@ static void train_reserved_node_update(int index, DisplayData *data) {
 }
 
 static void train_reserved_node_released(int index, DisplayData *data, track_node *node) {
-    ulog("Train widget got released event for index %d, train %d, node %s", index, data->id, node->name);
+    //ulog("Train widget got released event for index %d, train %d, node %s", index, data->id, node->name);
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == node) {
@@ -192,6 +192,7 @@ static void train_reserved_node_released(int index, DisplayData *data, track_nod
 }
 
 static void train_reserved_node_reserved(int index, DisplayData *data, track_node *node) {
+    //ulog("Train widget got reserve event for index %d, train %d, node %s", index, data->id, node->name);
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == 0) {
@@ -320,15 +321,15 @@ void train_widget() {
 
     // Find the location server and subscribe.
     Subscribe("LocationServerStream", PUBSUB_LOW);
-    Subscribe("CalibrationServerStream", PUBSUB_LOW);
-    Subscribe("ReservationServerStream", PUBSUB_LOW);
+    //Subscribe("CalibrationServerStream", PUBSUB_LOW);
+    //Subscribe("ReservationServerStream", PUBSUB_LOW);
 
     // Initial Display.
     train_display_init();
 
     // Deal with out Subscription.
     int tid;
-    struct Message msg, rply;
+    Message msg, rply;
     int number_to_train[MAX_TRAINS];
 
     DisplayData train_displays[MAX_TRAINS];
@@ -341,6 +342,7 @@ void train_widget() {
 
         switch(msg.type) {
             case LOCATION_SERVER_MESSAGE: {
+                //ulog("Location Server Message!");
                 cuassert(msg.ls_msg.type == LOCATION_COURIER_REQUEST, "Invalid Location Widget Request");
 
                 // Ack Location Message.
@@ -348,6 +350,7 @@ void train_widget() {
                 rply.ls_msg.type = LOCATION_COURIER_RESPONSE;
                 Reply(tid, (char *) &rply, sizeof(rply));
 
+                /*
                 TrainData* data = &msg.ls_msg.data;
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, data->id);
@@ -361,10 +364,12 @@ void train_widget() {
                 train_distance_update(index, display, data->distance);
                 train_estimated_velocity_update(index, display, data->velocity);
                 train_stopping_distance_update(index, display, data->stopping_distance);
+                */
 
                 break;
             }
             case CALIBRATION_MESSAGE: {
+                //ulog("Calibration Server MEssage");
                 cuassert(msg.cs_msg.type == CALIBRATION_INFO, "Invalid Location Widget Request");
 
                 // Ack Calibration Message.
@@ -372,6 +377,7 @@ void train_widget() {
                 rply.cs_msg.type = CALIBRATION_INFO;
                 Reply(tid, (char *) &rply, sizeof(rply));
 
+                /*
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, msg.cs_msg.train);
                 DisplayData *display = &train_displays[index];
@@ -381,30 +387,35 @@ void train_widget() {
 
                 train_calibrated_velocity_update(index, display, msg.cs_msg.velocity);
                 train_error_update(index, display, msg.cs_msg.error);
+                */
                 break;
             }
             case RESERVATION_SERVER_MESSAGE: {
-                rply.type = RESERVATION_SERVER_MESSAGE;
-                rply.rs_msg.type = RESERVATION_SUCCESS_RESPONSE;
-                Reply(tid, (char *) &rply, sizeof(rply));
-
+                /*
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, msg.rs_msg.train_no);
                 DisplayData *display = &train_displays[index];
                 if (old_num_trains < num_trains) {
                     train_display_add(index, display, msg.rs_msg.train_no);
                 }
+                */
 
                 switch (msg.rs_msg.type) {
                     case RESERVATION_RESERVE:
-                        train_reserved_node_reserved(index, display, msg.rs_msg.node);
+                        ulog("Train Widget: Reserve %s from %d, I am %d", msg.rs_msg.node->name, tid, MyTid());
+                        //train_reserved_node_reserved(index, display, msg.rs_msg.node);
                         break;
                     case RESERVATION_RELEASE:
-                        train_reserved_node_released(index, display, msg.rs_msg.node);
+                        ulog("Train Widget: Release %s from %d, I am %d", msg.rs_msg.node->name, tid, MyTid());
+                        //train_reserved_node_released(index, display, msg.rs_msg.node);
                         break;
                     default:
                         ulog("Train Widget: Invalid Reservation Server Message");
                 }
+
+                rply.type = RESERVATION_SERVER_MESSAGE;
+                rply.rs_msg.type = RESERVATION_SUCCESS_RESPONSE;
+                Reply(tid, (char *) &rply, sizeof(rply));
 
                 break;
             }
