@@ -131,7 +131,7 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
 //            ulog ("Train %u tried reserving %s twice!", train_no, track->name);
             return RESERVATION_ALREADY_OWNER;
         }
-        ulog ("Train %u failed to reserve %s which is owned by %u", train_no, track->name, track->owner);
+//        ulog ("Train %u failed to reserve %s which is owned by %u", train_no, track->name, track->owner);
         return RESERVATION_FAILURE;
     }
     unsigned int j;
@@ -139,7 +139,7 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
         if (track->edge[j].dest) {
             track_node *other_direction = track->edge[j].dest->reverse;
             if (other_direction->owner != 0) {
-                ulog ("Train %u failed to reserve %s which is owned by %u", train_no, other_direction->name, other_direction->owner);
+//                ulog ("Train %u failed to reserve %s which is owned by %u", train_no, other_direction->name, other_direction->owner);
                 return RESERVATION_FAILURE;
             }
         }
@@ -151,8 +151,8 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
             other_direction->owner = train_no;
         }
     }
-    ulog ("Train %u successfully reserved %s", train_no, track->name);
 
+    ulog ("Train %u successfully reserved %s", train_no, track->name);
     // Publish reservation
     publish_track_reserve(train_no, track);
     return RESERVATION_SUCCESS;
