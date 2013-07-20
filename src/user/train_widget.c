@@ -16,9 +16,9 @@
 #define REFRESH_RATE 5
 
 #define TRAIN_TABLE_HEIGHT 9
-#define TRAIN_COLUMN_WIDTH 40
+#define TRAIN_COLUMN_WIDTH 60
 #define TRAIN_COLUMN_WRITABLE_WIDTH TRAIN_COLUMN_WIDTH - 1
-#define MAX_RESERVED_NODES 10
+#define MAX_RESERVED_NODES 14
 
 #define TRAIN_STRING "Train:"
 #define LANDMARK_STRING "Landmark:"
@@ -157,14 +157,14 @@ static void train_stopping_distance_update(int index, DisplayData *data, int sto
 }
 
 static void train_reserved_node_update(int index, DisplayData *data) {
-    char command[128];
+    char command[256];
     char *pos = &command[0];
 
     char buf[TRAIN_COLUMN_WIDTH];
     char *buf_pos = &buf[0];
 
     pos += sprintf(pos, "\0337");
-    int offset = strlen(STOPPING_DISTANCE_STRING);
+    int offset = strlen(RESERVED_NODES_STRING);
     pos += sprintf(pos, "\033[%u;%uH", TRAIN_RESERVED_NODES_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
 
     unsigned int j;
@@ -181,6 +181,7 @@ static void train_reserved_node_update(int index, DisplayData *data) {
 }
 
 static void train_reserved_node_released(int index, DisplayData *data, track_node *node) {
+    ulog("Train widget got released event for index %d, train %d, node %s", index, data->id, node->name);
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == node) {
@@ -424,14 +425,14 @@ void train_widget() {
             }
             case RESERVATION_SERVER_MESSAGE: {
                 rply.type = RESERVATION_SERVER_MESSAGE;
-                rply.cs_msg.type = RESERVATION_SUCCESS_RESPONSE;
+                rply.rs_msg.type = RESERVATION_SUCCESS_RESPONSE;
                 Reply(tid, (char *) &rply, sizeof(rply));
 
                 int old_num_trains = num_trains;
-                int index = get_train_index(number_to_train, &num_trains, msg.cs_msg.train);
+                int index = get_train_index(number_to_train, &num_trains, msg.rs_msg.train_no);
                 DisplayData *display = &train_displays[index];
                 if (old_num_trains < num_trains) {
-                    train_display_add(index, display, msg.cs_msg.train);
+                    train_display_add(index, display, msg.rs_msg.train_no);
                 }
 
                 switch (msg.rs_msg.type) {
