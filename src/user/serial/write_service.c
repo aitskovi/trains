@@ -1,13 +1,19 @@
 #include <write_service.h>
 
-#include <circular_queue.h>
+#include <ring_buffer.h>
 #include <dassert.h>
 #include <uart.h>
+#include <ts7200.h>
+
+static struct ring_buffer com2_buffer;
+static struct ring_buffer com1_buffer;
 
 void writeservice_initialize(struct WriteService *service, int channel) {
     service->channel = channel;
+    if (channel == COM1) service->buf = &com1_buffer;
+    else service->buf = &com2_buffer;
     service->writable = 0;
-    ring_buffer_initialize(&service->buf);
+    ring_buffer_initialize(service->buf);
 }
 
 /**
@@ -16,7 +22,7 @@ void writeservice_initialize(struct WriteService *service, int channel) {
 void writeservice_enqueue(struct WriteService *service, char *str, unsigned int size) {
     dassert(service != 0, "Invalid Service");
 
-    cuassert(ring_buffer_write(&service->buf, (unsigned char *) str, size), "WriteService RingBuf Overrun");
+    ckassert(ring_buffer_write(service->buf, (unsigned char *) str, size) >= 0, "WriteService RingBuf Overrun");
 }
 
 /**
@@ -26,11 +32,11 @@ int writeservice_flush(struct WriteService *service) {
     dassert(service != 0, "Invalid Service");
 
     if (!service->writable) return -2;
-    else if (ring_buffer_empty(&service->buf)) return 0;
+    else if (ring_buffer_empty(service->buf)) return 0;
 
     service->writable = 0;
     char c;
-    ring_buffer_read(&service->buf, (unsigned char *) &c, 1);
+    ring_buffer_read(service->buf, (unsigned char *) &c, 1);
     return uart_write(service->channel, c);
 }
 

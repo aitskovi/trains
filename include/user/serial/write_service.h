@@ -6,7 +6,7 @@
 struct WriteService {
     int channel;
     int writable;
-    struct ring_buffer buf;
+    struct ring_buffer *buf;
 };
 
 void writeservice_initialize(struct WriteService *service, int channel);

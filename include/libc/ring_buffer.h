@@ -8,7 +8,7 @@
 #ifndef RING_BUFFER_H_
 #define RING_BUFFER_H_
 
-#define RING_BUFFER_SIZE 1024
+#define RING_BUFFER_SIZE 16384 * 4
 
 struct ring_buffer {
     unsigned char buf[RING_BUFFER_SIZE];
