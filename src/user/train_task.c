@@ -30,7 +30,7 @@
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 300
 #define MAX_OCCUPIED_NODES 5
-#define STOPPING_BUFFER 15000
+#define STOPPING_BUFFER 80000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -451,7 +451,7 @@ static void perform_path_actions(TrainStatus *status) {
             return;
         } else if (result == RESERVATION_FAILURE) {
             if (!status->reservation_failed_time) {
-                ulog ("Train %u: Reservation of %s failed, waiting", status->train_no, current->name);
+                ulog ("Train %u: Reservation of %s failed, waiting %d ahead of %s", status->train_no, current->name, status->position.distance, status->position.edge->src->name);
                 status->reservation_failed_time = Time();
                 train_start_stopping(status);
             }
