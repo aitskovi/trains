@@ -28,6 +28,7 @@
 #define D_CURVED 1
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 300
+#define MAX_OCCUPIED_NODES 5
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -194,38 +195,70 @@ static int calculate_path_reserved_distance(TrainStatus *status) {
     return result;
 }
 
-static void reserve_current_position(TrainStatus *status) {
-    int result;
+static void determine_occupied_nodes(TrainStatus *status, track_node **result, int *num_nodes) {
+    *num_nodes = 0;
+
+    if (!status->position.edge) return;
 
     // Reserve behind/ahead of it if train pointed forward and it's necessary
     if (status->position.distance < TRAIN_LENGTH_UM) {
         track_node *behind = track_previous_landmark(status->position.edge->src);
         if (behind) {
-            result = Reserve(status->train_no, behind);
-            if (result == RESERVATION_ERROR || result == RESERVATION_FAILURE) {
-                ulog("Failed to reserve track segment behind train (%s)!", behind->name);
-            } else if (result == RESERVATION_SUCCESS) {
-                circular_queue_push(&status->reserved_nodes, behind);
-            }
+            result[(*num_nodes)++] = behind;
         }
     }
 
-    result = Reserve(status->train_no, status->position.edge->src);
-    if (result == RESERVATION_ERROR || result == RESERVATION_FAILURE) {
-        ulog("Failed to reserve track segment that train is on (%s)!", status->position.edge->src->name);
-    } else if (result == RESERVATION_SUCCESS) {
-        circular_queue_push(&status->reserved_nodes, status->position.edge->src);
-    }
+    result[(*num_nodes)++] = status->position.edge->src;
 
     // Reserve behind/ahead of it if train pointed forward and it's necessary
     if (status->position.edge->dist - status->position.distance < TRAIN_LENGTH_UM) {
         track_node *ahead = track_next_landmark(status->position.edge->src);
         if (ahead) {
-            result = Reserve(status->train_no, ahead);
-            if (result == RESERVATION_ERROR || result == RESERVATION_FAILURE) {
-                ulog("Failed to reserve track segment ahead of train (%s)!", ahead->name);
-            } else if (result == RESERVATION_SUCCESS) {
-                circular_queue_push(&status->reserved_nodes, ahead);
+            result[(*num_nodes)++] = ahead;
+        }
+    }
+}
+
+static void reserve_current_position(TrainStatus *status) {
+    track_node *occupied_nodes[MAX_OCCUPIED_NODES];
+    int num_occupied_nodes;
+
+    determine_occupied_nodes(status, occupied_nodes, &num_occupied_nodes);
+
+    int j, error;
+    for (j = 0; j < num_occupied_nodes; ++j) {
+        track_node *node = occupied_nodes[j];
+        error = Reserve(status->train_no, node);
+        if (error == RESERVATION_ERROR || error == RESERVATION_FAILURE) {
+            ulog("Train %u failed to reserve occupied track segment(%s)!", node->name);
+        } else if (error == RESERVATION_SUCCESS) {
+            circular_queue_push(&status->reserved_nodes, node);
+        }
+    }
+}
+
+static void train_reset_reserved_nodes(TrainStatus *status) {
+    track_node *occupied_nodes[MAX_OCCUPIED_NODES];
+    int num_occupied_nodes;
+    int error;
+
+    determine_occupied_nodes(status, occupied_nodes, &num_occupied_nodes);
+
+    unsigned int j, k, should_release;
+    for (j = circular_queue_size(&status->reserved_nodes); j > 0; j--) {
+        track_node *node = (track_node *) circular_queue_pop(&status->reserved_nodes);
+        should_release = 1;
+        for (k = 0; k < num_occupied_nodes; ++k) {
+            if (occupied_nodes[k] == node) {
+                circular_queue_push(&status->reserved_nodes, node);
+                should_release = 0;
+                break;
+            }
+        }
+        if (should_release) {
+            error = Release(status->train_no, node);
+            if (error != RESERVATION_SUCCESS) {
+                ulog("Failed to release all reserved nodes!");
             }
         }
     }
@@ -244,25 +277,13 @@ static void train_reset(TrainStatus *status) {
 
     publish_destination(status);
 
-    /*
-    unsigned int j;
-    for (j = circular_queue_size(&status->reserved_nodes); j > 0; j--) {
-        track_node *node = (track_node *) circular_queue_pop(&status->reserved_nodes);
-        if (status->position.edge && node == status->position.edge->src) {
-            circular_queue_push(&status->reserved_nodes, node);
-        } else {
-            result = Release(status->train_no, node);
-            if (result != RESERVATION_SUCCESS) {
-                ulog("Failed to release track segments on reserved queue while resetting!");
-            }
-        }
-    }
+    // TODO don't release what we're on or find some way to make this atomic
+
+    train_reset_reserved_nodes(status);
 
     if (circular_queue_empty(&status->reserved_nodes) && status->position.edge) {
         ulog("Train thinks it has no spots reserved after resetting");
-        reserve_current_position(status);
     }
-    */
 }
 
 static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) {
@@ -275,6 +296,10 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
 
     if (REVERSING_WAITING_FOR_LOCATION == status->reversing_status) {
         status->reversing_status = REVERSING_NOT;
+        ulog("Changing reserved nodes upon reverse");
+        train_reset_reserved_nodes(status);
+        // TODO instead, swap reserved nodes for opposite direction
+        reserve_current_position(status);
     }
 
     if (status->position.edge) {
@@ -294,7 +319,7 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
 
                 // Release oldest reserved node if we're past it by at least train length
                 if (is_node_ahead_of_node(node, status->position.edge->src)) {
-                    int clearance = distance_between_nodes(node, status->position.edge->src);
+                    int clearance = distance_between_nodes(node, status->position.edge->src) + status->position.distance;
                     if (clearance > TRAIN_LENGTH_UM) {
                         circular_queue_pop(&status->reserved_nodes);
                         int result = Release(status->train_no, node);
@@ -311,14 +336,14 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
     }
 }
 
-static void recalculate_path(TrainStatus *status) {
+static void recalculate_path(TrainStatus *status, int avoid_others) {
     if (!status->path_length) {
         ulog("Error: Recalculating non-existant path");
         return;
     }
     track_node *dest = status->path[status->path_length - 1];
     train_reset(status);
-    int result = calculate_path(status->position.edge->src, dest, status->path, &status->path_length);
+    int result = calculate_path(avoid_others, status->position.edge->src, dest, status->path, &status->path_length);
     if (result) {
         ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);
         train_reset(status);
@@ -359,7 +384,8 @@ static void perform_path_actions(TrainStatus *status) {
     if (!found) {
         ulog("Train %u got lost %d um ahead of %s, recalculating", status->train_no, status->position.distance, status->position.edge->src->name);
         train_set_speed(status, 0);
-        recalculate_path(status);
+        recalculate_path(status, 0);
+        perform_path_actions(&status);
         return;
     }
 
@@ -403,11 +429,12 @@ static void perform_path_actions(TrainStatus *status) {
         } else if (result == RESERVATION_FAILURE) {
             if (!status->reservation_failed_time) {
                 ulog ("Train %u: Reservation of %s failed, waiting", status->train_no, current->name);
+                status->reservation_failed_time = Time();
                 train_start_stopping(status);
             }
             if (Time() > status->reservation_failed_time + WAIT_TIME_FOR_RESERVED_TRACK) {
                 ulog ("Train %u: Timed out reserving %s, recalculating", status->train_no, current->name);
-                recalculate_path(status);
+                recalculate_path(status, 1);
             }
             return;
         } else {
@@ -531,7 +558,7 @@ void train_task(int train_no) {
                 train_reset(&status);
                 status.path_length = 1;
                 status.path[0] = tr_command->destination;
-                recalculate_path(&status);
+                recalculate_path(&status, 0);
                 perform_path_actions(&status);
                 break;
             case (COMMAND_STOP):

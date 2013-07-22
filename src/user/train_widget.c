@@ -221,7 +221,7 @@ static void train_reserved_node_update(int index, DisplayData *data, track_node 
 }
 
 static void train_reserved_node_released(int index, DisplayData *data, track_node *node) {
-    ulog("Train widget got released event for index %d, train %d, node %s", index, data->id, node->name);
+//    ulog("Train widget got released event for index %d, train %d, node %s", index, data->id, node->name);
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == node) {
@@ -233,7 +233,7 @@ static void train_reserved_node_released(int index, DisplayData *data, track_nod
 }
 
 static void train_reserved_node_reserved(int index, DisplayData *data, track_node *node) {
-    ulog("Train widget got reserved event for index %d, train %d, node %s", index, data->id, node->name);
+//    ulog("Train widget got reserved event for index %d, train %d, node %s", index, data->id, node->name);
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == 0) {

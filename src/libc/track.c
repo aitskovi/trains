@@ -30,6 +30,7 @@ int track_initialize(char track_name) {
     // Default penalty for reversing and blocked track is ten, one hundred meter (basically only want to reverse/wait if impossible to find other route)
     REVERSE_PENALTY = 10000000;
     BLOCKED_TRACK_PENALTY = 100000000;
+    //BLOCKED_TRACK_PENALTY = 0;
     return 0;
 }
 
@@ -220,7 +221,7 @@ int can_reverse_at_node(track_node *node) {
 }
 
 // O(v^2) Dijkstra's
-int calculate_path(track_node *src, track_node *dest, track_node **path, unsigned int *path_length) {
+int calculate_path(int avoid_others, track_node *src, track_node *dest, track_node **path, unsigned int *path_length) {
     if (!src) {
         ulog("Calculate path called with null src");
         return 1;
@@ -258,7 +259,7 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
             neighbour = current->edge[j].dest;
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + current->edge[j].dist;
-                if (neighbour->owner) {
+                if (avoid_others && neighbour->owner) {
                     dist += BLOCKED_TRACK_PENALTY;
                 }
                 if (dist < dijkstra_state[neighbour - track].distance) {
@@ -273,7 +274,7 @@ int calculate_path(track_node *src, track_node *dest, track_node **path, unsigne
             neighbour = current->reverse;
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + REVERSE_PENALTY;
-                if (neighbour->owner) {
+                if (avoid_others && neighbour->owner) {
                     dist += BLOCKED_TRACK_PENALTY;
                 }
                 if (dist < dijkstra_state[neighbour - track].distance) {
