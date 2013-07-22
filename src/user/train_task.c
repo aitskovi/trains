@@ -98,6 +98,27 @@ static void notify_speed_change(int train, speed_t speed, tid_t tid) {
     cuassert(TRAIN_MESSAGE == reply.type, "Train task received invalid msg");
 }
 
+static void publish_destination(TrainStatus *status) {
+    static tid_t train_widget = -1;
+
+    if (train_widget < 0) {
+        train_widget = WhoIs("TrainWidget");
+    }
+
+    Message msg, reply;
+    TrainMessage *tr_msg = &msg.tr_msg;
+    msg.type = TRAIN_MESSAGE;
+
+    tr_msg->type = COMMAND_GOTO;
+    tr_msg->train = status->train_no;
+    if (status->path_length) {
+        tr_msg->destination = status->path[status->path_length - 1];
+    } else {
+        tr_msg->destination = 0;
+    }
+    Send(train_widget, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+}
+
 static void train_set_speed(TrainStatus *status, speed_t speed) {
     static tid_t server_tid = -2;
     if (server_tid < 0) {
@@ -221,6 +242,8 @@ static void train_reset(TrainStatus *status) {
 
     int result;
 
+    publish_destination(status);
+
     /*
     unsigned int j;
     for (j = circular_queue_size(&status->reserved_nodes); j > 0; j--) {
@@ -299,6 +322,8 @@ static void recalculate_path(TrainStatus *status) {
     if (result) {
         ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);
         train_reset(status);
+    } else {
+        publish_destination(status);
     }
 }
 
@@ -504,13 +529,10 @@ void train_task(int train_no) {
             case (COMMAND_GOTO):
                 ulog("Train received command to goto %s from %s", tr_command->destination->name, status.position.edge->src->name);
                 train_reset(&status);
-                int result = calculate_path(status.position.edge->src, tr_command->destination, status.path, &status.path_length);
-                if (result) {
-                    ulog("Could not calculate path");
-                    status.path_length = 0;
-                } else {
-                    perform_path_actions(&status);
-                }
+                status.path_length = 1;
+                status.path[0] = tr_command->destination;
+                recalculate_path(&status);
+                perform_path_actions(&status);
                 break;
             case (COMMAND_STOP):
                 ulog("Train received command to stop at %s", tr_command->destination->name);
