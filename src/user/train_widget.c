@@ -13,6 +13,8 @@
 #include <string.h>
 #include <memory.h>
 
+#define REFRESH_RATE 5
+
 #define TRAIN_TABLE_HEIGHT 9
 #define TRAIN_COLUMN_WIDTH 23
 #define TRAIN_COLUMN_WRITABLE_WIDTH TRAIN_COLUMN_WIDTH - 1
@@ -260,12 +262,29 @@ static int get_train_index(int *number_to_train, int *num_trains, int id) {
     return index;
 }
 
+void train_widget_notifier() {
+    tid_t train_widget = MyParentTid();
+
+    for (;;) {
+        Message msg, rply;
+        msg.type = TRAIN_DISPLAY_MESSAGE;
+        Send(train_widget, (char *)&msg, sizeof(msg), (char *)&rply, sizeof(rply));
+        cuassert(rply.type == TRAIN_DISPLAY_MESSAGE, "Invalid Reply");
+
+        Delay(REFRESH_RATE);
+    }
+
+    Exit();
+}
+
 void train_widget() {
     RegisterAs("TrainWidget");
 
     // Find the location server and subscribe.
     Subscribe("LocationServerStream", PUBSUB_LOW);
     Subscribe("CalibrationServerStream", PUBSUB_LOW);
+
+    Create(HIGHEST, train_widget_notifier);
 
     // Initial Display.
     train_display_init();
@@ -275,8 +294,11 @@ void train_widget() {
     struct Message msg, rply;
     int number_to_train[MAX_TRAINS];
 
-    DisplayData train_displays[MAX_TRAINS];
-    memset(train_displays, 0, sizeof(train_displays));
+    DisplayData old_train_displays[MAX_TRAINS];
+    memset(old_train_displays, 0, sizeof(old_train_displays));
+    DisplayData new_train_displays[MAX_TRAINS];
+    memset(new_train_displays, 0, sizeof(new_train_displays));
+
 
     int num_trains = 0;
     for(;;) {
@@ -295,17 +317,16 @@ void train_widget() {
                 TrainData* data = &msg.ls_msg.data;
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, data->id);
-                DisplayData *display = &train_displays[index];
+                DisplayData *display = &new_train_displays[index];
                 if (old_num_trains < num_trains) {
                     train_display_add(index, display, data->id);
                 }
 
-                train_orientation_update(index, display, data->orientation);
-                train_edge_update(index, display, data->edge);
-                train_distance_update(index, display, data->distance);
-                train_estimated_velocity_update(index, display, data->velocity);
-                train_stopping_distance_update(index, display, data->stopping_distance);
-
+                display->orientation = data->orientation;
+                display->edge = data->edge;
+                display->distance = data->distance;
+                display->velocity = data->velocity;
+                display->stopping_distance = data->stopping_distance;
                 break;
             }
             case CALIBRATION_MESSAGE: {
@@ -318,13 +339,32 @@ void train_widget() {
 
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, msg.cs_msg.train);
-                DisplayData *display = &train_displays[index];
+                DisplayData *display = &new_train_displays[index];
                 if (old_num_trains < num_trains) {
                     train_display_add(index, display, msg.cs_msg.train);
                 }
 
-                train_calibrated_velocity_update(index, display, msg.cs_msg.velocity);
-                train_error_update(index, display, msg.cs_msg.error);
+                display->calibrated_velocity = msg.cs_msg.velocity;
+                display->calibrated_error = msg.cs_msg.error;
+                break;
+            }
+            case TRAIN_DISPLAY_MESSAGE: {
+                // Ack Calibration Message.
+                rply.type = TRAIN_DISPLAY_MESSAGE;
+                Reply(tid, (char *) &rply, sizeof(rply));
+
+                int index;
+                for (index = 0; index < num_trains; ++index) {
+                    DisplayData *new_display = &new_train_displays[index];
+                    DisplayData *old_display = &old_train_displays[index];
+                    train_orientation_update(index, old_display, new_display->orientation);
+                    train_edge_update(index, old_display, new_display->edge);
+                    train_distance_update(index, old_display, new_display->distance);
+                    train_estimated_velocity_update(index, old_display, new_display->velocity);
+                    train_stopping_distance_update(index, old_display, new_display->stopping_distance);
+                    train_calibrated_velocity_update(index, old_display, new_display->calibrated_velocity);
+                    train_error_update(index, old_display, new_display->calibrated_error);
+                }
                 break;
             }
             default:
