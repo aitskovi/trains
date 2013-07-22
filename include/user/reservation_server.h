@@ -19,6 +19,7 @@ typedef struct ReservationServerMessage {
     enum {
         RESERVATION_RESERVE,
         RESERVATION_RELEASE,
+        RESERVATION_SWAP_REVERSE,
         RESERVATION_SUCCESS_RESPONSE,
         RESERVATION_FAILURE_RESPONSE,
         RESERVATION_ERROR_RESPONSE,
@@ -31,6 +32,7 @@ typedef struct ReservationServerMessage {
 
 int Reserve(unsigned int train_no, track_node *node);
 int Release(unsigned int train_no, track_node *node);
+track_node * SwapForReverse(unsigned int train_no, track_node *node);
 void reservation_server();
 
 #endif /* RESERVATION_SERVER_H_ */

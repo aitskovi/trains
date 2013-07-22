@@ -66,6 +66,22 @@ int Release(unsigned int train_no, track_node *node) {
     return RESERVATION_ERROR;
 }
 
+track_node * SwapForReverse(unsigned int train_no, track_node *node) {
+    Message msg, reply;
+    ReservationServerMessage *rs_msg = &msg.rs_msg;
+    ReservationServerMessage *rs_reply = &reply.rs_msg;
+    msg.type = RESERVATION_SERVER_MESSAGE;
+
+    rs_msg->type = RESERVATION_SWAP_REVERSE;
+    rs_msg->node = node;
+    rs_msg->train_no = train_no;
+    Send(server_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+
+    cuassert(reply.type == RESERVATION_SERVER_MESSAGE, "Received invalid reply message type from reservation server on reserve!");
+
+    return rs_reply->node;
+}
+
 static void publish_track_release(unsigned int train_no, track_node *node) {
     Message msg;
     ReservationServerMessage *rs_msg = &msg.rs_msg;
@@ -158,6 +174,22 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
     return RESERVATION_SUCCESS;
 }
 
+static track_node *swap_track_node_for_reverse(unsigned int train_no, track_node *track) {
+    int result;
+    result = release_track_node(train_no, track);
+    if (result == RESERVATION_ERROR || result == RESERVATION_FAILURE) {
+        return 0;
+    }
+
+    track_node *ahead = track_next_landmark(track);
+
+    result = reserve_track_node(train_no, ahead->reverse);
+    if (result == RESERVATION_ERROR || result == RESERVATION_FAILURE) {
+        return 0;
+    }
+    return ahead->reverse;
+}
+
 // TODO path finding should be done here to avoid reserving in the middle of pathfinding
 
 void reservation_server() {
@@ -183,6 +215,10 @@ void reservation_server() {
                 break;
             case RESERVATION_RELEASE:
                 result = release_track_node(rs_msg->train_no, rs_msg->node);
+                break;
+            case RESERVATION_SWAP_REVERSE:
+                rs_reply->node = swap_track_node_for_reverse(rs_msg->train_no, rs_msg->node);
+                result = rs_reply->node ? RESERVATION_SUCCESS : RESERVATION_ERROR;
                 break;
             }
             switch (result) {

@@ -79,6 +79,7 @@ OBJECTS = bwio.o\
 		  ring_buffer.o\
 		  track_data.o\
 		  track.o\
+		  stack.o
 		  
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf
