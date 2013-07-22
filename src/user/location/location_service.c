@@ -180,12 +180,12 @@ int locationservice_distance_event(struct LocationService *service) {
     for (i = 0; i < service->num_trains; ++i) {
         TrainLocation *train = &service->trains[i];
 
-        if (!train->edge) return 0;
-        if (!train->edge->dest) return 0;
-
         int old_velocity = train->velocity;
         train->distance += train->velocity;
         update_velocity(train);
+
+        if (!train->edge) return 0;
+        if (!train->edge->dest) return 0;
 
         if (train->edge->dest->type == NODE_EXIT) {
             train->distance = min(train->edge->dist, train->distance);
