@@ -13,7 +13,7 @@
 #include <string.h>
 #include <memory.h>
 
-#define REFRESH_RATE 5
+#define REFRESH_RATE 10
 
 #define TRAIN_TABLE_HEIGHT 9
 #define TRAIN_COLUMN_WIDTH 60
@@ -185,7 +185,18 @@ static void train_stopping_distance_update(int index, DisplayData *data, int sto
     Write(COM2, command, pos - command);
 }
 
-static void train_reserved_node_update(int index, DisplayData *data) {
+static void train_reserved_node_update(int index, DisplayData *data, track_node **reserved_nodes) {
+    // Do a diff.
+    int i;
+    int diff = 0;
+    for (i = 0; i < MAX_RESERVED_NODES; ++i) {
+        if (data->reserved_nodes[i] != reserved_nodes[i]) {
+            data->reserved_nodes[i] = reserved_nodes[i];
+            diff++;
+        }
+    }
+    if (diff == 0) return;
+
     char command[256];
     char *pos = &command[0];
 
@@ -215,7 +226,6 @@ static void train_reserved_node_released(int index, DisplayData *data, track_nod
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == node) {
             data->reserved_nodes[j] = 0;
-            train_reserved_node_update(index, data);
             return;
         }
     }
@@ -223,11 +233,11 @@ static void train_reserved_node_released(int index, DisplayData *data, track_nod
 }
 
 static void train_reserved_node_reserved(int index, DisplayData *data, track_node *node) {
+    ulog("Train widget got reserved event for index %d, train %d, node %s", index, data->id, node->name);
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
         if (data->reserved_nodes[j] == 0) {
             data->reserved_nodes[j] = node;
-            train_reserved_node_update(index, data);
             return;
         }
     }
@@ -453,6 +463,8 @@ void train_widget() {
                     train_stopping_distance_update(index, old_display, new_display->stopping_distance);
                     train_calibrated_velocity_update(index, old_display, new_display->calibrated_velocity);
                     train_error_update(index, old_display, new_display->calibrated_error);
+                    train_destination_update(index, old_display, new_display->destination);
+                    train_reserved_node_update(index, old_display, new_display->reserved_nodes);
                 }
                 break;
             }
@@ -466,12 +478,12 @@ void train_widget() {
 
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, msg.tr_msg.train);
-                DisplayData *display = &train_displays[index];
+                DisplayData *display = &new_train_displays[index];
                 if (old_num_trains < num_trains) {
                     train_display_add(index, display, msg.tr_msg.train);
                 }
 
-                train_destination_update(index, display, msg.tr_msg.destination);
+                display->destination = msg.tr_msg.destination;
                 break;
             }
             case RESERVATION_SERVER_MESSAGE: {
@@ -481,7 +493,7 @@ void train_widget() {
 
                 int old_num_trains = num_trains;
                 int index = get_train_index(number_to_train, &num_trains, msg.rs_msg.train_no);
-                DisplayData *display = &train_displays[index];
+                DisplayData *display = &new_train_displays[index];
                 if (old_num_trains < num_trains) {
                     train_display_add(index, display, msg.rs_msg.train_no);
                 }
