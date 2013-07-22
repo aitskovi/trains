@@ -22,6 +22,7 @@
 #include <circular_queue.h>
 #include <location_server.h>
 #include <constants.h>
+#include <stack.h>
 
 #define CRUISING_SPEED 11
 #define D_STRAIGHT 0
@@ -277,8 +278,6 @@ static void train_reset(TrainStatus *status) {
 
     publish_destination(status);
 
-    // TODO don't release what we're on or find some way to make this atomic
-
     train_reset_reserved_nodes(status);
 
     if (circular_queue_empty(&status->reserved_nodes) && status->position.edge) {
@@ -297,9 +296,24 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
     if (REVERSING_WAITING_FOR_LOCATION == status->reversing_status) {
         status->reversing_status = REVERSING_NOT;
         ulog("Changing reserved nodes upon reverse");
-        train_reset_reserved_nodes(status);
-        // TODO instead, swap reserved nodes for opposite direction
-        reserve_current_position(status);
+
+        stack s;
+        stack_initialize(&s);
+
+        unsigned int j;
+        for (j = circular_queue_size(&status->reserved_nodes); j > 0; j--) {
+            stack_push(&s, circular_queue_pop(&status->reserved_nodes));
+        }
+
+        track_node *node, *swapped;
+        while ((node = stack_pop(&s))) {
+            swapped = SwapForReverse(status->train_no, node);
+            if (!swapped) {
+                ulog("Train %u failed to swap occupied track segment(%s)!", node->name);
+            } else {
+                circular_queue_push(&status->reserved_nodes, swapped);
+            }
+        }
     }
 
     if (status->position.edge) {
@@ -333,6 +347,11 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
             // TODO is this necessary?
             reserve_current_position(status);
         }
+    }
+
+    if (status->velocity == 0) {
+        reserve_current_position(status);
+        train_reset_reserved_nodes(status);
     }
 }
 
@@ -486,6 +505,7 @@ static void perform_reversing_actions(TrainStatus *status) {
             status->reversing_status = REVERSING_WAITING_FOR_LOCATION;
             train_set_speed(status, 15);
             train_set_speed(status, status->saved_speed);
+            train_reset_reserved_nodes(status);
         }
         return;
     }
