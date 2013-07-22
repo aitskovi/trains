@@ -234,13 +234,17 @@ int parse_calibrate(char *str, int *train) {
     return 1;
 }
 
-int parse_go(char *str, int *train, char *landmark) {
+char *parse_go(char *str) {
     // Skip Whitespace.
     while(is_whitespace(*str)) str++;
 
     if (*str++ != 'g') return 0;
     if (*str++ != 'o') return 0;
 
+    return str;
+}
+
+char *parse_go_params(char *str, int *train, char *landmark) {
     *train = parse_uint(&str);
     if (*train == -1) return 0;
 
@@ -248,7 +252,7 @@ int parse_go(char *str, int *train, char *landmark) {
     while(!is_whitespace(*str)) *landmark++ = *str++;
     *landmark = 0;
 
-    return 1;
+    return str;
 }
 
 int parse_stop(char *str, int *train, char *landmark) {
@@ -428,17 +432,20 @@ void shell() {
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
-            } else if (parse_go(line_buffer, &train, landmark_buffer1)) {
-                ulog("\nShell making train %u go to %s", train, landmark_buffer1);
-                sh_msg->type = SHELL_GO;
-                sh_msg->train_no = train;
-                sh_msg->position = track_get_by_name(landmark_buffer1);
-                if (!sh_msg->position) {
-                    ulog("\nCan't find landmark %s", landmark_buffer1);
-                } else {
-                    Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-                    cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
-                    cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+            } else if (parse_go(line_buffer)) {
+                char *tmp = parse_go(line_buffer);
+                while((tmp = parse_go_params(tmp, &train, landmark_buffer1))) {
+                    ulog("\nShell making train %u go to %s", train, landmark_buffer1);
+                    sh_msg->type = SHELL_GO;
+                    sh_msg->train_no = train;
+                    sh_msg->position = track_get_by_name(landmark_buffer1);
+                    if (!sh_msg->position) {
+                        ulog("\nCan't find landmark %s", landmark_buffer1);
+                    } else {
+                        Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                        cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                        cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+                    }
                 }
             } else if (parse_stop(line_buffer, &train, landmark_buffer1)) {
                 ulog("\nShell making train %u stop after hitting %s", train, landmark_buffer1);
