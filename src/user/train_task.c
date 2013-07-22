@@ -30,6 +30,7 @@
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 300
 #define MAX_OCCUPIED_NODES 5
+#define STOPPING_BUFFER 15000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -415,7 +416,8 @@ static void perform_path_actions(TrainStatus *status) {
     // Reserve up to us + stopping distance
     j = status->path_reserved_pos;
     while (1) {
-        if (!status->reservation_failed_time && status->path_reserved_distance > status->stopping_distance) {
+        if (!status->reservation_failed_time
+                && status->path_reserved_distance > status->stopping_distance + STOPPING_BUFFER) {
             break;
         }
 
@@ -426,11 +428,13 @@ static void perform_path_actions(TrainStatus *status) {
         track_node *current = status->path[j];
 
         // If we're reserving the final node, we have arrived
-        if (j == status->path_length - 1) {
+        if (j == status->path_length - 1 && status->path_reserved_distance < status->stopping_distance) {
             ulog("Train arriving at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
             // We have arrived
             status->path_length = 0;
             train_start_stopping(status);
+            return;
+        } else if (j == status->path_length - 1) {
             return;
         }
 
