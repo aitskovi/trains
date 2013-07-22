@@ -194,7 +194,10 @@ int locationservice_distance_event(struct LocationService *service) {
                 track_edge *next_edge = track_next_edge(train->edge->dest);
                 locationservice_associate(service, train, next_edge);
             } else if (train->distance >= train->edge->dist + SENSOR_ERROR_OFFSET) {
-                cuassert(!train->missed_sensor, "Missed Multiple Sensors in a Row");
+                //cuassert(!train->missed_sensor, "Missed Multiple Sensors in a Row");
+                if (train->missed_sensor) {
+                    continue;
+                }
                 track_edge *next_edge = track_next_edge(train->edge->dest);
                 locationservice_associate(service, train, next_edge);
                 train->missed_sensor = next_edge->src;
