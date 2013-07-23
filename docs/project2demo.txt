@@ -1,0 +1,28 @@
+1. Place 49 A13
+2. Place 50 C13
+
+-- Talk about position, reservations
+
+3. Go 50 B1
+4. Go 49 C13
+
+-- Talk about position, reservations
+
+
+// Head on collision
+3. go 49 C6 50 C12
+
+// Sideways collision
+4. go 49 B5
+5. go 50 C13
+6. go 49 A9 50 B12
+
+// Swap
+7. go 49 C13
+8. go 49 B12 50 C14
+
+// Stationary avoidance
+9. go 50 C3
+10. go 49 MR8
+
+// Questions, rvpenalty
