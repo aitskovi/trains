@@ -183,6 +183,8 @@ static track_node *swap_track_node_for_reverse(unsigned int train_no, track_node
 
     track_node *ahead = track_next_landmark(track);
 
+    if (!ahead) return 0;
+
     result = reserve_track_node(train_no, ahead->reverse);
     if (result == RESERVATION_ERROR || result == RESERVATION_FAILURE) {
         return 0;

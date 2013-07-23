@@ -51,6 +51,8 @@ struct track_edge *track_next_edge(struct track_node *node) {
 struct track_node *track_next_landmark(struct track_node *node) {
     if (!node) return 0;
 
+    if (node->type == NODE_EXIT) return 0;
+
     int edge_direction = DIR_AHEAD;
 
     if (node->type == NODE_BRANCH) {
@@ -239,6 +241,7 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
     memset(previous, 0, sizeof(previous));
     memset(next, 0, sizeof(next));
     memset(dijkstra_state, 0, sizeof(dijkstra_state));
+    int disallowed_neighbour_count = 0;
 
     track_node *current, *neighbour;
 
@@ -260,7 +263,10 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
             neighbour = current->edge[j].dest;
 
             // Don't switch node that we're on
-            if (current == src) neighbour = track_next_landmark(current);
+            if (current == src && disallowed_neighbour_count < 2) {
+                neighbour = track_next_landmark(current);
+                disallowed_neighbour_count++;
+            }
 
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + current->edge[j].dist;

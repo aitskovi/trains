@@ -30,7 +30,7 @@
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 300
 #define MAX_OCCUPIED_NODES 5
-#define STOPPING_BUFFER 150000
+#define STOPPING_BUFFER 200000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
