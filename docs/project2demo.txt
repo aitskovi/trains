@@ -3,11 +3,14 @@
 
 -- Talk about position, reservations
 
-3. Go 50 B1
-4. Go 49 C13
+3. Go 50 B1     /// Swap
+4. Go 49 C13    /// SWAP
 
 -- Talk about position, reservations
 
+
+go 49 B6 50 C6
+go 50 C13
 
 // Head on collision
 3. go 49 C6 50 C12
@@ -26,3 +29,39 @@
 10. go 49 MR8
 
 // Questions, rvpenalty
+
+// DEMO
+
+50 at EN4
+49 at EN5
+
+ad 49 
+ad 50 
+
+// What's reserved.
+
+go 49 B1
+go 50 C13
+
+// Short Hops.
+// What's reserved.
+
+go 49 B6 50 C6
+
+// Head on collision.
+
+Edge near door to bays near the wall.
+
+// Sidweways Collosion.
+
+One train to C13
+Swap trains.
+
+// Train on C13 to C3
+// Train in bay to MR8
+
+Avoiding stationary obstacles.
+
+// Rvpenalty
+
+Bay reversal.
