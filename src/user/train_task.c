@@ -30,7 +30,7 @@
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 300
 #define MAX_OCCUPIED_NODES 5
-#define STOPPING_BUFFER 80000
+#define STOPPING_BUFFER 150000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -136,10 +136,8 @@ static void train_set_speed(TrainStatus *status, speed_t speed) {
 }
 
 static void train_start_stopping(TrainStatus *status) {
-    if (status->velocity != 0) {
-        status->stopping_status = STOPPING_STOPPING;
-        train_set_speed(status, 0);
-    }
+    status->stopping_status = STOPPING_STOPPING;
+    train_set_speed(status, 0);
 }
 
 static void train_start_reversing(TrainStatus *status) {
@@ -232,7 +230,7 @@ static void reserve_current_position(TrainStatus *status) {
         track_node *node = occupied_nodes[j];
         error = Reserve(status->train_no, node);
         if (error == RESERVATION_ERROR || error == RESERVATION_FAILURE) {
-            ulog("Train %u failed to reserve occupied track segment(%s)!", node->name);
+            ulog("Train %u failed to reserve occupied track segment(%s)!", status->train_no, node->name);
         } else if (error == RESERVATION_SUCCESS) {
             circular_queue_push(&status->reserved_nodes, node);
         }
@@ -411,8 +409,6 @@ static void perform_path_actions(TrainStatus *status) {
 
     status->path_reserved_distance = calculate_path_reserved_distance(status);
 
-
-
     // Reserve up to us + stopping distance
     j = status->path_reserved_pos;
     while (1) {
@@ -426,6 +422,7 @@ static void perform_path_actions(TrainStatus *status) {
         }
 
         track_node *current = status->path[j];
+        track_node *previous = j > 0 ? status->path[j-1] : 0;
 
         // If we're reserving the final node, we have arrived
         if (j == status->path_length - 1 && status->path_reserved_distance < status->stopping_distance) {
@@ -451,7 +448,7 @@ static void perform_path_actions(TrainStatus *status) {
             return;
         } else if (result == RESERVATION_FAILURE) {
             if (!status->reservation_failed_time) {
-                ulog ("Train %u: Reservation of %s failed, waiting %d ahead of %s", status->train_no, current->name, status->position.distance, status->position.edge->src->name);
+                ulog ("Train %u: Reservation of %s failed, waiting %d ahead of %s, buffer is %d", status->train_no, current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
                 status->reservation_failed_time = Time();
                 train_start_stopping(status);
             }
@@ -488,6 +485,22 @@ static void perform_path_actions(TrainStatus *status) {
             } else if (D_CURVED == direction) {
 //                ulog("%s switched to curved", current->name);
                 SetSwitch(current->num, CURVED);
+            } else {
+//                ulog ("INVALID DIRECTION");
+            }
+        }
+
+        // Switch merges as we drive over them to enable reverses
+        if (previous && current->type == NODE_MERGE) {
+            int direction = direction_between_nodes(current->reverse, previous->reverse);
+            cuassert(direction >= 0, "Disconnected nodes in merge swapping!");
+
+            if (D_STRAIGHT == direction) {
+//                ulog("%s switched to straight", current->reverse->name);
+                SetSwitch(current->reverse->num, STRAIGHT);
+            } else if (D_CURVED == direction) {
+//                ulog("%s switched to curved", current->reverse->name);
+                SetSwitch(current->reverse->num, CURVED);
             } else {
                 ulog ("INVALID DIRECTION");
             }

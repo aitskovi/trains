@@ -215,6 +215,7 @@ int can_reverse_at_node(track_node *node) {
         return 1;
     case NODE_SENSOR:
     case NODE_BRANCH:
+//        return 1;
         return (has_room_ahead(node, 1) && has_room_behind(node));
     }
     return 0;
@@ -257,6 +258,10 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
         // For each neighbour
         for (j = 0; j < NUM_NODE_EDGES[current->type]; ++j) {
             neighbour = current->edge[j].dest;
+
+            // Don't switch node that we're on
+            if (current == src) neighbour = track_next_landmark(current);
+
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + current->edge[j].dist;
                 if (avoid_others && neighbour->owner) {
@@ -270,7 +275,7 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
         }
 
         // If there is enough space around current node we could also reverse
-        if (can_reverse_at_node(current)) {
+        if (current == src || can_reverse_at_node(current)) {
             neighbour = current->reverse;
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + REVERSE_PENALTY;
