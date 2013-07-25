@@ -43,7 +43,8 @@ enum TRAIN_WIDGET_HEIGHTS {
     TRAIN_MEASURED_VELOCITY_HEIGHT,
     TRAIN_ERROR_HEIGHT,
     TRAIN_RESERVED_NODES_HEIGHT,
-    TRAIN_DESTINATION_HEIGHT
+    TRAIN_DESTINATION_HEIGHT,
+    TRAIN_WIDGET_HEIGHT,
 };
 
 typedef struct DisplayData {
@@ -59,6 +60,14 @@ typedef struct DisplayData {
     track_node *destination;
 } DisplayData;
 
+static int get_y(int index, int widget_height) {
+    return index / 2 * (TRAIN_WIDGET_HEIGHT - TRAIN_DISPLAY_HEIGHT) + widget_height;
+}
+
+static int get_x(int index) {
+    return index % 2;
+}
+
 static void train_orientation_update(int index, DisplayData *data, enum TRAIN_ORIENTATION orientation) {
     if (data->orientation == orientation) return;
     data->orientation = orientation;
@@ -68,7 +77,7 @@ static void train_orientation_update(int index, DisplayData *data, enum TRAIN_OR
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(ORIENTATION_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ORIENTATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ORIENTATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char position[TRAIN_COLUMN_WIDTH];
     if (orientation == TRAIN_FORWARD) {
         sprintf(position, "F");
@@ -95,7 +104,7 @@ static void train_destination_update(int index, DisplayData *data, track_node *d
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(DESTINATION_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_DESTINATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DESTINATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
 
     if (data->destination) {
         buf_pos += sprintf(buf_pos, "%s", data->destination->name);
@@ -118,7 +127,7 @@ static void train_edge_update(int index, DisplayData *data, track_edge *edge) {
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(LANDMARK_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_LANDMARK_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_LANDMARK_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char position[TRAIN_COLUMN_WIDTH];
     if (!edge) {
         sprintf(position, "N/A");
@@ -140,7 +149,7 @@ static void train_distance_update(int index, DisplayData *data, int distance) {
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(DISTANCE_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char buf[TRAIN_COLUMN_WIDTH];
     sprintf(buf, "%dmm", distance / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
@@ -158,7 +167,7 @@ static void train_estimated_velocity_update(int index, DisplayData *data, int ve
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(ESTIMATED_SPEED_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ESTIMATED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ESTIMATED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char velocity_buf[TRAIN_COLUMN_WIDTH];
     sprintf(velocity_buf, "%dum/tick", velocity);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', velocity_buf);
@@ -176,7 +185,7 @@ static void train_stopping_distance_update(int index, DisplayData *data, int sto
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(STOPPING_DISTANCE_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_STOPPING_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_STOPPING_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char stop_buf[TRAIN_COLUMN_WIDTH];
     sprintf(stop_buf, "%dmm", stopping_distance / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', stop_buf);
@@ -205,7 +214,7 @@ static void train_reserved_node_update(int index, DisplayData *data, track_node 
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(RESERVED_NODES_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_RESERVED_NODES_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_RESERVED_NODES_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
 
     unsigned int j;
     for (j = 0; j < MAX_RESERVED_NODES; ++j) {
@@ -253,7 +262,7 @@ static void train_calibrated_velocity_update(int index, DisplayData *data, int v
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(MEASURED_VELOCITY_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_MEASURED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_MEASURED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char buf[TRAIN_COLUMN_WIDTH];
     sprintf(buf, "%dum/tick", velocity);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
@@ -271,7 +280,7 @@ static void train_error_update(int index, DisplayData *data, int error) {
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(ERROR_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ERROR_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ERROR_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char buf[TRAIN_COLUMN_WIDTH];
     sprintf(buf, "%dmm", error / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
@@ -299,43 +308,43 @@ static void train_display_add(int index, DisplayData *display, int train) {
     pos += sprintf(pos, "\0337");
 
     // Draw Trin Id.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ID_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ID_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, "Train: %d", train);
 
     // Draw Orientation.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ORIENTATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ORIENTATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ORIENTATION_STRING);
 
     // Draw Train Position
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_LANDMARK_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_LANDMARK_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, LANDMARK_STRING);
 
     // Draw Train Distance 
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, DISTANCE_STRING);
 
     // Draw Calibrated Train Velocity
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ESTIMATED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ESTIMATED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ESTIMATED_SPEED_STRING);
 
     // Draw Calibrated Train Stopping Distance
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_STOPPING_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_STOPPING_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, STOPPING_DISTANCE_STRING);
 
     // Draw Train Speed
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_MEASURED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_MEASURED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, MEASURED_VELOCITY_STRING);
 
     // Draw Train Error.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ERROR_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ERROR_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ERROR_STRING);
 
     // Draw Train Reservations.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_RESERVED_NODES_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_RESERVED_NODES_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, RESERVED_NODES_STRING);
 
     // Draw Train Destination
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_DESTINATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DESTINATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, DESTINATION_STRING);
 
     pos += sprintf(pos, "\0338");
