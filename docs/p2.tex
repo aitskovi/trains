@@ -13,7 +13,7 @@
 
 \section{Overview}
 
-This documentation covers milestone one of our train project.
+This documentation covers milestone two of our train project.
 
 \section{Operating Instructions}
 \begin{enumerate}
@@ -23,15 +23,160 @@ This documentation covers milestone one of our train project.
 \end{enumerate}
 
 \section{Submitted Files}
-Root directory: /u1/aianus/cs452/handin/project1/
+Root directory: /u1/aianus/cs452/handin/project2/
 
 \subsection{Executable}
 \begin{verbatim}
-e901cd3cd93b0dd7973a1ee99c73b7c2  ./project1.elf
+0d572c6fe87cf82fc50e29045c3f7214  project2.elf
 \end{verbatim}
 
 \subsection{Code}
 \begin{verbatim}
+d39148360f7d205cb98a36d0a0c61aad  ./include/bwio.h
+339437283fc2f0d78f47a74f4fe61a52  ./include/circular_queue.h
+9f6106bd19009aec00d7f458e964d719  ./include/ts7200.h
+3d308fffb8d7c9cdaba180f4867bb516  ./include/ksyscalls.h
+081b58b1ad6e401d9648cb88ffb30301  ./include/request.h
+ccac3c439d86709412554719f50434cc  ./include/switch.h
+9aef3c967205b2c838b9ce1dbe0704a3  ./include/task.h
+7cc98e8bfe2af9dfa5426aeb8da10e92  ./include/nameserver.h
+18060a9170044e77e2c91364f48054f8  ./include/scheduling.h
+01b23f49792d910a524f42badf460c5c  ./include/libc/syscall.h
+01c2b8c8738d48493c9e57e216e86ff0  ./include/libc/dassert.h
+5c61838a4125651ebe41601ccd881455  ./include/libc/random.h
+e31e1aa5f0cf7747c5ca02d9219265d0  ./include/libc/fine_timer.h
+019ef4d963e27b73dc863cd252201dce  ./include/libc/heap_priority_queue.h
+4e13693535c5e92f1d0041b56ce2d557  ./include/libc/log.h
+b9124cb9c114764f4ac6fb6ae00f8d1d  ./include/libc/ring_buffer.h
+2fa1c69b76a787a5b5dc6b480aa5d734  ./include/libc/sprintf.h
+d1418a29bf14f9cffdc17b4b486256f3  ./include/libc/conv.h
+1dee5d1af1534d6eb63e1c60a39482b1  ./include/libc/string.h
+ac4459311ef2e5e5d607c556a0db393d  ./include/libc/encoding.h
+7b9a8374db9a2a3211ef11a5ac00f20e  ./include/libc/memcpy.h
+78ac3cf1f6b60961ca67e33dfc701c64  ./include/libc/memory.h
+4832f57aab043ea00409f6cb2025e3cd  ./include/libc/track.h
+be1297d4e484ad68e9581359902968c8  ./include/libc/common.h
+0bb9501743135b42ee43e46949f6cd2f  ./include/libc/stack.h
+e4afa944926d4fab745f25de33535d64  ./include/nameservice.h
+af46e41f00d29010abdca05eafe75609  ./include/verify.h
+f5d65e70556962f5effba160e9bbd0a0  ./include/messaging.h
+7a43181f7908eef779e270832fcd9148  ./include/bits.h
+a53c63ad1757b25362486bce6ef7c90d  ./include/user/rps/rps.h
+570c77afbd19a6a0be4419d136ee9a1f  ./include/user/rps/rpsclient.h
+331b47449d891d458b0647da2c2924de  ./include/user/rps/rpsserver.h
+862df1e336ef89d83bceadc522085dd1  ./include/user/user.h
+92023eb7f5b51008caee8b80306fde73  ./include/user/clock/clock.h
+67d3408c795e016994abc7daccaf2dfb  ./include/user/clock/clock_notifier.h
+e9f7e445c32353f3b72917ecf553de05  ./include/user/clock/clock_server.h
+e75d3afab221f201593235fa63ae912e  ./include/user/clock/clock_widget.h
+c43444432320abfb09777821a38ae8a7  ./include/user/idle.h
+6320a395d0add67f42fb141fb8301591  ./include/user/serial/read_notifier.h
+e3c465f3ae1a65a8bf6e144372e9f2b4  ./include/user/serial/read_server.h
+3e6ecd73503f1abcbf7e33a574780d95  ./include/user/serial/read_service.h
+2d8b7da4e01baff3d765879657ae984b  ./include/user/serial/serial.h
+1481dd9fe1dcd2ad9f5328171ebec4b9  ./include/user/serial/write_notifier.h
+4b8c17d07abc40b0e36874eb758663e7  ./include/user/serial/write_server.h
+3ab9dd46e2c0b4d73b4fb2d38bb72006  ./include/user/serial/write_service.h
+994b625e8810a90d433639283dee842b  ./include/user/calibration/calibration.h
+f6fbf657c61b70cedaa8a43f3c339536  ./include/user/calibration/velocity_calibrator.h
+33329917168536461949d2020b837b12  ./include/user/shell.h
+d2ffb3543bad05bcf695c4cde2aa738f  ./include/user/switch_server.h
+28dfb869aef2191e1dc6e4bcc1cd144e  ./include/user/distance/distance_notifier.h
+c688d7be0a097a4f7247394b2d532172  ./include/user/location/location_service.h
+a3d9a640af567a20a59695a18760283d  ./include/user/location/location_server.h
+79a75d577e35fa3c4932b55aecab21da  ./include/user/mission_control.h
+2d7038f2cf03750c88de76d0546d7673  ./include/user/sensor/sensor_service.h
+dd0af4b68ec86e59475b5db33fda4a46  ./include/user/sensor/sensor_notifier.h
+4b0de334f1b4f3315f89283ce0647a6e  ./include/user/sensor/sensor_server.h
+3c0e19f904f5e271f542704790630ba4  ./include/user/sensor/sensor_widget.h
+d805d625d50dce647fefd8ad5d315b36  ./include/user/train_task.h
+c5f4c7bc8b1e886e0ef71fa164df8dd0  ./include/user/train_widget.h
+aee19e03d88ba8a5315e04d7541707e5  ./include/user/pubsub/courier.h
+dd7c6bbf2bf50dbb5c730754d2f331f5  ./include/user/pubsub/pubsub.h
+a86f4b3b9192c3a531aaeea86304e709  ./include/user/reservation_server.h
+ad54c11df98adfdb38617ec59a7f8a7a  ./include/constants.h
+5bd4a0357d0702750838dc1417cd4f14  ./include/event.h
+cdf8d943e1d25a7d7c9fc693a45256e2  ./include/track/track_node.h
+95ff6f43aac027e9832905d4afdaa8c5  ./include/interrupt.h
+94833a9ccce763038303123e95428de8  ./include/waiting.h
+3e9800bc664c0412dc73529ab1d1cc42  ./include/uart.h
+7df60a6a44bebe110c9b245dec42eedc  ./src/bwio.c
+ae7ddbbf11a46e10437e256ff3fbdbb5  ./src/kernel.c
+c5a60a7707f13874ee5672d221ec2bac  ./src/circular_queue.c
+3d07be1b7e34d5dddb0f2981f80eeed9  ./src/switch.c
+5ad86d57a8815700222af7812f181477  ./src/task.c
+1a456482cd1adc5d5880d60ab9cfdcf3  ./src/ksyscalls.c
+a21461fa9ad938328c6399384d82693c  ./src/nameserver.c
+3534459591a48a06217bf141d069f3a9  ./src/nameservice.c
+1d22f65e42f1c0e9a3fd0b7f7c53dbb7  ./src/libc/memory.c
+996a06e15c77de128da322b4e03ec471  ./src/libc/syscall.c
+df0e33ec5df1306650e909e7463c3834  ./src/libc/fine_timer.c
+428d29b72bb432d11e63812e3f19dedd  ./src/libc/random.c
+161c3e1bda2313818a7deb4ab1dfa18e  ./src/libc/heap_priority_queue.c
+4a47407f1350444a938b4abdc567e2a9  ./src/libc/log_arm.c
+686d7bdcad6b2a66f66e983565ffc8df  ./src/libc/log_x86.c
+a5c16093637f6f52699641447bdb536f  ./src/libc/ring_buffer.c
+e10d105c3f5b44d0d94e23c278304952  ./src/libc/swi_arm.c
+b7bebaa79148664424ff9f0f55c2415c  ./src/libc/swi_x86.c
+cf3630c1a255e94e6c4a2979273d25dd  ./src/libc/conv.c
+64a7c8eb92ea1295062e2b4b41d32a8f  ./src/libc/sprintf.c
+7964dd8d1e3b8eb16c2dbd01e8be0dc4  ./src/libc/string.c
+e4e1d07e4d86c82d62f26d82129c70a8  ./src/libc/memcpy.c
+2b1855aea8c00d54976391b8c56d8de5  ./src/libc/track.c
+9b38b5c16bb0c3c6ef2f2da3024c5d23  ./src/libc/stack.c
+cbc4b3cdae62ea6a211c5a0f834e646c  ./src/scheduling.c
+b0c8b9d56c401dc19fa710cf4b0b3a53  ./src/test/circular_queue_tests.c
+ce32d193c68b271e8167099dd4c32835  ./src/test/ksyscalls_tests.c
+0b5b1b5e8febfbd437bb0b775640cb0a  ./src/test/memory_tests.c
+e8617b00b01d3540ae62a140e4b2c15c  ./src/test/messaging_tests.c
+be5d61656c6f152bd9ecd52c3dec4614  ./src/test/scheduling_tests.c
+7fba2ea44d6922b270aff6e5423683e4  ./src/test/priority_queue_tests.c
+5601613cdbacddf01dc51029acb20515  ./src/test/unit.c
+7503c94508e4383df74166701f79bd4d  ./src/test/pathfinding_tests.c
+1e3f84b77a97255d6251ddf262835725  ./src/user/kernel1.c
+b23bda2d5f268ed1a85959e266882360  ./src/user/kernel2.c
+46a424731361d6176718c8b7c737bc55  ./src/user/rps/rpsclient.c
+e8a44b7c42f0a0d16eaf0594e1a02bd3  ./src/user/rps/rpsserver.c
+fa6b70558103fa109c508faa51d5071e  ./src/user/timings.c
+95197606aa508ee5043c16021c0f6234  ./src/user/user.c
+d05ccb77f412ed3b343094900c142f04  ./src/user/idle.c
+d8e09c1a0766a1ee4d3f8c6b9c8dc7f8  ./src/user/kernel3.c
+5a69a467671b083ba03266175cad6090  ./src/user/clock/clock_notifier.c
+1441403383f40c229ef151ed13b68993  ./src/user/clock/clock_server.c
+df32193e4f6a93c79d7f647d40f5cdee  ./src/user/clock/clock_widget.c
+f7cd27ec82053c8edd80b7f92b214f05  ./src/user/kernel4.c
+685878716ba1524a54f952330e6caac3  ./src/user/serial/read_notifier.c
+327b0c47ddea28ca88b82ef5e3eb6eee  ./src/user/serial/read_server.c
+6a63592be4452ed022f8e8cdcaf51391  ./src/user/serial/read_service.c
+ceb6691f814c0348cf4b0f9b9699e88d  ./src/user/serial/serial.c
+cd47b895551dcb88cd74e0fad3d1584b  ./src/user/serial/write_notifier.c
+eb2bf4d21085abca9c52a6d8a9b1d993  ./src/user/serial/write_server.c
+11dda1ee3994b49e83aab3dea1498f6b  ./src/user/serial/write_service.c
+47adc1b6e70cb59265e87bdab807b50f  ./src/user/calibration/calibration.c
+ffc033605d65cc62325b69138804f685  ./src/user/calibration/velocity_calibrator.c
+d92e7f78b9756c5d1bf989cff15b0347  ./src/user/reservation_server.c
+9b075bebfb12a28fe3a492018e49e061  ./src/user/switch_server.c
+bebb7808f7e5160d9572f9fc7ef1a0ea  ./src/user/distance/distance_notifier.c
+5524b3ef80bc5d7dd7bf46ccd10ad913  ./src/user/location/location_server.c
+f63ef075c59babd964d1319fada23bbe  ./src/user/location/location_service.c
+2fc7df9b48ce3ed6f2c52cc3ffa31c2e  ./src/user/mission_control.c
+5959f5754d4f908a467ed39c44b3a414  ./src/user/project1.c
+04849c38bbc8e2ee9c4559a9d16b463f  ./src/user/sensor/sensor_server.c
+12e360f0ae4dd3fcee8a85bdb83ea201  ./src/user/sensor/sensor_notifier.c
+7c8905da64b641b0046e9d92522de072  ./src/user/sensor/sensor_service.c
+5092ed24bec172bebfdeb60e27e6ef3a  ./src/user/sensor/sensor_widget.c
+5286807120a982880bb09a03690c38ab  ./src/user/shell.c
+435bdd3b01b1714a26d1f9bf50b1ba9c  ./src/user/train_widget.c
+abfadf2d6f31459c4ff9fe0e6cf3ecbd  ./src/user/pubsub/courier.c
+73e9e31fcee0bdf641825ba7a705db0f  ./src/user/pubsub/pubsub.c
+8dd31e002a0737429634f173570db202  ./src/user/train_task.c
+77697972cdac93a02951f8476ce29379  ./src/messaging.c
+c946f75ca4551a445ac3eda46091b7be  ./src/bits.c
+5337762b0342e2aa9406385f23991cfe  ./src/event.c
+0908fa9125745315f2d4bc258242aecc  ./src/interrupt.c
+f90b3c33dead7ca55d9192d8112cdc4f  ./src/waiting.c
+75dd26305bdbdd505590ec82cb80c6d7  ./src/verify.c
+c0554c00f8b3d0589f461dd9323524f7  ./src/uart.c
 \end{verbatim}
 
 \section{User Program Description}
@@ -47,7 +192,7 @@ Since we use a publish-subscribe model in our system, we made a generalizable sy
   \item void Publish(tid\_t stream, Message msg) - Publish a message to a stream. This message gets forwarded to all subscribers of the stream. Ordering of messages is guaranteed as fifo.
 \end{itemize}
 
-This lets us clearly seperate different components of the system and allow them to communicate through streams. It also allows us to easily introspect these streams so we can show the data on the screen.
+This lets us clearly separate different components of the system and allow them to communicate through streams. It also allows us to easily introspect these streams so we can show the data on the screen.
 
 \subsection{Calibration}
 
@@ -68,7 +213,7 @@ Switch failure is handled by having each train have as it's pending sensors all 
 We've added some simple augmentations to our shell system:
 \begin{itemize}
   \item The go command now accepts multiple train/destination pairs.
-  \item We've added an orient command so we can the train which direction it is facing.
+  \item We've added an orient command so we can inform the system of the location of the pickup relative to the train's direction of travel
   \item We've added a calibrate command to facilitate train calibration.
 \end{itemize}
 
@@ -78,12 +223,30 @@ During working on this demo we realized our train widget was printing much too o
 
 \subsection{Reservation System}
 
+We have a separate reservation task in order to make reservation operations atomic. The operations supported are Reserve, Release, and SwapForReverse. The Reserve operation is used to reserve a section of track. We represent sections of track by their source nodes. As part of reserving a section of track the opposite direction is also implicitly reserved. Reservations are re-entrant, so a train is allowed to reserve track it already owns. If someone else owns the track, a failure is immediately returned.
+
+Release is used to give up a section of track. Implicitly reserved nodes are also released. An error is returned if the caller does not in fact own the track it is trying to release.
+
+SwapForReverse is used to atomically swap a reserved node for its equivalent in the opposite direction. This makes it simpler for the train to release nodes while it's travelling after a reverse.
+
 \subsection{Pathfinding}
+
+Pathfinding is done using the original O(v\^2) algorithm by Dijkstra. The edge weight for travelling across the track is given by the physical distance between the different nodes. Reversing is considered another edge, with a configurable penalty. This penalty is very high by default, discouraging reverses unless absolutely necessary. By default, pathfinding ignores track reservations. This was a design decision we made because generally those reservations will change by the time they are reached by the train as the other train moves out of the way.
+
+However, there is a flag that can be passed to the pathfinding algorithm that will assign a very high penalty to reserved edges. This flag is used when a train times out waiting for a reserved piece of track to be freed. In this case, it is likely there is a static train in the way and we will not make progress unless we route around it.
+
+\subsection{Following a path}
+
+Each train has a task dedicated to its control. The train task is responsible for calculating and following paths. It accomplishes this by subscribing to the location stream and performing a set of actions on each position update depending upon its state.
+
+While following a path the train task attempts to reserve upcoming edges until the sum of their distance exceeds the stopping distance of the train plus a safety buffer. If a branch node is successfully reserved, the turnout is switched to the correct direction. Merge nodes are also switched to the correct direction in case we must reverse on top of them. 
+
+If, however, reserving an edge fails, we immediately stop the train. We then enter a waiting state that lasts for three seconds. During these three seconds, we continue to attempt to reserve the track that failed. If we succeed, the train continues on its original path. If we still haven't been able to reserve the track at the end of the three seconds, we attempt to find a different path to our destination.
 
 \subsection{Known Bugs and Limitations}
 \begin{itemize}
   \item There are cases where trains estimated positions can cross over each other, even with the reservation system in place.
-  \item Trains on the same edge may get confused by a sensor firing, confusing which train it goes to. However, this issue is heavily mitigated by the reservation system, which does not allow two trains on the same edge.
+  \item Sensor attribution sometimes fails when two different trains are expecting to next hit the same sensor. However, this issue is heavily mitigated by the reservation system, which does not allow two trains on the same edge.
 \end{itemize}
 
 \end{document}
