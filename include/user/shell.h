@@ -11,7 +11,7 @@
 #include <track_node.h>
 #include <switch_server.h>
 
-#define CONSOLE_HEIGHT 30
+#define CONSOLE_HEIGHT 34
 #define LINE_BUFFER_SIZE 70
 #define SCROLLABLE_AREA_SIZE 21
 
