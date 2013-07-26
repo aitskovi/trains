@@ -404,6 +404,10 @@ void train_widget() {
 
     DisplayData old_train_displays[MAX_TRAINS];
     memset(old_train_displays, 0, sizeof(old_train_displays));
+    int i;
+    for (i = 0; i < MAX_TRAINS; ++i) {
+        old_train_displays[i].orientation = -1;
+    }
     DisplayData new_train_displays[MAX_TRAINS];
     memset(new_train_displays, 0, sizeof(new_train_displays));
 
