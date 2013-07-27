@@ -326,11 +326,22 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
     // Output to client
     *path_length = 0;
     current = src;
-    do {
+    while (current != dest) {
         path[(*path_length)++] = current;
+
+        // If reversing, stick an extra path element in there to avoid getting lost if we overshoot
+        if (next[current - track] == current->reverse) {
+            neighbour = track_next_landmark(current);
+            if (neighbour) {
+                neighbour = neighbour->reverse;
+                path[(*path_length)++] = neighbour;
+            }
+        }
+
         current = next[current - track];
-    } while (current != dest);
+    };
     path[(*path_length)++] = dest;
+
 
     return 0;
 }
