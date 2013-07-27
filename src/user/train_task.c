@@ -415,10 +415,12 @@ static void perform_path_actions(TrainStatus *status) {
     }
 
     if (!found) {
-        ulog("Train %u got lost %d um ahead of %s, recalculating", status->train_no, status->position.distance, status->position.edge->src->name);
+        ulog("Train %u got lost %d um ahead of %s, resetting", status->train_no, status->position.distance, status->position.edge->src->name);
+        ulog("Train %u at %s, expected %s, %s, %s", status->train_no, status->path[status->path_pos]->name, status->path[status->path_pos + 1]->name, status->path[status->path_pos + 2]->name, status->path[status->path_pos + 3]->name);
         train_set_speed(status, 0);
-        recalculate_path(status, 0);
-        perform_path_actions(&status);
+        train_reset(status);
+//        recalculate_path(status, 0);
+//       perform_path_actions(&status);
         return;
     }
 
@@ -444,7 +446,7 @@ static void perform_path_actions(TrainStatus *status) {
         track_node *previous = j > 0 ? status->path[j-1] : 0;
 
         // If we're reserving the final node, we have arrived
-        if (j == status->path_length - 1 && status->path_reserved_distance < status->stopping_distance) {
+        if (j == status->path_length - 1 && status->path_reserved_distance <= status->stopping_distance) {
             ulog("Train arriving at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
             // We have arrived
             status->path_length = 0;
@@ -489,7 +491,8 @@ static void perform_path_actions(TrainStatus *status) {
             if (!status->reservation_failed_time) {
                 ulog ("Train %u: Reservation of %s failed, waiting %d ahead of %s, buffer is %d", status->train_no, current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
                 status->reservation_failed_time = Time();
-                train_start_stopping(status);
+                train_set_speed(status, 0);
+                //train_start_stopping(status);
             }
             if (Time() > status->reservation_failed_time + WAIT_TIME_FOR_RESERVED_TRACK) {
                 ulog ("Train %u: Timed out reserving %s, recalculating", status->train_no, current->name);
@@ -585,7 +588,6 @@ void train_task(int train_no) {
     memset(&status, 0, sizeof(TrainStatus));
     status.train_no = train_no;
     circular_queue_initialize(&status.reserved_nodes);
-
     train_reset(&status);
 
     // Subscribe.
