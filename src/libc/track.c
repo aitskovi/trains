@@ -6,6 +6,7 @@
 #include <string.h>
 #include <switch.h>
 #include <switch_server.h>
+#include <random.h>
 
 #define SENSORS_PER_TYPE 16
 #define TRAIN_LENGTH 250000
@@ -13,6 +14,14 @@
 static track_node track[TRACK_MAX];
 static unsigned int REVERSE_PENALTY;
 static unsigned int BLOCKED_TRACK_PENALTY;
+
+struct track_node *get_random_node() {
+    Random random;
+    seed_random(&random, Time());
+    int index = rand_int(&random) % 139;
+
+    return &track[index];
+}
 
 int track_initialize(char track_name) {
     switch(track_name) {
