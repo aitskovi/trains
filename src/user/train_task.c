@@ -102,13 +102,13 @@ static void notify_speed_change(int train, speed_t speed, tid_t tid) {
 }
 
 static void publish_destination(TrainStatus *status) {
-    static tid_t train_widget = -1;
+    static tid_t train_stream = -1;
 
-    if (train_widget < 0) {
-        train_widget = WhoIs("TrainWidget");
+    if (train_stream < 0) {
+        train_stream = WhoIs("TrainStream");
     }
 
-    Message msg, reply;
+    Message msg;
     TrainMessage *tr_msg = &msg.tr_msg;
     msg.type = TRAIN_MESSAGE;
 
@@ -119,7 +119,7 @@ static void publish_destination(TrainStatus *status) {
     } else {
         tr_msg->destination = 0;
     }
-    Send(train_widget, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+    Publish(train_stream, &msg);
 }
 
 static void train_set_speed(TrainStatus *status, speed_t speed) {

@@ -131,6 +131,7 @@ void mission_control() {
     TrainStatus *status;
 
     Subscribe("LocationServerStream", PUBSUB_HIGH);
+    CreateStream("TrainStream");
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
