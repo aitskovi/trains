@@ -134,6 +134,7 @@ void mission_control() {
 
     Subscribe("LocationServerStream", PUBSUB_HIGH);
     CreateStream("TrainStream");
+    Subscribe("TrainStream", PUBSUB_MEDIUM);
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
@@ -246,6 +247,22 @@ void mission_control() {
 
             break;
 
+        case TRAIN_MESSAGE: {
+            cuassert(msg.tr_msg.type == COMMAND_GOTO, "Invalid Location Widget Request from train");
+
+            // Ack
+            reply.type = TRAIN_MESSAGE;
+            reply.tr_msg.type = COMMAND_ACKNOWLEDGED;
+            Reply(tid, (char *) &reply, sizeof(reply));
+
+            status = train_status_by_number(trains, msg.tr_msg.train);
+            cuassert(status, "Train message for non-existent train");
+
+            if (status->simulating) {
+                mission_control_set_train_dest(status, get_random_node());
+            }
+            break;
+        }
         default:
             ulog("Src is %u", tid);
             ulog("Message type is %d", msg.type);
