@@ -391,6 +391,7 @@ void train_widget() {
     Subscribe("LocationServerStream", PUBSUB_LOW);
     Subscribe("CalibrationServerStream", PUBSUB_LOW);
     Subscribe("ReservationServerStream", PUBSUB_LOW);
+    Subscribe("TrainStream", PUBSUB_LOW);
 
     Create(HIGHEST, train_widget_notifier);
 
