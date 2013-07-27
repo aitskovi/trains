@@ -244,6 +244,11 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
         return 1;
     }
 
+    if (src == dest) {
+        path[(*path_length)++] = src;
+        return 0;
+    }
+
     track_node **previous[TRACK_MAX];
     track_node **next[TRACK_MAX];
     struct dijkstra_data dijkstra_state[TRACK_MAX];
@@ -357,6 +362,8 @@ int distance_between_nodes(track_node *src, track_node *dest) {
         ulog("Distance between nodes called with null dest");
         return -1;
     }
+
+    if (src == dest) return 0;
 
     struct dijkstra_data dijkstra_state[TRACK_MAX];
     memset(dijkstra_state, 0, sizeof(dijkstra_state));
