@@ -599,6 +599,11 @@ void train_task(int train_no) {
                 train_start_reversing(&status);
                 break;
             case (COMMAND_GOTO):
+                if (status.path_length > 0) {
+                    ulog("Train ignoring goto");
+                    break;
+                }
+
                 ulog("Train received command to goto %s from %s", tr_command->destination->name, status.position.edge->src->name);
                 train_reset(&status);
                 status.path_length = 1;
