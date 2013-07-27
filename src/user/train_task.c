@@ -370,12 +370,19 @@ static void recalculate_path(TrainStatus *status, int avoid_others) {
     track_node *dest = status->path[status->path_length - 1];
     train_reset(status);
     int result = calculate_path(avoid_others, status->position.edge->src, dest, status->path, &status->path_length);
+
     if (result) {
         ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);
         train_reset(status);
-    } else {
-        publish_destination(status);
+        return;
     }
+
+    publish_destination(status);
+}
+
+static int is_reverse_step(track_node *node1, track_node *node2) {
+    track_node * next_landmark = track_next_landmark(node1);
+    return node2 == next_landmark->reverse || node1 == node2->reverse;
 }
 
 static void perform_path_actions(TrainStatus *status) {
@@ -415,6 +422,10 @@ static void perform_path_actions(TrainStatus *status) {
         return;
     }
 
+    if (status->path_pos > status->path_reserved_pos) {
+        status->path_reserved_pos = status->path_pos;
+    }
+
     status->path_reserved_distance = calculate_path_reserved_distance(status);
 
     // Reserve up to us + stopping distance
@@ -446,7 +457,27 @@ static void perform_path_actions(TrainStatus *status) {
         track_node *next    = status->path[j+1];
 
         int dist = distance_between_nodes(current, next);
-        //cuassert(dist >= 0, "Disconnected nodes in path!");
+
+        // We're reversing
+        if (is_reverse_step(current, next)) {
+            ulog("Train reversing at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
+            status->path_reserved_pos++;
+            status->path_reserved_distance = 0;
+            train_start_reversing(status);
+            return;
+        }
+
+        /*
+
+        // No need to reserve the section we're already on if it's the start of the path (this frequently causes us to get stuck)
+        if (current == status->position.edge->src && current == status->path[0]) {
+            status->path_reserved_distance += dist;
+            status->path_reserved_pos++;
+            ++j;
+            continue;
+        }
+
+        */
 
         result = Reserve(status->train_no, current);
         if (result == RESERVATION_ERROR) {
@@ -467,20 +498,11 @@ static void perform_path_actions(TrainStatus *status) {
             return;
         } else {
             status->reservation_failed_time = 0;
-//            ulog("Train reserved node %s while %d um ahead of %s, buffer space is now %d um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
+            ulog("Cruise speed set after train reserved node %s while %d um ahead of %s, buffer space is now %d um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
             if (result == RESERVATION_SUCCESS) {
                 circular_queue_push(&status->reserved_nodes, current);
             }
             train_set_speed(status, CRUISING_SPEED);
-        }
-
-        // We're reversing
-        if (current->reverse == next) {
-            ulog("Train reversing at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
-            status->path_reserved_pos++;
-            status->path_reserved_distance = 0;
-            train_start_reversing(status);
-            return;
         }
 
         if (current->type == NODE_BRANCH) {
