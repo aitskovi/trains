@@ -26,6 +26,7 @@ typedef struct ShellMessage {
         SHELL_STOP,
         SHELL_SET_SWITCH_POSITION,
         SHELL_ORIENT,
+        SHELL_SIMULATE,
         SHELL_SUCCESS_REPLY
     } type;
 

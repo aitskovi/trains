@@ -319,7 +319,7 @@ int parse_orient(char *str, int *train, int *orientation) {
     return 1;
 }
 
-int parse_simulate(char *str) {
+int parse_simulate(char *str, int *train) {
     // Skip Whitespace.
     while(is_whitespace(*str)) str++;
 
@@ -331,6 +331,9 @@ int parse_simulate(char *str) {
     if (*str++ != 'a') return 0;
     if (*str++ != 't') return 0;
     if (*str++ != 'e') return 0;
+
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
 
     return 1;
 }
@@ -475,8 +478,13 @@ void shell() {
                 tid_t calibrator = Execute(MEDIUM, velocity_calibrator, train);
                 WaitTid(calibrator);
                 ulog("Calibration Completed");
-            } else if (parse_simulate(line_buffer)) {
-                //Create(HIGH, simulation);
+            } else if (parse_simulate(line_buffer, &number)) {
+                ulog("Simulating train %d", train);
+                sh_msg->type = SHELL_SIMULATE;
+                sh_msg->train_no = number;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
             }
 
             line_buffer[line_buffer_pos + 1] = 0;

@@ -25,6 +25,7 @@ typedef struct TrainStatus {
     track_node *dest, *stop;
     track_edge *position;
     unsigned int dist;
+    int simulating;
 } TrainStatus;
 
 void train_status_init(TrainStatus *status, unsigned char train_no, tid_t tid) {
@@ -36,6 +37,7 @@ void train_status_init(TrainStatus *status, unsigned char train_no, tid_t tid) {
     status->dist = 0;
     status->dest = 0;
     status->stop = 0;
+    status->simulating = 0;
 }
 
 TrainStatus * train_status_by_number(TrainStatus *status, unsigned char train_no) {
@@ -200,6 +202,16 @@ void mission_control() {
                     break;
 
                 default:
+                    break;
+                case SHELL_SIMULATE:
+                    status = train_status_by_number(trains, sh_msg->train_no);
+                    if (!status) {
+                        ulog("\nCould not find train");
+                        break;
+                    }
+                    status->simulating = 1;
+                    mission_control_set_train_dest(status, get_random_node());
+
                     break;
             }
 

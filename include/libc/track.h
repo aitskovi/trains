@@ -38,4 +38,6 @@ struct track_node *track_previous_landmark(struct track_node *node);
 struct track_node *track_next_sensor(struct track_node *node);
 int is_node_ahead_of_node(track_node *node1, track_node *node2);
 
+
+struct track_node *get_random_node();
 #endif
