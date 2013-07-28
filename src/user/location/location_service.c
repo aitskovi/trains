@@ -187,6 +187,18 @@ int locationservice_distance_event(struct LocationService *service) {
         if (!train->edge) return 0;
         if (!train->edge->dest) return 0;
 
+        // Check for trains on the same edge as us. We shouldn't cross them.
+        int j;
+        for (j = 0; j < service->num_trains; ++j) {
+            TrainLocation *other = &service->trains[j];
+
+            if (train->edge->reverse == other->edge) {
+                if (train->distance > other->edge->dist - other->distance) {
+                    train->distance = max(0, other->edge->dist - other->distance);
+                }
+            }
+        }
+
         if (train->edge->dest->type == NODE_EXIT) {
             train->distance = min(train->edge->dist, train->distance);
         } else if (train->distance >= train->edge->dist) {
