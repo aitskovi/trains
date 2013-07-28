@@ -163,10 +163,13 @@ void mission_control() {
 
                     break;
                 case SHELL_ADD_TRAIN:
-                    new_child = Execute(HIGH, train_task, sh_msg->train_no);
-                    status = &trains[num_trains++];
-                    train_status_init(status, sh_msg->train_no, new_child);
-                    AddTrain(sh_msg->train_no);
+                    status = train_status_by_number(trains, sh_msg->train_no);
+                    if (!status) {
+                        new_child = Execute(HIGH, train_task, sh_msg->train_no);
+                        status = &trains[num_trains++];
+                        train_status_init(status, sh_msg->train_no, new_child);
+                        AddTrain(sh_msg->train_no);
+                    }
                     mission_control_set_train_speed(status, 2);
                     break;
                 case SHELL_SET_TRAIN_SPEED:
