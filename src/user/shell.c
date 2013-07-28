@@ -26,6 +26,7 @@
 #include <clock_server.h>
 #include <velocity_calibrator.h>
 #include <reservation_server.h>
+#include <stats_widget.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -377,6 +378,7 @@ void shell() {
     Create(LOW, sensor_widget);
     // Start the train widget.
     Create(LOW, train_widget);
+    Create(LOW, stats_widget);
 
     Create(HIGH, switch_server);
 
