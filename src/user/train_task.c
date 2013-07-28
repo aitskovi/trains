@@ -367,7 +367,12 @@ static void recalculate_path(TrainStatus *status, int avoid_others) {
     }
     track_node *dest = status->path[status->path_length - 1];
     train_reset(status);
-    int result = calculate_path(avoid_others, status->position.edge->src, dest, status->path, &status->path_length);
+
+    track_node *occupied_nodes[MAX_OCCUPIED_NODES];
+    int num_occupied_nodes;
+    determine_occupied_nodes(status, occupied_nodes, &num_occupied_nodes);
+
+    int result = calculate_path(status->train_no, occupied_nodes, num_occupied_nodes, avoid_others, status->position.edge->src, dest, status->path, &status->path_length);
 
     if (result) {
         ulog("Train %u could not find a path to %s from %s", status->train_no, status->position.edge->src->name, dest->name);

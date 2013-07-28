@@ -30,7 +30,8 @@ struct dijkstra_data {
 
 track_node *track_get_by_name(char * name);
 int can_reverse_at_node(track_node *node);
-int calculate_path(int avoid_others, track_node *src, track_node *dest, track_node **path, unsigned int *path_length);
+int calculate_path(unsigned int train_no, track_node **occupied_nodes, unsigned int num_occupied_nodes, int avoid_others, track_node *src, track_node *dest, track_node **path, unsigned int *path_length);
+
 
 struct track_edge *track_next_edge(struct track_node *node);
 struct track_node *track_next_landmark(struct track_node *node);

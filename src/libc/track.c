@@ -233,7 +233,8 @@ int can_reverse_at_node(track_node *node) {
 }
 
 // O(v^2) Dijkstra's
-int calculate_path(int avoid_others, track_node *src, track_node *dest, track_node **path, unsigned int *path_length) {
+int calculate_path(unsigned int train_no, track_node **occupied_nodes, unsigned int num_occupied_nodes,
+        int avoid_others, track_node *src, track_node *dest, track_node **path, unsigned int *path_length) {
     if (!src) {
         ulog("Calculate path called with null src");
         return 1;
@@ -257,10 +258,12 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
     memset(dijkstra_state, 0, sizeof(dijkstra_state));
     int disallowed_neighbour_count = 0;
 
+    unsigned int i, j, k;
+
     track_node *current, *neighbour;
 
     // Configure distance to be +inf
-    unsigned int i;
+
     for (i = 0; i < TRACK_MAX; ++i) {
         dijkstra_state[i].distance = 0xFFFFFFFF;
         dijkstra_state[i].visited = 0;
@@ -271,20 +274,26 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
     while ((current = get_closest_unvisited_node(dijkstra_state))) {
         // ulog("\nDijkstra's on node %s", current->name);
         dijkstra_state[current - track].visited = 1;
-        unsigned int j;
+
         // For each neighbour
         for (j = 0; j < NUM_NODE_EDGES[current->type]; ++j) {
             neighbour = current->edge[j].dest;
 
             // Don't switch node that we're on
-            if (current == src && disallowed_neighbour_count < 2) {
-                neighbour = track_next_landmark(current);
-                disallowed_neighbour_count++;
+            if (current->type == NODE_BRANCH) {
+                for (k = 0; k < num_occupied_nodes; ++k) {
+                    if (current == occupied_nodes[k]) {
+                        disallowed_neighbour_count++;
+                        if (disallowed_neighbour_count < 2) {
+                            neighbour = track_next_landmark(current);
+                        }
+                    }
+                }
             }
 
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + current->edge[j].dist;
-                if (avoid_others && neighbour->owner) {
+                if (avoid_others && neighbour->owner && neighbour->owner != train_no) {
                     dist += BLOCKED_TRACK_PENALTY;
                 }
                 if (dist < dijkstra_state[neighbour - track].distance) {
@@ -299,7 +308,7 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
             neighbour = current->reverse;
             if (neighbour && neighbour->type != NODE_NONE && !dijkstra_state[neighbour - track].visited) {
                 unsigned int dist = dijkstra_state[current - track].distance + REVERSE_PENALTY;
-                if (avoid_others && neighbour->owner) {
+                if (avoid_others && neighbour->owner && neighbour->owner != train_no) {
                     dist += BLOCKED_TRACK_PENALTY;
                 }
                 if (dist < dijkstra_state[neighbour - track].distance) {
@@ -308,7 +317,6 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
                 }
             }
         }
-
 
         if (current == dest) {
             break;
@@ -346,7 +354,6 @@ int calculate_path(int avoid_others, track_node *src, track_node *dest, track_no
         current = next[current - track];
     };
     path[(*path_length)++] = dest;
-
 
     return 0;
 }
