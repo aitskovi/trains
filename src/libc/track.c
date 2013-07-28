@@ -14,10 +14,12 @@
 static track_node track[TRACK_MAX];
 static unsigned int REVERSE_PENALTY;
 static unsigned int BLOCKED_TRACK_PENALTY;
+static Random random;
 
 struct track_node *get_random_node() {
-    Random random;
-    seed_random(&random, Time());
+    if (random.seed == 0) seed_random(&random, Time());
+
+    //seed_random(&random, Time());
     int index = rand_int(&random) % 139;
 
     return &track[index];
