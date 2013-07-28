@@ -256,7 +256,8 @@ int calculate_path(unsigned int train_no, track_node **occupied_nodes, unsigned 
     memset(previous, 0, sizeof(previous));
     memset(next, 0, sizeof(next));
     memset(dijkstra_state, 0, sizeof(dijkstra_state));
-    int disallowed_neighbour_count = 0;
+    int disallowed_neighbour_count[num_occupied_nodes];
+    memset(disallowed_neighbour_count, 0, sizeof(disallowed_neighbour_count));
 
     unsigned int i, j, k;
 
@@ -283,10 +284,12 @@ int calculate_path(unsigned int train_no, track_node **occupied_nodes, unsigned 
             if (current->type == NODE_BRANCH) {
                 for (k = 0; k < num_occupied_nodes; ++k) {
                     if (current == occupied_nodes[k]) {
-                        disallowed_neighbour_count++;
-                        if (disallowed_neighbour_count < 2) {
+                        ulog("Dijkstra encountered occupied branch %s", current->name);
+                        if (disallowed_neighbour_count[k] < 2) {
+                            ulog("Dijkstra disallowed switching branch %s", current->name);
                             neighbour = track_next_landmark(current);
                         }
+                        disallowed_neighbour_count[k]++;
                     }
                 }
             }
