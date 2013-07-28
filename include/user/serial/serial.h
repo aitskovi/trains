@@ -23,8 +23,16 @@ enum ReadMessageType {
 
 typedef struct WriteMessage {
     enum WriteMessageType type;
-    char * data;
-    unsigned int length;
+
+    union {
+        char * data;
+        int channel;
+    };
+
+    union {
+        unsigned int length;
+        unsigned int size;
+    };
 } WriteMessage;
 
 typedef struct ReadMessage {
