@@ -283,8 +283,6 @@ static void train_reset(TrainStatus *status) {
 
     int result;
 
-    publish_destination(status);
-
     train_reset_reserved_nodes(status);
 
     if (circular_queue_empty(&status->reserved_nodes) && status->position.edge) {
@@ -572,6 +570,8 @@ static void perform_stopping_actions(TrainStatus *status) {
             if (!status->path_length) {
                 train_reset(status);
             }
+
+            publish_destination(status);
         }
         return;
     }
