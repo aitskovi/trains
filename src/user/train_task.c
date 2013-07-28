@@ -479,10 +479,12 @@ static void perform_path_actions(TrainStatus *status) {
 
         // We're reversing
         if (is_reverse_step(current, next)) {
-            ulog("Train reversing at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
-            status->path_reserved_pos++;
-            status->path_reserved_distance = 0;
-            train_start_reversing(status);
+            if (status->path_reserved_distance <= status->stopping_distance) {
+                ulog("Train reversing at %s while %d um ahead of %s", current->name, status->position.distance, status->position.edge->src->name);
+                status->path_reserved_pos++;
+                status->path_reserved_distance = 0;
+                train_start_reversing(status);
+            }
             return;
         }
 
