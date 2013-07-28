@@ -29,7 +29,7 @@
 #define D_CURVED 1
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 300
-#define MAX_OCCUPIED_NODES 5
+#define MAX_OCCUPIED_NODES 9
 #define STOPPING_BUFFER 200000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
@@ -204,14 +204,21 @@ static void determine_occupied_nodes(TrainStatus *status, track_node **result, i
     if (status->position.orientation == TRAIN_FORWARD) distance_backward = PICKUP_BACK_TO_TRAIN_BACK_UM + PICKUP_LENGTH_UM;
     else distance_backward = PICKUP_LENGTH_UM + PICKUP_FRONT_TO_TRAIN_FRONT_UM;
 
-    // Reserve behind/ahead of it if train pointed forward and it's necessary
-    if (status->position.distance < distance_backward) {
-        track_node *behind = track_previous_landmark(status->position.edge->src);
-        if (behind) {
-            result[(*num_nodes)++] = behind;
+    int distance_travelled = status->position.distance;
+    track_node *landmark = status->position.edge->src;
+    while(distance_travelled < distance_backward) {
+        track_node *behind = track_previous_landmark(landmark);
+        if (!behind) {
+            break;
         }
+
+        result[(*num_nodes)++] = behind;
+
+        distance_travelled += distance_between_nodes(behind, landmark);
+        landmark = behind;
     }
 
+    // Our node.
     result[(*num_nodes)++] = status->position.edge->src;
 
     int distance_forward;
@@ -219,11 +226,18 @@ static void determine_occupied_nodes(TrainStatus *status, track_node **result, i
     else distance_forward = PICKUP_BACK_TO_TRAIN_BACK_UM;
 
     // Reserve behind/ahead of it if train pointed forward and it's necessary
-    if (status->position.edge->dist - status->position.distance < distance_forward) {
-        track_node *ahead = track_next_landmark(status->position.edge->src);
-        if (ahead) {
-            result[(*num_nodes)++] = ahead;
+    distance_travelled = status->position.edge->dist - status->position.distance;
+    landmark = status->position.edge->src;
+    while(distance_travelled < distance_forward) {
+        track_node *ahead = track_next_landmark(landmark);
+        if (!ahead) {
+            break;
         }
+
+        result[(*num_nodes)++] = ahead;
+
+        distance_travelled += distance_between_nodes(landmark, ahead);
+        landmark = ahead;
     }
 }
 
@@ -570,7 +584,7 @@ static void perform_stopping_actions(TrainStatus *status) {
         return;
     case STOPPING_STOPPING:
         if (status->velocity == 0) {
-            ulog("Train %u finished stopping, path length was %u", status->train_no, status->path_length);
+            ulog("Train %u finished stopping %d ahead of %s", status->train_no, status->position.distance, status->position.edge->src->name);
             status->stopping_status = STOPPING_NOT;
             if (!status->path_length) {
                 train_reset(status);
