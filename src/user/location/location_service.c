@@ -233,7 +233,7 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
 
     // When we're reversing we want to reverse intellegently based on where we are over the
     // sensor, e.g. if we will trigger it again.
-    if (train->distance < PICKUP_LENGTH_UM && train->edge->src->type == NODE_SENSOR) {
+    if (train->distance <= 0 && train->edge->src->type == NODE_SENSOR) {
         train->edge = &train->edge->src->reverse->edge[0];
         train->distance = 0;
     } else {
