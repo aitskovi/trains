@@ -17,7 +17,8 @@ static unsigned int BLOCKED_TRACK_PENALTY;
 static Random random;
 
 struct track_node *get_random_node() {
-    if (random.seed == 0) seed_random(&random, Time());
+//    if (random.seed == 0) seed_random(&random, Time());
+    if (random.seed == 0) seed_random(&random, 12345678);
 
     //seed_random(&random, Time());
     int index = rand_int(&random) % 139;
