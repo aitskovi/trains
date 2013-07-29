@@ -48,6 +48,21 @@ void initialize_calibration() {
     velocities[47][13] = 5534;
     velocities[47][14] = 5575;
 
+    velocities[48][0] = 0;
+    velocities[48][1] = 637;
+    velocities[48][2] = 637;
+    velocities[48][3] = 1239;
+    velocities[48][4] = 1780;
+    velocities[48][5] = 2345;
+    velocities[48][6] = 2895;
+    velocities[48][7] = 3382;
+    velocities[48][8] = 3800;
+    velocities[48][9] = 4253;
+    velocities[48][10] = 4719;
+    velocities[48][11] = 5252;
+    velocities[48][12] = 5592;
+    velocities[48][13] = 5630;
+    velocities[48][14] = 5703;
 
     velocities[49][0] = 0;
     velocities[49][1] = 737;
@@ -84,7 +99,7 @@ void initialize_calibration() {
 
 
 int velocity(int train, int speed, track_edge *edge) {
-    cuassert(train == 47 || train == 49 || train == 50, "Using uncalibrated train!");
+    cuassert(train >= 47 && train <= 50, "Using uncalibrated train!");
 
     return velocities[train][speed];
 }
