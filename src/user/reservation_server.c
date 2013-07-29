@@ -136,7 +136,7 @@ static int release_track_node(unsigned int train_no, track_node *track) {
             other_direction->owner = 0;
         }
     }
-    ulog ("Train %u successfully released %s", train_no, track->name);
+    //ulog ("Train %u successfully released %s", train_no, track->name);
     publish_track_release(train_no, track);
     return RESERVATION_SUCCESS;
 }
@@ -168,7 +168,7 @@ static int reserve_track_node(unsigned int train_no, track_node *track) {
         }
     }
 
-    ulog ("Train %u successfully reserved %s", train_no, track->name);
+    //ulog ("Train %u successfully reserved %s", train_no, track->name);
     // Publish reservation
     publish_track_reserve(train_no, track);
     return RESERVATION_SUCCESS;
