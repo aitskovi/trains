@@ -104,11 +104,13 @@ void WriteServer() {
 
         int size = writeservice_flush(&service);
 
-        Message evt;
-        evt.type = WRITE_MESSAGE;
-        evt.ws_msg.size = size;
-        evt.ws_msg.channel = channel;
-        Publish(stream, &evt);
+        if (channel == COM1) {
+            Message evt;
+            evt.type = WRITE_MESSAGE;
+            evt.ws_msg.size = size;
+            evt.ws_msg.channel = channel;
+            Publish(stream, &evt);
+        }
     }
 
     dlog("Write Server: Shutting Down\n");
