@@ -246,6 +246,8 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
 
     // Associate us with the correct landmark and sensor.
     train->num_pending_sensors = track_sensor_search(train->edge->src, train->next_sensors);
+    // Clear missed sensors on reverse.
+    train->missed_sensor = 0;
 
     locationservice_add_event(service, train);
 
