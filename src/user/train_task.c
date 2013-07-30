@@ -85,6 +85,7 @@ typedef struct {
     // Time at which we failed to reserve piece of track
     // After a certain amount of time, try to recalculate a different path
     int reservation_failed_time;
+    int reservation_failed_attempts;
 
     // Reserved nodes
     struct circular_queue reserved_nodes;
@@ -513,8 +514,14 @@ static void perform_path_actions(TrainStatus *status) {
                 train_set_speed(status, 0);
                 //train_start_stopping(status);
             }
-            if (Time() > status->reservation_failed_time + WAIT_TIME_FOR_RESERVED_TRACK) {
+            if (status->reservation_failed_attempts > 4) {
+                ulog ("Maximum number of retries exceeded for train %u, getting new destination", status->train_no);
+                status->reservation_failed_attempts = 0;
+                train_reset(status);
+                train_start_stopping(status);
+            } else if (Time() > status->reservation_failed_time + WAIT_TIME_FOR_RESERVED_TRACK) {
                 ulog ("Train %u: Timed out reserving %s, recalculating", status->train_no, current->name);
+                status->reservation_failed_attempts++;
                 recalculate_path(status, 1);
             }
             return;
@@ -611,6 +618,8 @@ void train_task(int train_no) {
     circular_queue_initialize(&status.reserved_nodes);
     train_reset(&status);
 
+    status.reservation_failed_attempts = 0;
+
     // Subscribe.
     Subscribe("LocationServerStream", PUBSUB_HIGH);
 
@@ -648,6 +657,8 @@ void train_task(int train_no) {
                     ulog("Train ignoring goto");
                     break;
                 }
+
+                status.reservation_failed_attempts = 0;
 
                 ulog("Train received command to goto %s from %s", tr_command->destination->name, status.position.edge->src->name);
                 train_reset(&status);
