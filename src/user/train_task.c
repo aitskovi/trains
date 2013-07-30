@@ -129,6 +129,9 @@ static void train_set_speed(TrainStatus *status, speed_t speed) {
         server_tid = WhoIs("LocationServer");
     }
     if (speed != status->speed) {
+        if (speed == CRUISING_SPEED) {
+            ulog("Cruise speed set for train %u while %d um ahead of %s, buffer space is now %d um", status->train_no, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
+        }
         char set_speed_command[2] = { speed, status->train_no };
         Write(COM1, set_speed_command, sizeof(set_speed_command));
         status->speed = speed;
@@ -448,6 +451,8 @@ static void perform_path_actions(TrainStatus *status) {
 
     status->path_reserved_distance = calculate_path_reserved_distance(status);
 
+    int should_start_moving = 1;
+
     // Reserve up to us + stopping distance
     j = status->path_reserved_pos;
     while (1) {
@@ -471,7 +476,7 @@ static void perform_path_actions(TrainStatus *status) {
             train_start_stopping(status);
             return;
         } else if (j == status->path_length - 1) {
-            return;
+            break;
         }
 
         track_node *next    = status->path[j+1];
@@ -486,27 +491,17 @@ static void perform_path_actions(TrainStatus *status) {
                 status->path_reserved_distance = 0;
                 train_start_reversing(status);
             }
-            return;
+            should_start_moving = 0;
+            break;
         }
-
-        /*
-
-        // No need to reserve the section we're already on if it's the start of the path (this frequently causes us to get stuck)
-        if (current == status->position.edge->src && current == status->path[0]) {
-            status->path_reserved_distance += dist;
-            status->path_reserved_pos++;
-            ++j;
-            continue;
-        }
-
-        */
 
         result = Reserve(status->train_no, current);
         if (result == RESERVATION_ERROR) {
             ulog ("Reservation error occurred");
             train_start_stopping(status);
             train_reset(status);
-            return;
+            should_start_moving = 0;
+            break;
         } else if (result == RESERVATION_FAILURE) {
             if (!status->reservation_failed_time) {
                 ulog ("Train %u: Reservation of %s failed, waiting %d ahead of %s, buffer is %d", status->train_no, current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
@@ -524,14 +519,13 @@ static void perform_path_actions(TrainStatus *status) {
                 status->reservation_failed_attempts++;
                 recalculate_path(status, 1);
             }
-            return;
+            should_start_moving = 0;
+            break;
         } else {
             status->reservation_failed_time = 0;
-            ulog("Cruise speed set after train reserved node %s while %d um ahead of %s, buffer space is now %d um", current->name, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
             if (result == RESERVATION_SUCCESS) {
                 circular_queue_push(&status->reserved_nodes, current);
             }
-            train_set_speed(status, CRUISING_SPEED);
         }
 
         if (current->type == NODE_BRANCH) {
@@ -568,6 +562,10 @@ static void perform_path_actions(TrainStatus *status) {
         status->path_reserved_distance += dist;
         status->path_reserved_pos++;
         ++j;
+    }
+
+    if (should_start_moving) {
+        train_set_speed(status, CRUISING_SPEED);
     }
 }
 
