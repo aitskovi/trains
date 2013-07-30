@@ -19,6 +19,13 @@ enum TRAIN_ORIENTATION {
     TRAIN_BACKWARD,
 };
 
+enum TRAIN_CONFIDENCE {
+    CONFIDENCE_LOW,
+    CONFIDENCE_MEDIUM,
+    CONFIDENCE_HIGH,
+    NUM_CONFIDENCES,
+};
+
 struct track_node;
 
 typedef struct TrainData {
@@ -30,6 +37,7 @@ typedef struct TrainData {
     int stopping_distance;
     int error;
     enum TRAIN_ORIENTATION orientation;
+    enum TRAIN_CONFIDENCE confidence;
 } TrainData;
 
 typedef struct LocationServerMessage {
