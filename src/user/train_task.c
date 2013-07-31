@@ -449,10 +449,10 @@ static void perform_path_actions(TrainStatus *status) {
     if (!found) {
         ulog("Train %u got lost %d um ahead of %s, resetting", status->train_no, status->position.distance, status->position.edge->src->name);
         ulog("Train %u at %s, expected %s, %s, %s", status->train_no, status->path[status->path_pos]->name, status->path[status->path_pos + 1]->name, status->path[status->path_pos + 2]->name, status->path[status->path_pos + 3]->name);
-        train_set_speed(status, 0);
-        train_reset(status);
-//        recalculate_path(status, 0);
-//       perform_path_actions(&status);
+ //       train_set_speed(status, 0);
+ //       train_reset(status);
+        recalculate_path(status, 0);
+        perform_path_actions(&status);
         return;
     }
 
