@@ -215,6 +215,7 @@ int locationservice_distance_event(struct LocationService *service) {
                 track_edge *next_edge = track_next_edge(train->edge->dest);
                 locationservice_associate(service, train, next_edge);
                 train->missed_sensor = next_edge->src;
+                confidence = CONFIDENCE_LOW;
             }
         }
 
