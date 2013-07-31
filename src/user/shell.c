@@ -339,6 +339,25 @@ int parse_simulate(char *str, int *train) {
     return 1;
 }
 
+char *parse_demo(char *str) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 'd') return 0;
+    if (*str++ != 'e') return 0;
+    if (*str++ != 'm') return 0;
+    if (*str++ != 'o') return 0;
+
+    return str;
+}
+
+char *parse_demo_params(char *str, int *train) {
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    return str;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -487,6 +506,16 @@ void shell() {
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+            } else if (parse_demo(line_buffer)) {
+                char *tmp = parse_demo(line_buffer);
+                while((tmp = parse_demo_params(tmp, &train))) {
+                    sh_msg->type = SHELL_GO;
+                    sh_msg->train_no = train;
+                    sh_msg->position = get_random_node();
+                    Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                    cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                    cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+                }
             }
 
             line_buffer[line_buffer_pos + 1] = 0;
