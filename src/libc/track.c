@@ -20,10 +20,14 @@ struct track_node *get_random_node() {
 //    if (random.seed == 0) seed_random(&random, Time());
     if (random.seed == 0) seed_random(&random, 12345678);
 
-    //seed_random(&random, Time());
-    int index = rand_int(&random) % 139;
+    track_node *result = 0;
+    do {
+        //seed_random(&random, Time());
+        int index = rand_int(&random) % 139;
+        result = &track[index];
+    } while (result && result->type != NODE_SENSOR);
 
-    return &track[index];
+    return result;
 }
 
 int track_initialize(char track_name) {
