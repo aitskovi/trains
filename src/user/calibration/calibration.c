@@ -153,9 +153,22 @@ int stopping_distance(int train, int v) {
 }
 
 int deceleration(int train, int start, int end, int tick) {
+    int padding = 60;
+
     int d = stopping_distance(train, end) - stopping_distance(train, start);
     int v = end - start;
-    return v * v / (2 * d);
+
+    int dv = v * v / (2 * d);
+
+    int estimated_ticks = v / dv;
+    if (tick == estimated_ticks - 1) {
+        int estimated_velocity = start + dv * tick;
+        return -1 * (estimated_velocity - padding);
+    } else if (tick >= estimated_ticks) {
+        return -1;
+    }
+
+    return dv;
 }
 
 int acceleration(int train, int start, int end, int tick) {
