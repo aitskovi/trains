@@ -153,7 +153,7 @@ int stopping_distance(int train, int v) {
 }
 
 int deceleration(int train, int start, int end, int tick) {
-    int padding = 60;
+    int padding = 100;
 
     int d = stopping_distance(train, end) - stopping_distance(train, start);
     int v = end - start;
