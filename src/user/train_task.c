@@ -38,6 +38,7 @@ typedef struct {
     track_edge *edge;
     int distance;
     enum TRAIN_ORIENTATION orientation;
+    enum TRAIN_CONFIDENCE confidence;
 } Position;
 
 typedef struct {
@@ -129,9 +130,6 @@ static void train_set_speed(TrainStatus *status, speed_t speed) {
         server_tid = WhoIs("LocationServer");
     }
     if (speed != status->speed) {
-        if (speed == CRUISING_SPEED) {
-            ulog("Cruise speed set for train %u while %d um ahead of %s, buffer space is now %d um", status->train_no, status->position.distance, status->position.edge->src->name, status->path_reserved_distance);
-        }
         char set_speed_command[2] = { speed, status->train_no };
         Write(COM1, set_speed_command, sizeof(set_speed_command));
         status->speed = speed;
@@ -313,6 +311,7 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
     status->position.distance = ls_msg->data.distance;
     status->position.edge = ls_msg->data.edge;
     status->position.orientation = ls_msg->data.orientation;
+    status->position.confidence = ls_msg->data.confidence;
     status->velocity = ls_msg->data.velocity;
     status->stopping_distance = ls_msg->data.stopping_distance;
 
@@ -339,7 +338,7 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
         }
     }
 
-    if (status->position.edge) {
+    if (status->position.edge && status->position.confidence != CONFIDENCE_LOW) {
         if (status->position.edge != status->old_position.edge) {
             if (status->old_position.edge) {
                 if (circular_queue_empty(&status->reserved_nodes)) {
@@ -347,22 +346,30 @@ static void update_position(TrainStatus *status, LocationServerMessage *ls_msg) 
                             status->old_position.edge->src->name);
                     return;
                 }
-                track_node *node = circular_queue_peek(&status->reserved_nodes);
 
-                if (!node) {
-                    ulog("Somehow head of queue was null");
-                    return;
-                }
+                while (1) {
+                    if (circular_queue_empty(&status->reserved_nodes)) {
+                        break;
+                    }
 
-                // Release oldest reserved node if we're past it by at least train length
-                if (is_node_ahead_of_node(node, status->position.edge->src)) {
-                    int clearance = distance_between_nodes(node, status->position.edge->src) + status->position.distance;
-                    if (clearance > TRAIN_LENGTH_UM) {
-                        circular_queue_pop(&status->reserved_nodes);
-                        int result = Release(status->train_no, node);
-                        if (result != RESERVATION_SUCCESS) {
-                            ulog("Failed to release %s on reserved queue while moving!", node->name);
+                    track_node *node = circular_queue_peek(&status->reserved_nodes);
+
+                    // Release oldest reserved node if we're past it by at least train length
+                    if (is_node_ahead_of_node(node, status->position.edge->src)) {
+                        int clearance = distance_between_nodes(node, status->position.edge->src)
+                                + status->position.distance;
+                        if (clearance > TRAIN_LENGTH_UM) {
+//                            ulog("Train %u released %s while %d um ahead of %s", status->train_no, node->name, status->position.distance, status->position.edge->src->name);
+                            circular_queue_pop(&status->reserved_nodes);
+                            int result = Release(status->train_no, node);
+                            if (result != RESERVATION_SUCCESS) {
+                                ulog("Failed to release %s on reserved queue while moving!", node->name);
+                            }
+                        } else {
+                            break;
                         }
+                    } else {
+                        break;
                     }
                 }
             }
@@ -565,6 +572,9 @@ static void perform_path_actions(TrainStatus *status) {
     }
 
     if (should_start_moving) {
+        if (status->speed != CRUISING_SPEED) {
+            ulog("Cruise speed set for train %u while %d um ahead of %s, buffer space is now %d um after reserving up to and not including %s", status->train_no, status->position.distance, status->position.edge->src->name, status->path_reserved_distance, status->path[status->path_reserved_pos]->name);
+        }
         train_set_speed(status, CRUISING_SPEED);
     }
 }
