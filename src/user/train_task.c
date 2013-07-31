@@ -30,7 +30,7 @@
 #define D_REVERSE 2
 #define WAIT_TIME_FOR_RESERVED_TRACK 500
 #define MAX_OCCUPIED_NODES 9
-#define STOPPING_BUFFER 400000
+#define STOPPING_BUFFER 330000
 
 #define min(a,b) (a) < (b) ? (a) : (b)
 
@@ -462,13 +462,15 @@ static void perform_path_actions(TrainStatus *status) {
 
     status->path_reserved_distance = calculate_path_reserved_distance(status);
 
+    int stopping_buffer = STOPPING_BUFFER + (status->position.orientation == TRAIN_BACKWARD ? PICKUP_BACK_TO_TRAIN_BACK_UM : PICKUP_FRONT_TO_TRAIN_FRONT_UM);
+
     int should_start_moving = 1;
 
     // Reserve up to us + stopping distance
     j = status->path_reserved_pos;
     while (1) {
         if (!status->reservation_failed_time
-                && status->path_reserved_distance > status->stopping_distance + STOPPING_BUFFER) {
+                && status->path_reserved_distance > status->stopping_distance + stopping_buffer) {
             break;
         }
 
