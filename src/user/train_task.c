@@ -206,6 +206,8 @@ static void determine_occupied_nodes(TrainStatus *status, track_node **result, i
     if (status->position.orientation == TRAIN_FORWARD) distance_backward = PICKUP_BACK_TO_TRAIN_BACK_UM + PICKUP_LENGTH_UM;
     else distance_backward = PICKUP_LENGTH_UM + PICKUP_FRONT_TO_TRAIN_FRONT_UM;
 
+    distance_backward += TRAIN_SIZE_FUDGE_FACTOR;
+
     int distance_travelled = status->position.distance;
     track_node *landmark = status->position.edge->src;
     while(distance_travelled < distance_backward) {
@@ -226,6 +228,8 @@ static void determine_occupied_nodes(TrainStatus *status, track_node **result, i
     int distance_forward;
     if (status->position.orientation == TRAIN_FORWARD) distance_forward = PICKUP_FRONT_TO_TRAIN_FRONT_UM;
     else distance_forward = PICKUP_BACK_TO_TRAIN_BACK_UM;
+
+    distance_forward += TRAIN_SIZE_FUDGE_FACTOR;
 
     // Reserve behind/ahead of it if train pointed forward and it's necessary
     distance_travelled = status->position.edge->dist - status->position.distance;
