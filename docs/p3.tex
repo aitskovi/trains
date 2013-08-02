@@ -1,0 +1,124 @@
+\documentclass{article}
+
+\title{CS 452 Project Documentation}
+\author{
+  Avi Itskovich, 20332164
+  \and
+  Alex Ianus, 20342535
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+This documentation covers our train project.
+
+\section{Operating Instructions}
+\begin{enumerate}
+  \item Reset the box and wait for the redboot prompt
+  \item load -b 0x00218000 -h 10.15.167.4 \$executable
+  \item go
+\end{enumerate}
+
+\section{Submitted Files}
+Root directory: /u1/aianus/cs452/handin/project2/
+
+\subsection{Executable}
+\begin{verbatim}
+
+\end{verbatim}
+
+\subsection{Code}
+\begin{verbatim}
+
+\end{verbatim}
+
+\section{User Program Description}
+
+\subsection{PubSub System}
+
+Since we use a publish-subscribe model in our system, we made a generalizable system to allow any server to support this. Previously, each server implemented PubSub by itself, and only had one courier for subscriptions. Our new system has 3 different couriers which at different priorities. These allow a low priority task like the train\_widget to subscribe to the same stream as the train controller without a performance loss. Our pubsub sustem supports the following API:
+
+\begin{itemize}
+  \item int CreateStream(char *name) - Creates the set of tasks and returns the tid of the PubSub server it created. The name is assigned to the PubSub server in the NameServer.
+  \item void Subscribe(char *name, int priority) - Subscribe to a stream. You will begin recieving updates after calling this.
+  \item void Unsubscribe(char *name, int priority) - Unsubscribe from a stream. You will recieve no more updates after calling this,
+  \item void Publish(tid\_t stream, Message msg) - Publish a message to a stream. This message gets forwarded to all subscribers of the stream. Ordering of messages is guaranteed as fifo.
+\end{itemize}
+
+This lets us clearly separate different components of the system and allow them to communicate through streams. It also allows us to easily introspect these streams so we can show the data on the screen.
+
+
+\subsection{LocationServer}
+
+Our train system has a central location server that manages train locations. The LocationServer consumes the SensorServer's stream of sensor updates. It also has a notifier task pinging it every tick to update the distances for moving trains. The LocationServer generates an event every-time a train moves, changes speed, and passes landmarks. Each of these events comes along with the following data:
+
+\begin{itemize}
+    \item Train Velocity in micrometres per tick.
+    \item The edge the train is on.
+    \item The distance along the edge we've travelled.
+    \item The train's stopping distance.
+    \item The train's error.
+    \item The confidence in its position.
+\end{itemize}
+
+Internally the LocationServer uses a set of arrays to track train data. Each train has associated with it the sensors it is able to hit next and when one of these is hit, it's position is updated to be at that sensor. These are recalculated every time the train passes a sensor. Every tick the location server updates the position of each train. This consists of updating the current velocity based on acceleration, current distance on edge based on velocity and even changing edges if we've hit non-sensor landmarks.
+
+\subsubsection{Sensor Attribution}
+
+Sensor attribution now supports multiple trains. Each train maintains a list of pending sensors that it is expecting to hit. A hit of a sensor that is not associated with any train is considered a spurious hit. Two trains may be waiting for the same sensor. We solve this conflict by giving the sensor to the train with the highest velocity. This isn't a good solution. However, it fixes the issue of having the trains start up at the same siding. A better solution would be to use the train's distance along an edge for this. We just haven't gotten around to implementing it yet.
+
+Internally we augment this distance along an edge every tick based on a trains current velocity. Once we have reached the end of an edge we switch to the next one. If the source of next edge is a sensor, we try to wait for a sensor to fire before switching to that edge. We will wait up to 10cm of extra distance before switching to that edge. If we do switch to that edge, we will record a missed sensor. During sensor attribution this is also checked before a sensor hit is deemed spurious. If we are going to miss a second sensor, we do not switch edges again. This is necessary, because otherwise a stall can cause us to think we're just missing all sensors in a path instead of actually being stalled.
+
+\subsubsection{Location Confidence}
+
+Each location updates comes with a measure of confidence about the location. This measure is used when deciding if to release reservations. We have 3 levels of this:
+\begin{enumerate}
+  \item LOW - Low confidence update. The train is either accelerating or has missed a sensor.
+  \item MEDIUM - Medium confidence udpate. Regular distance measurement update.
+  \item HIGH - High confidence update. We just hit a sensor.
+\end{enumerate}
+
+\section{SensorServer}
+
+The SensorServer exports a stream of sensor events. It constantly polls the TrainController for sensor data, serializing it into single sensor fired events. Internally it uses a notifer to poll the sensor data and return it to it and a courier to hand out the data to subscribers.
+
+Inside the notifier we apply a filter to sensor data and only say a sensor was triggered when it switches from being "off" to being "on". An "on" to "on" transition gets filtered in the notifier. This serves two purposes: ignoring stuck switches, and ignoring the multiple events of a train passing over a sensor (we only get one instead).
+
+\section{Calibration}
+
+We created a calibration program for calibrating the average speed of the train. This program calibrates speeds from 2 - 14, by averaging speeds measured over multiple sensor hits. 
+
+We generated an acceleration model for the train under the assumption of quadratic acceleration. We measured how long it took the train to accelerate in ticks and using that along with it's velocity at that speed to generate the quadratic acceleration. We also did some manual tweaking of this, waiting a couple of ticks before using this function to better map the train.
+
+Our stopping distance is calibrated using simple measurements and a linear deceleration assumption. We do not do piecewise velocities (different velocities on different edges) or dynamic calibration as the trains run. This would likely have been helpful in longer runs of the train program.
+
+\section{Pathfinding}
+
+\section{Train Control}
+
+\section{Reservation System}
+
+\section{Screen}
+
+Everything printed to the screen is done using a differential method. Effectively, we store what data the screen is displaying as well as what the newest data is. Every 10 ticks, if something has changed we update the screen. This minimizes output and helps us not overflow the write buffer.
+
+\subsection{Shell}
+
+\textbf{Shell Commands:}
+\begin{itemize}
+    \item in [track] - Tell the system which track you're using.
+    \item ad [train] - Add a train to the system.
+    \item stop [train] [sensor] - Tell a train to stop whenever it hits a specific sensor.
+    \item tr [train] [speed] - Change the speed of a train.
+    \item rv [train] - Reverse a train.
+    \item rvpenalty [number] - Set the penalty, in micrometers, incurred when introducing a reverse while pathfinding (default is 10M)
+    \item go [train] [landmark] - Tell a train to move to a given location
+    \item demo [trains...] - Send a set of trains to random destinations
+    \item simulate [train] - Make a train continually go to random destinations
+    \item orient [train] [direction] - Tell a train its orientation.
+\end{itemize}
+
+\end{document}
