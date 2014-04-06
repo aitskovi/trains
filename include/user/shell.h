@@ -11,8 +11,9 @@
 #include <track_node.h>
 #include <switch_server.h>
 
-#define CONSOLE_HEIGHT 30
+#define CONSOLE_HEIGHT 34
 #define LINE_BUFFER_SIZE 70
+#define SCROLLABLE_AREA_SIZE 21
 
 typedef struct ShellMessage {
 
@@ -25,6 +26,7 @@ typedef struct ShellMessage {
         SHELL_STOP,
         SHELL_SET_SWITCH_POSITION,
         SHELL_ORIENT,
+        SHELL_SIMULATE,
         SHELL_SUCCESS_REPLY
     } type;
 

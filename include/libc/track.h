@@ -23,12 +23,22 @@ int sensor_to_idx(char sensor, int num);
 track_node *track_get_sensor(char sensor, int num);
 int sensor_eq(track_node *sensor, char name, int num);
 
+struct dijkstra_data {
+    unsigned int distance;
+    int visited;
+};
+
 track_node *track_get_by_name(char * name);
 int can_reverse_at_node(track_node *node);
-int calculate_path(track_node *src, track_node *dest, track_node **path, unsigned int *path_length);
+int calculate_path(unsigned int train_no, track_node **occupied_nodes, unsigned int num_occupied_nodes, int avoid_others, track_node *src, track_node *dest, track_node **path, unsigned int *path_length);
+
 
 struct track_edge *track_next_edge(struct track_node *node);
 struct track_node *track_next_landmark(struct track_node *node);
+struct track_node *track_previous_landmark(struct track_node *node);
 struct track_node *track_next_sensor(struct track_node *node);
+int is_node_ahead_of_node(track_node *node1, track_node *node2);
 
+
+struct track_node *get_random_node();
 #endif

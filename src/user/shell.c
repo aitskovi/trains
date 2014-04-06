@@ -25,6 +25,8 @@
 #include <dassert.h>
 #include <clock_server.h>
 #include <velocity_calibrator.h>
+#include <reservation_server.h>
+#include <stats_widget.h>
 
 const char CLEAR_SCREEN[] = "\033[2J";
 const char CLEAR_LINE[] = "\033[K";
@@ -233,13 +235,17 @@ int parse_calibrate(char *str, int *train) {
     return 1;
 }
 
-int parse_go(char *str, int *train, char *landmark) {
+char *parse_go(char *str) {
     // Skip Whitespace.
     while(is_whitespace(*str)) str++;
 
     if (*str++ != 'g') return 0;
     if (*str++ != 'o') return 0;
 
+    return str;
+}
+
+char *parse_go_params(char *str, int *train, char *landmark) {
     *train = parse_uint(&str);
     if (*train == -1) return 0;
 
@@ -247,7 +253,7 @@ int parse_go(char *str, int *train, char *landmark) {
     while(!is_whitespace(*str)) *landmark++ = *str++;
     *landmark = 0;
 
-    return 1;
+    return str;
 }
 
 int parse_stop(char *str, int *train, char *landmark) {
@@ -314,6 +320,44 @@ int parse_orient(char *str, int *train, int *orientation) {
     return 1;
 }
 
+int parse_simulate(char *str, int *train) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 's') return 0;
+    if (*str++ != 'i') return 0;
+    if (*str++ != 'm') return 0;
+    if (*str++ != 'u') return 0;
+    if (*str++ != 'l') return 0;
+    if (*str++ != 'a') return 0;
+    if (*str++ != 't') return 0;
+    if (*str++ != 'e') return 0;
+
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    return 1;
+}
+
+char *parse_demo(char *str) {
+    // Skip Whitespace.
+    while(is_whitespace(*str)) str++;
+
+    if (*str++ != 'd') return 0;
+    if (*str++ != 'e') return 0;
+    if (*str++ != 'm') return 0;
+    if (*str++ != 'o') return 0;
+
+    return str;
+}
+
+char *parse_demo_params(char *str, int *train) {
+    *train = parse_uint(&str);
+    if (*train == -1) return 0;
+
+    return str;
+}
+
 void reset_shell() {
     line_buffer_pos = 0;
     memset(line_buffer, 0, sizeof(line_buffer));
@@ -332,14 +376,14 @@ void generate_debug_area() {
     char command[200];
     char *pos = &command[0];
 
-    pos += sprintf(pos, (char *)SCROLLABLE_AREA, CONSOLE_HEIGHT + 1, CONSOLE_HEIGHT + 11);
+    pos += sprintf(pos, (char *)SCROLLABLE_AREA, CONSOLE_HEIGHT + 1, CONSOLE_HEIGHT + SCROLLABLE_AREA_SIZE);
     Write(COM2, command, pos - command);
 }
 
 void shell() {
-
     tid_t mission_control_tid = WhoIs("MissionControl");
     tid_t location_server_tid = WhoIs("LocationServer");
+
 
     // Clear the screen.
     Write(COM2, (char *)CLEAR_SCREEN, strlen((char *)CLEAR_SCREEN));
@@ -353,8 +397,11 @@ void shell() {
     Create(LOW, sensor_widget);
     // Start the train widget.
     Create(LOW, train_widget);
+    Create(LOW, stats_widget);
 
     Create(HIGH, switch_server);
+
+    Create(HIGH, reservation_server);
 
     // Create the debug print area.
     generate_debug_area();
@@ -409,17 +456,20 @@ void shell() {
                 Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
                 cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
                 cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
-            } else if (parse_go(line_buffer, &train, landmark_buffer1)) {
-                ulog("\nShell making train %u go to %s", train, landmark_buffer1);
-                sh_msg->type = SHELL_GO;
-                sh_msg->train_no = train;
-                sh_msg->position = track_get_by_name(landmark_buffer1);
-                if (!sh_msg->position) {
-                    ulog("\nCan't find landmark %s", landmark_buffer1);
-                } else {
-                    Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
-                    cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
-                    cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+            } else if (parse_go(line_buffer)) {
+                char *tmp = parse_go(line_buffer);
+                while((tmp = parse_go_params(tmp, &train, landmark_buffer1))) {
+                    ulog("\nShell making train %u go to %s", train, landmark_buffer1);
+                    sh_msg->type = SHELL_GO;
+                    sh_msg->train_no = train;
+                    sh_msg->position = track_get_by_name(landmark_buffer1);
+                    if (!sh_msg->position) {
+                        ulog("\nCan't find landmark %s", landmark_buffer1);
+                    } else {
+                        Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                        cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                        cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+                    }
                 }
             } else if (parse_stop(line_buffer, &train, landmark_buffer1)) {
                 ulog("\nShell making train %u stop after hitting %s", train, landmark_buffer1);
@@ -449,6 +499,23 @@ void shell() {
                 tid_t calibrator = Execute(MEDIUM, velocity_calibrator, train);
                 WaitTid(calibrator);
                 ulog("Calibration Completed");
+            } else if (parse_simulate(line_buffer, &number)) {
+                ulog("Simulating train %d", train);
+                sh_msg->type = SHELL_SIMULATE;
+                sh_msg->train_no = number;
+                Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+            } else if (parse_demo(line_buffer)) {
+                char *tmp = parse_demo(line_buffer);
+                while((tmp = parse_demo_params(tmp, &train))) {
+                    sh_msg->type = SHELL_GO;
+                    sh_msg->train_no = train;
+                    sh_msg->position = get_random_node();
+                    Send(mission_control_tid, (char *) &msg, sizeof(msg), (char *) &reply, sizeof(reply));
+                    cuassert(reply.type == SHELL_MESSAGE, "Shell received unexpected message");
+                    cuassert(reply.sh_msg.type == SHELL_SUCCESS_REPLY, "Shell received unexpected message");
+                }
             }
 
             line_buffer[line_buffer_pos + 1] = 0;

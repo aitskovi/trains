@@ -19,6 +19,7 @@ struct circular_queue {
 
 int circular_queue_empty(struct circular_queue *queue);
 int circular_queue_push(struct circular_queue *queue, void *data);
+void *circular_queue_peek(struct circular_queue *queue);
 void *circular_queue_pop(struct circular_queue *queue);
 void circular_queue_initialize(struct circular_queue *queue);
 unsigned int circular_queue_size(struct circular_queue *queue);

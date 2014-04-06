@@ -23,6 +23,10 @@ int circular_queue_push(struct circular_queue *queue, void *data) {
    return 0;
 }
 
+void *circular_queue_peek(struct circular_queue *queue) {
+    return queue->elements[queue->read_count % CIRCULAR_QUEUE_SIZE];
+}
+
 void *circular_queue_pop(struct circular_queue *queue) {
     if (!circular_queue_empty(queue)) {
         return queue->elements[queue->read_count++ % CIRCULAR_QUEUE_SIZE];

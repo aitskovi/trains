@@ -8,9 +8,13 @@
 #include <ts7200.h>
 #include <write_service.h>
 #include <write_notifier.h>
+#include <pubsub.h>
+#include <encoding.h>
 
 static tid_t com1_server_tid = -1;
 static tid_t com2_server_tid = -1;
+static tid_t com1_stream_tid = -1;
+static tid_t com2_stream_tid = -1;
 
 int Write(int channel, char *str, unsigned int size) {
     tid_t server_tid = -1;
@@ -43,7 +47,8 @@ int Putc(int channel, char ch) {
 }
 
 void WriteServer() {
-    int tid, channel;
+    tid_t tid, stream;
+    int channel;
     WriteMessage msg;
     WriteMessage rply;
     struct WriteService service;
@@ -59,9 +64,11 @@ void WriteServer() {
     dlog("Write Server: Registering\n");
     if (channel == COM1) {
         RegisterAs("UART1WriteServer");
+        stream = com1_stream_tid = CreateStream("UART1WriteServerStream");
         com1_server_tid = MyTid();
     } else {
         RegisterAs("UART2WriteServer");
+        stream = com2_stream_tid = CreateStream("UART2WriteServerStream");
         com2_server_tid = MyTid();
     }
     dlog("Write Server: Registered\n");
@@ -95,7 +102,15 @@ void WriteServer() {
                 break;
         }
 
-        writeservice_flush(&service);
+        int size = writeservice_flush(&service);
+
+        if (channel == COM1) {
+            Message evt;
+            evt.type = WRITE_MESSAGE;
+            evt.ws_msg.size = size;
+            evt.ws_msg.channel = channel;
+            Publish(stream, &evt);
+        }
     }
 
     dlog("Write Server: Shutting Down\n");

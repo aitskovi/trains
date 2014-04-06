@@ -64,7 +64,7 @@ static TrainLocation *add_train_location(LocationService *service, int train) {
     return &service->trains[index];
 }
 
-static void locationservice_add_event(LocationService *service, TrainLocation *train) {
+static void locationservice_add_event(LocationService *service, TrainLocation *train, enum TRAIN_CONFIDENCE confidence) {
     Message msg;
     msg.type = LOCATION_SERVER_MESSAGE;
     msg.ls_msg.type = LOCATION_COURIER_REQUEST;
@@ -76,6 +76,7 @@ static void locationservice_add_event(LocationService *service, TrainLocation *t
     msg.ls_msg.data.stopping_distance = stopping_distance(train->id, train->velocity);
     msg.ls_msg.data.error = calibration_error(train->id);
     msg.ls_msg.data.orientation = train->orientation;
+    msg.ls_msg.data.confidence = confidence;
 
     Publish(service->stream, &msg);
 }
@@ -135,7 +136,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
         if (train->missed_sensor == sensor) {
             train->missed_sensor = 0;
             locationservice_associate(service, train, sensor_edge);
-            locationservice_add_event(service, train);
+            locationservice_add_event(service, train, CONFIDENCE_LOW);
             return 0;
         }
     }
@@ -154,7 +155,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
         TrainLocation *train = &service->trains[matching_trains[0]];
         train->missed_sensor = 0;
         locationservice_associate(service, train, sensor_edge);
-        locationservice_add_event(service, train);
+        locationservice_add_event(service, train, CONFIDENCE_HIGH);
         return 0;
     }
 
@@ -166,7 +167,7 @@ int locationservice_sensor_event(struct LocationService *service, char name, int
 
         if (!train->edge) {
             locationservice_associate(service, train, sensor_edge);
-            locationservice_add_event(service, train);
+            locationservice_add_event(service, train, CONFIDENCE_HIGH);
         }
         
         return 0;
@@ -180,12 +181,25 @@ int locationservice_distance_event(struct LocationService *service) {
     for (i = 0; i < service->num_trains; ++i) {
         TrainLocation *train = &service->trains[i];
 
-        if (!train->edge) return 0;
-        if (!train->edge->dest) return 0;
-
+        enum TRAIN_CONFIDENCE confidence = train->accelerating ? CONFIDENCE_LOW : CONFIDENCE_MEDIUM;
         int old_velocity = train->velocity;
         train->distance += train->velocity;
         update_velocity(train);
+
+        if (!train->edge) return 0;
+        if (!train->edge->dest) return 0;
+
+        // Check for trains on the same edge as us. We shouldn't cross them.
+        int j;
+        for (j = 0; j < service->num_trains; ++j) {
+            TrainLocation *other = &service->trains[j];
+
+            if (train->edge->reverse == other->edge) {
+                if (train->distance > other->edge->dist - other->distance) {
+                    train->distance = max(0, other->edge->dist - other->distance);
+                }
+            }
+        }
 
         if (train->edge->dest->type == NODE_EXIT) {
             train->distance = min(train->edge->dist, train->distance);
@@ -194,14 +208,21 @@ int locationservice_distance_event(struct LocationService *service) {
                 track_edge *next_edge = track_next_edge(train->edge->dest);
                 locationservice_associate(service, train, next_edge);
             } else if (train->distance >= train->edge->dist + SENSOR_ERROR_OFFSET) {
-                cuassert(!train->missed_sensor, "Missed Multiple Sensors in a Row");
+                //cuassert(!train->missed_sensor, "Missed Multiple Sensors in a Row");
+                if (train->missed_sensor) {
+                    continue;
+                }
                 track_edge *next_edge = track_next_edge(train->edge->dest);
                 locationservice_associate(service, train, next_edge);
                 train->missed_sensor = next_edge->src;
+                confidence = CONFIDENCE_LOW;
             }
         }
 
-        if (old_velocity > 0 || train->velocity > 0) locationservice_add_event(service, train);
+
+        // TODO remove this!!!
+        static int tick = 0;
+        if (old_velocity > 0 || tick++ % 100 == 0 || train->velocity > 0) locationservice_add_event(service, train, confidence);
     }
 
     return 0;
@@ -215,7 +236,7 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
 
     // When we're reversing we want to reverse intellegently based on where we are over the
     // sensor, e.g. if we will trigger it again.
-    if (train->distance < PICKUP_LENGTH_UM && train->edge->src->type == NODE_SENSOR) {
+    if (train->distance <= 0 && train->edge->src->type == NODE_SENSOR) {
         train->edge = &train->edge->src->reverse->edge[0];
         train->distance = 0;
     } else {
@@ -228,8 +249,10 @@ static int locationservice_reverse_event(struct LocationService *service, int tr
 
     // Associate us with the correct landmark and sensor.
     train->num_pending_sensors = track_sensor_search(train->edge->src, train->next_sensors);
+    // Clear missed sensors on reverse.
+    train->missed_sensor = 0;
 
-    locationservice_add_event(service, train);
+    locationservice_add_event(service, train, CONFIDENCE_MEDIUM);
 
     return 0;
 }
@@ -243,7 +266,7 @@ int locationservice_speed_event(struct LocationService *service, int train_numbe
     // TODO: Set-up acceleration stuff. For now, just set our speed.
     update_speed(train, speed);
 
-    locationservice_add_event(service, train);
+    locationservice_add_event(service, train, CONFIDENCE_MEDIUM);
     return 0;
 }
 
@@ -255,7 +278,7 @@ int locationservice_orientation_event(LocationService *service,
 
     train->orientation = orientation;
 
-    locationservice_add_event(service, train);
+    locationservice_add_event(service, train, CONFIDENCE_MEDIUM);
     return 0;
 }
 
@@ -267,6 +290,6 @@ int locationservice_add_train(struct LocationService *service, int train_number)
 
     TrainLocation *train = add_train_location(service, train_number);
     
-    locationservice_add_event(service, train);
+    locationservice_add_event(service, train, CONFIDENCE_MEDIUM);
     return 0;
 }

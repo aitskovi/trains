@@ -48,7 +48,9 @@ ARMOBJECTS = kernel.o\
 			 pubsub.o\
 			 courier.o\
 			 velocity_calibrator.o\
-			 		  	 
+			 reservation_server.o\
+			 stats_widget.o\
+			 		 		  	 
 
 X86OBJECTS = log_x86.o\
 	   		 swi_x86.o
@@ -78,6 +80,7 @@ OBJECTS = bwio.o\
 		  ring_buffer.o\
 		  track_data.o\
 		  track.o\
+		  stack.o
 		  
 
 all: kerneltimings.elf kernel2.elf kernel3.elf kernel4.elf project1.elf

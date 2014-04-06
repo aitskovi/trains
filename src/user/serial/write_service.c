@@ -31,13 +31,15 @@ void writeservice_enqueue(struct WriteService *service, char *str, unsigned int 
 int writeservice_flush(struct WriteService *service) {
     dassert(service != 0, "Invalid Service");
 
-    if (!service->writable) return -2;
-    else if (ring_buffer_empty(service->buf)) return 0;
+    if (!service->writable) return ring_buffer_size(service->buf);
+    else if (ring_buffer_empty(service->buf)) return ring_buffer_size(service->buf);
 
     service->writable = 0;
     char c;
     ring_buffer_read(service->buf, (unsigned char *) &c, 1);
-    return uart_write(service->channel, c);
+    uart_write(service->channel, c);
+
+    return ring_buffer_size(service->buf);
 }
 
 /**

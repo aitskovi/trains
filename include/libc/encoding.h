@@ -8,6 +8,8 @@
 #include <switch_server.h>
 #include <calibration.h>
 #include <pubsub.h>
+#include <reservation_server.h>
+#include <serial.h>
 
 enum MESSAGE_TYPE {
     SENSOR_SERVER_MESSAGE,
@@ -18,6 +20,8 @@ enum MESSAGE_TYPE {
     CALIBRATION_MESSAGE,
     PUBSUB_MESSAGE,
     TRAIN_DISPLAY_MESSAGE,
+    RESERVATION_SERVER_MESSAGE,
+    WRITE_MESSAGE,
 };
 
 typedef struct Message {
@@ -30,6 +34,8 @@ typedef struct Message {
         SwitchServerMessage sw_msg;
         CalibrationMessage cs_msg;
         PubSubMessage ps_msg;
+        ReservationServerMessage rs_msg;
+        WriteMessage ws_msg;
     };
     int subscribers[MAX_SUBSCRIBERS];
 } Message;

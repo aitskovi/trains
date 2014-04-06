@@ -13,12 +13,12 @@
 #include <string.h>
 #include <memory.h>
 
-#define REFRESH_RATE 5
+#define REFRESH_RATE 10
 
 #define TRAIN_TABLE_HEIGHT 9
-#define TRAIN_COLUMN_WIDTH 23
+#define TRAIN_COLUMN_WIDTH 60
 #define TRAIN_COLUMN_WRITABLE_WIDTH TRAIN_COLUMN_WIDTH - 1
-#define MAX_RESERVED_NODES 10
+#define MAX_RESERVED_NODES 14
 
 #define TRAIN_STRING "Train:"
 #define LANDMARK_STRING "Landmark:"
@@ -27,7 +27,9 @@
 #define STOPPING_DISTANCE_STRING "Stop Dist.:"
 #define MEASURED_VELOCITY_STRING "Mea. Speed:"
 #define ERROR_STRING "Error:"
+#define RESERVED_NODES_STRING "Reserved:"
 #define ORIENTATION_STRING "Orientation:"
+#define DESTINATION_STRING "Destination:"
 
 enum TRAIN_WIDGET_HEIGHTS {
     TRAIN_DISPLAY_HEIGHT = TRAIN_TABLE_HEIGHT,
@@ -40,6 +42,9 @@ enum TRAIN_WIDGET_HEIGHTS {
     TRAIN_STOPPING_DISTANCE_HEIGHT,
     TRAIN_MEASURED_VELOCITY_HEIGHT,
     TRAIN_ERROR_HEIGHT,
+    TRAIN_RESERVED_NODES_HEIGHT,
+    TRAIN_DESTINATION_HEIGHT,
+    TRAIN_WIDGET_HEIGHT,
 };
 
 typedef struct DisplayData {
@@ -51,8 +56,17 @@ typedef struct DisplayData {
     int calibrated_velocity;
     int calibrated_error;
     enum TRAIN_ORIENTATION orientation;
-    struct track_node *reserved_nodes[MAX_RESERVED_NODES];
+    track_node *reserved_nodes[MAX_RESERVED_NODES];
+    track_node *destination;
 } DisplayData;
+
+static int get_y(int index, int widget_height) {
+    return index / 2 * (TRAIN_WIDGET_HEIGHT - TRAIN_DISPLAY_HEIGHT) + widget_height;
+}
+
+static int get_x(int index) {
+    return index % 2;
+}
 
 static void train_orientation_update(int index, DisplayData *data, enum TRAIN_ORIENTATION orientation) {
     if (data->orientation == orientation) return;
@@ -63,7 +77,7 @@ static void train_orientation_update(int index, DisplayData *data, enum TRAIN_OR
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(ORIENTATION_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ORIENTATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ORIENTATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char position[TRAIN_COLUMN_WIDTH];
     if (orientation == TRAIN_FORWARD) {
         sprintf(position, "F");
@@ -78,6 +92,32 @@ static void train_orientation_update(int index, DisplayData *data, enum TRAIN_OR
     Write(COM2, command, pos - command);
 }
 
+static void train_destination_update(int index, DisplayData *data, track_node *destination) {
+    if (data->destination == destination) return;
+    data->destination = destination;
+
+    char command[256];
+    char *pos = &command[0];
+
+    char buf[TRAIN_COLUMN_WIDTH];
+    char *buf_pos = &buf[0];
+
+    pos += sprintf(pos, "\0337");
+    int offset = strlen(DESTINATION_STRING);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DESTINATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
+
+    if (data->destination) {
+        buf_pos += sprintf(buf_pos, "%s", data->destination->name);
+    } else {
+        buf_pos += sprintf(buf_pos, "%s", "None");
+    }
+
+    pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
+}
+
 static void train_edge_update(int index, DisplayData *data, track_edge *edge) {
     if (data->edge == edge) return;
     data->edge = edge;
@@ -87,7 +127,7 @@ static void train_edge_update(int index, DisplayData *data, track_edge *edge) {
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(LANDMARK_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_LANDMARK_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_LANDMARK_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char position[TRAIN_COLUMN_WIDTH];
     if (!edge) {
         sprintf(position, "N/A");
@@ -109,7 +149,7 @@ static void train_distance_update(int index, DisplayData *data, int distance) {
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(DISTANCE_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char buf[TRAIN_COLUMN_WIDTH];
     sprintf(buf, "%dmm", distance / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
@@ -127,7 +167,7 @@ static void train_estimated_velocity_update(int index, DisplayData *data, int ve
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(ESTIMATED_SPEED_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ESTIMATED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ESTIMATED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char velocity_buf[TRAIN_COLUMN_WIDTH];
     sprintf(velocity_buf, "%dum/tick", velocity);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', velocity_buf);
@@ -145,13 +185,72 @@ static void train_stopping_distance_update(int index, DisplayData *data, int sto
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(STOPPING_DISTANCE_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_STOPPING_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_STOPPING_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char stop_buf[TRAIN_COLUMN_WIDTH];
     sprintf(stop_buf, "%dmm", stopping_distance / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', stop_buf);
     pos += sprintf(pos, "\0338");
 
     Write(COM2, command, pos - command);
+}
+
+static void train_reserved_node_update(int index, DisplayData *data, track_node **reserved_nodes) {
+    // Do a diff.
+    int i;
+    int diff = 0;
+    for (i = 0; i < MAX_RESERVED_NODES; ++i) {
+        if (data->reserved_nodes[i] != reserved_nodes[i]) {
+            data->reserved_nodes[i] = reserved_nodes[i];
+            diff++;
+        }
+    }
+    if (diff == 0) return;
+
+    char command[256];
+    char *pos = &command[0];
+
+    char buf[TRAIN_COLUMN_WIDTH];
+    char *buf_pos = &buf[0];
+
+    pos += sprintf(pos, "\0337");
+    int offset = strlen(RESERVED_NODES_STRING);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_RESERVED_NODES_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
+
+    unsigned int j;
+    for (j = 0; j < MAX_RESERVED_NODES; ++j) {
+        if (data->reserved_nodes[j] != 0) {
+            buf_pos += sprintf(buf_pos, "%s ", data->reserved_nodes[j]->name);
+        }
+    }
+
+    pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
+    pos += sprintf(pos, "\0338");
+
+    Write(COM2, command, pos - command);
+}
+
+static void train_reserved_node_released(int index, DisplayData *data, track_node *node) {
+//    ulog("Train widget got released event for index %d, train %d, node %s", index, data->id, node->name);
+    unsigned int j;
+    for (j = 0; j < MAX_RESERVED_NODES; ++j) {
+        if (data->reserved_nodes[j] == node) {
+            data->reserved_nodes[j] = 0;
+            return;
+        }
+    }
+    ulog("ERROR: Train widget got release event for unreserved node");
+}
+
+static void train_reserved_node_reserved(int index, DisplayData *data, track_node *node) {
+//    ulog("Train widget got reserved event for index %d, train %d, node %s", index, data->id, node->name);
+    unsigned int j;
+    for (j = 0; j < MAX_RESERVED_NODES; ++j) {
+        if (data->reserved_nodes[j] == 0) {
+            data->reserved_nodes[j] = node;
+            return;
+        }
+    }
+    ulog("ERROR: Train widget: Reserved more than MAX_RESERVED_NODES");
 }
 
 static void train_calibrated_velocity_update(int index, DisplayData *data, int velocity) {
@@ -163,7 +262,7 @@ static void train_calibrated_velocity_update(int index, DisplayData *data, int v
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(MEASURED_VELOCITY_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_MEASURED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_MEASURED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char buf[TRAIN_COLUMN_WIDTH];
     sprintf(buf, "%dum/tick", velocity);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
@@ -181,7 +280,7 @@ static void train_error_update(int index, DisplayData *data, int error) {
 
     pos += sprintf(pos, "\0337");
     int offset = strlen(ERROR_STRING);
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ERROR_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1 + offset);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ERROR_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1 + offset);
     char buf[TRAIN_COLUMN_WIDTH];
     sprintf(buf, "%dmm", error / 1000);
     pos += sputw(pos, TRAIN_COLUMN_WRITABLE_WIDTH - offset, ' ', buf);
@@ -209,36 +308,44 @@ static void train_display_add(int index, DisplayData *display, int train) {
     pos += sprintf(pos, "\0337");
 
     // Draw Trin Id.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ID_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ID_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, "Train: %d", train);
 
     // Draw Orientation.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ORIENTATION_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ORIENTATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ORIENTATION_STRING);
 
     // Draw Train Position
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_LANDMARK_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_LANDMARK_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, LANDMARK_STRING);
 
     // Draw Train Distance 
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, DISTANCE_STRING);
 
     // Draw Calibrated Train Velocity
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ESTIMATED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ESTIMATED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ESTIMATED_SPEED_STRING);
 
     // Draw Calibrated Train Stopping Distance
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_STOPPING_DISTANCE_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_STOPPING_DISTANCE_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, STOPPING_DISTANCE_STRING);
 
     // Draw Train Speed
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_MEASURED_VELOCITY_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_MEASURED_VELOCITY_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, MEASURED_VELOCITY_STRING);
 
     // Draw Train Error.
-    pos += sprintf(pos, "\033[%u;%uH", TRAIN_ERROR_HEIGHT, index * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_ERROR_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
     pos += sprintf(pos, ERROR_STRING);
+
+    // Draw Train Reservations.
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_RESERVED_NODES_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, RESERVED_NODES_STRING);
+
+    // Draw Train Destination
+    pos += sprintf(pos, "\033[%u;%uH", get_y(index, TRAIN_DESTINATION_HEIGHT), get_x(index) * TRAIN_COLUMN_WIDTH + 1);
+    pos += sprintf(pos, DESTINATION_STRING);
 
     pos += sprintf(pos, "\0338");
 
@@ -283,6 +390,8 @@ void train_widget() {
     // Find the location server and subscribe.
     Subscribe("LocationServerStream", PUBSUB_LOW);
     Subscribe("CalibrationServerStream", PUBSUB_LOW);
+    Subscribe("ReservationServerStream", PUBSUB_LOW);
+    Subscribe("TrainStream", PUBSUB_LOW);
 
     Create(HIGHEST, train_widget_notifier);
 
@@ -296,6 +405,10 @@ void train_widget() {
 
     DisplayData old_train_displays[MAX_TRAINS];
     memset(old_train_displays, 0, sizeof(old_train_displays));
+    int i;
+    for (i = 0; i < MAX_TRAINS; ++i) {
+        old_train_displays[i].orientation = -1;
+    }
     DisplayData new_train_displays[MAX_TRAINS];
     memset(new_train_displays, 0, sizeof(new_train_displays));
 
@@ -364,7 +477,52 @@ void train_widget() {
                     train_stopping_distance_update(index, old_display, new_display->stopping_distance);
                     train_calibrated_velocity_update(index, old_display, new_display->calibrated_velocity);
                     train_error_update(index, old_display, new_display->calibrated_error);
+                    train_destination_update(index, old_display, new_display->destination);
+                    train_reserved_node_update(index, old_display, new_display->reserved_nodes);
                 }
+                break;
+            }
+            case TRAIN_MESSAGE: {
+                cuassert(msg.tr_msg.type == COMMAND_GOTO, "Invalid Location Widget Request from train");
+
+                // Ack
+                rply.type = TRAIN_MESSAGE;
+                rply.tr_msg.type = COMMAND_ACKNOWLEDGED;
+                Reply(tid, (char *) &rply, sizeof(rply));
+
+                int old_num_trains = num_trains;
+                int index = get_train_index(number_to_train, &num_trains, msg.tr_msg.train);
+                DisplayData *display = &new_train_displays[index];
+                if (old_num_trains < num_trains) {
+                    train_display_add(index, display, msg.tr_msg.train);
+                }
+
+                display->destination = msg.tr_msg.destination;
+                break;
+            }
+            case RESERVATION_SERVER_MESSAGE: {
+                rply.type = RESERVATION_SERVER_MESSAGE;
+                rply.rs_msg.type = RESERVATION_SUCCESS_RESPONSE;
+                Reply(tid, (char *) &rply, sizeof(rply));
+
+                int old_num_trains = num_trains;
+                int index = get_train_index(number_to_train, &num_trains, msg.rs_msg.train_no);
+                DisplayData *display = &new_train_displays[index];
+                if (old_num_trains < num_trains) {
+                    train_display_add(index, display, msg.rs_msg.train_no);
+                }
+
+                switch (msg.rs_msg.type) {
+                    case RESERVATION_RESERVE:
+                        train_reserved_node_reserved(index, display, msg.rs_msg.node);
+                        break;
+                    case RESERVATION_RELEASE:
+                        train_reserved_node_released(index, display, msg.rs_msg.node);
+                        break;
+                    default:
+                        ulog("Train Widget: Invalid Reservation Server Message");
+                }
+
                 break;
             }
             default:

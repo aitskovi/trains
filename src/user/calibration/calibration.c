@@ -32,6 +32,38 @@ typedef struct TrainCalibration {
 void initialize_calibration() {
     memset(velocities, 0, sizeof(velocities));
 
+    velocities[45][0] = 0;
+    velocities[45][1] = 674;
+    velocities[45][2] = 674;
+    velocities[45][3] = 1236;
+    velocities[45][4] = 1684;
+    velocities[45][5] = 2317;
+    velocities[45][6] = 2809;
+    velocities[45][7] = 3456;
+    velocities[45][8] = 3822;
+    velocities[45][9] = 4263;
+    velocities[45][10] = 4613;
+    velocities[45][11] = 5009;
+    velocities[45][12] = 5609;
+    velocities[45][13] = 5720;
+    velocities[45][14] = 5795;
+
+    velocities[46][0] = 0;
+    velocities[46][1] = 694;
+    velocities[46][2] = 694;
+    velocities[46][3] = 1282;
+    velocities[46][4] = 1813;
+    velocities[46][5] = 2392;
+    velocities[46][6] = 2933;
+    velocities[46][7] = 3505;
+    velocities[46][8] = 3864;
+    velocities[46][9] = 4371;
+    velocities[46][10] = 4772;
+    velocities[46][11] = 5331;
+    velocities[46][12] = 5467;
+    velocities[46][13] = 5534;
+    velocities[46][14] = 5575;
+
     velocities[47][0] = 0;
     velocities[47][1] = 694;
     velocities[47][2] = 694;
@@ -48,6 +80,21 @@ void initialize_calibration() {
     velocities[47][13] = 5534;
     velocities[47][14] = 5575;
 
+    velocities[48][0] = 0;
+    velocities[48][1] = 637;
+    velocities[48][2] = 637;
+    velocities[48][3] = 1239;
+    velocities[48][4] = 1780;
+    velocities[48][5] = 2345;
+    velocities[48][6] = 2895;
+    velocities[48][7] = 3382;
+    velocities[48][8] = 3800;
+    velocities[48][9] = 4253;
+    velocities[48][10] = 4719;
+    velocities[48][11] = 5252;
+    velocities[48][12] = 5592;
+    velocities[48][13] = 5630;
+    velocities[48][14] = 5703;
 
     velocities[49][0] = 0;
     velocities[49][1] = 737;
@@ -84,7 +131,7 @@ void initialize_calibration() {
 
 
 int velocity(int train, int speed, track_edge *edge) {
-    cuassert(train == 47 || train == 49 || train == 50, "Using uncalibrated train!");
+    cuassert(train >= 45 && train <= 50, "Using uncalibrated train!");
 
     return velocities[train][speed];
 }

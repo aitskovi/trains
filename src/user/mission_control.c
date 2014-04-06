@@ -25,6 +25,7 @@ typedef struct TrainStatus {
     track_node *dest, *stop;
     track_edge *position;
     unsigned int dist;
+    int simulating;
 } TrainStatus;
 
 void train_status_init(TrainStatus *status, unsigned char train_no, tid_t tid) {
@@ -36,6 +37,7 @@ void train_status_init(TrainStatus *status, unsigned char train_no, tid_t tid) {
     status->dist = 0;
     status->dest = 0;
     status->stop = 0;
+    status->simulating = 0;
 }
 
 TrainStatus * train_status_by_number(TrainStatus *status, unsigned char train_no) {
@@ -131,6 +133,8 @@ void mission_control() {
     TrainStatus *status;
 
     Subscribe("LocationServerStream", PUBSUB_HIGH);
+    CreateStream("TrainStream");
+    Subscribe("TrainStream", PUBSUB_MEDIUM);
 
     while (1) {
         Receive(&tid, (char *) &msg, sizeof(msg));
@@ -159,10 +163,13 @@ void mission_control() {
 
                     break;
                 case SHELL_ADD_TRAIN:
-                    new_child = Execute(HIGH, train_task, sh_msg->train_no);
-                    status = &trains[num_trains++];
-                    train_status_init(status, sh_msg->train_no, new_child);
-                    AddTrain(sh_msg->train_no);
+                    status = train_status_by_number(trains, sh_msg->train_no);
+                    if (!status) {
+                        new_child = Execute(HIGH, train_task, sh_msg->train_no);
+                        status = &trains[num_trains++];
+                        train_status_init(status, sh_msg->train_no, new_child);
+                        AddTrain(sh_msg->train_no);
+                    }
                     mission_control_set_train_speed(status, 2);
                     break;
                 case SHELL_SET_TRAIN_SPEED:
@@ -200,6 +207,16 @@ void mission_control() {
 
                 default:
                     break;
+                case SHELL_SIMULATE:
+                    status = train_status_by_number(trains, sh_msg->train_no);
+                    if (!status) {
+                        ulog("\nCould not find train");
+                        break;
+                    }
+                    status->simulating = 1;
+                    mission_control_set_train_dest(status, get_random_node());
+
+                    break;
             }
 
             reply.type = SHELL_MESSAGE;
@@ -233,6 +250,22 @@ void mission_control() {
 
             break;
 
+        case TRAIN_MESSAGE: {
+            cuassert(msg.tr_msg.type == COMMAND_GOTO, "Invalid Location Widget Request from train");
+
+            // Ack
+            reply.type = TRAIN_MESSAGE;
+            reply.tr_msg.type = COMMAND_ACKNOWLEDGED;
+            Reply(tid, (char *) &reply, sizeof(reply));
+
+            status = train_status_by_number(trains, msg.tr_msg.train);
+            cuassert(status, "Train message for non-existent train");
+
+            if (status->simulating) {
+                mission_control_set_train_dest(status, get_random_node());
+            }
+            break;
+        }
         default:
             ulog("Src is %u", tid);
             ulog("Message type is %d", msg.type);
